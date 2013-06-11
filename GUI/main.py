@@ -66,7 +66,7 @@ def main():
     y = numpy.random.random((1, numPoints)).flatten() - tt
     z = numpy.sin(x) * y
 
-    filename = glob.glob('./sample_data/*.fcs')[0]
+    filename = glob.glob('../sample_data/*.fcs')[0]
     data = loadFCS(filename)
     #data = DataSet(data.
     #print numpy.shape(data)
