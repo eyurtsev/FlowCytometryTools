@@ -10,7 +10,7 @@ except ImportError:
 
 from fcm import loadFCS
 from pandas import DataFrame as DF
-
+from numpy import nan, unravel_index
 
 def get_files(dirname=None, pattern='*.fcs', recursive=True):
     '''
@@ -92,6 +92,8 @@ def to_list(obj):
     Convert an object to a list if it is not already 
     a non-string iterable.
     '''
+    if obj is None:
+        return obj
     if isinstance(obj, basestring):
         l = [obj]
     elif not hasattr(obj, '__iter__'):
@@ -125,9 +127,26 @@ class Sample(object):
         return load(path)
     
     def read_data(self, **kwargs):
+        '''
+        Read the datafile specified in Sample.datafile and 
+        return the resulting object.
+        Does NOT assign the data to self.data
+        '''
         kwargs.setdefault('transform', None)
         data = loadFCS(self.datafile, transform=None)
-        self.data = data
+        return data
+    
+    def set_data(self, data=None, datafile=None, readdata_kwargs={}):
+        '''
+        Assign a value to Sample.data. 
+        Data is not returned
+        '''
+        if data is not None:
+            self.data = data
+        else:
+            if datafile is not None:
+                self.datafile = datafile
+            self.data = self.read_data(**readdata_kwargs)     
     
     def clear_data(self):
         self.data = None
@@ -136,9 +155,43 @@ class Sample(object):
         if self.data is None:
             raise Exception, 'Data must be read before extracting metadata.'
         all_meta = self.data.notes
+        fields = to_list(fields)
         return dict( (field, all_meta[field]) for field in fields )
+    
+    def apply(self, func, applyto='FCS', noneval=nan, nout=1):
+        '''
+        Apply func either to self or to associated FCS data.
+        If data is not already parsed, try and read it.
         
-        
+        Parameters
+        ----------
+        func : callable 
+            Each func value is a callable that accepts a Sample 
+            object or an FCS object.
+        applyto : 'FCS' | 'SAMPLE'
+            'FCS'    : apply to associated FCS data
+            'SAMPLE' : apply to sample object itself. 
+        noneval : obj
+            Value returned if applyto is 'FCS' but no data is available.
+        nout : int
+            number of outputs from func.
+        '''         
+        applyto = applyto.upper()
+        if applyto == 'FCS':
+            if self.data is not None:
+                data = self.data
+            if self.datafile is None:
+                if nout==1:
+                    return noneval
+                else:
+                    return [noneval]*nout
+            else:
+                data = self.read_data()
+            return func(data)
+        elif applyto == 'SAMPLE':
+            return func(self)
+        else:
+            raise ValueError, 'Encountered unsupported value "%s" for applyto paramter.' %applyto       
         
 class Plate(object):
     '''
@@ -151,9 +204,14 @@ class Plate(object):
                  pattern='*.fcs', recursive=True):
         '''
         Constructor
+        
+        datafiles : str| iterable of str | None
+            Datafiles to parse.
+            If None is given, parse self.datafiles 
         '''
         self.ID = ID
         self.shape = shape
+        self.extracted = {}
         if row_labels is None:
             row_labels = self._default_labels('rows')
         if col_labels is None:
@@ -186,14 +244,51 @@ class Plate(object):
                 ID = '%s%s' %(rlabel, clabel)
                 wells[clabel][rlabel] = Sample(ID)
         self.wells = wells 
+    
+    def _datafile_wellID_parser(self, datafile, parser):
+        if hasattr(parser, '__call__'):
+            return parser(datafile)
+        if parser == 'name':
+            return datafile.split('_')[-1].split('.')[0]
+        elif parser == 'number':
+            number = int(datafile.split('.')[-2])
+            i,j = unravel_index(number, self.shape)
+            return self.wells.values[i,j].ID
+        elif parser == 'read':
+            data = loadFCS(datafile, transform=None)
+            return data.notes.text['src']
+        else:
+            raise ValueError,  'Encountered unsupported value "%s" for parser paramter.' %parser 
+    
+    def assign_datafiles_to_wells(self, assignments=None, parser='name'):
+        '''
+        assignments : dict
+            keys    = well ids
+            values = data file names (str)
+        parser : 'name' | 'number' | callable 
+        '''
+        if assignments is None: #guess assignments
+            assignments = {}
+            for datafile in self.datafiles:
+                ID = self._datafile_wellID_parser(datafile)
+                assignments[ID] = datafile
+            
+        wells = self.get_wells(assignments.keys())
+        for well_id, datafile in assignments.iteritems():
+            wells[well_id].datafile = datafile
+                
+            
                     
     def set_datafiles(self, datafiles=None, datadir=None, 
                       pattern='*.fcs', recursive=True):
+        '''
+        datafiles : str| iterable of str | None
+            Datafiles to parse.
+            If None is given, parse self.datafiles 
+        ''' 
         if datadir is not None:
             datafiles = get_files(datadir, pattern, recursive)        
-        if datafiles is not None:
-            if isinstance(datafiles, basestring):
-                datafiles = [datafiles]
+        datafiles = to_list(datafiles)
         self.datafiles = datafiles
     
     @property
@@ -202,57 +297,81 @@ class Plate(object):
     
     def get_wells(self, well_ids):
         '''
-        Return a dictionary off the wells that corresponding 
+        Return a dictionary of the wells that correspond
         to the requested ids.
         '''
         inds = self.wells.applymap(lambda x:x.ID in well_ids)
         return dict( (ID,well) for ID,well in zip(well_ids, self.wells[inds]) )
-    
     
     def clear_well_data(self, well_ids=None):
         if well_ids is None:
             well_ids = self.well_IDS
         for well in self.get_wells(well_ids).itervalues():
             well.clear_data()
-    
-    def analyze_well(self, well_id, analyzers):
-        # parse fcs file using fcm
-        well = self.get_well(well_id)
-        data = well.read_data()
-        # extract desired values
-        vals = [analyzer(data) for analyzer in analyzers]
-        return vals
         
-    def analyze_files(self, analyzers, datafiles=None):
+    def apply(self, func, outputs, applyto='FCS', noneval=nan,
+              well_ids=None):
         '''
         
         Parameters
         ----------
-        analyzers : dict 
-            Each analyzer value is a callable that accepts a Sample 
+        func : dict 
+            Each func value is a callable that accepts a Sample 
             object and returns a single number/string. 
-        datafiles : str| iterable of str | None
-            Datafiles to parse.
-            If None is given, parse self.datafiles 
+        outputs : str | str iterable
+            Names of outputs of func
+        applyto : 'FCS' | 'SAMPLE'
+        well_ids : str| iterable of str | None
+            IDs of well to apply function to.
+            If None is given
         ''' 
-        if datafiles is None: 
-            datafiles = self.datafiles
-        elif isinstance(datafiles, basestring):
-            datafiles = [datafiles]
+        if well_ids is None:
+            well_ids = self.well_IDS
+        else:
+            well_ids = to_list(well_ids)
         
+        outputs = to_list(outputs)
+        nout    = len(outputs)
+        
+        def applied_func(well):
+            if well.ID not in well_ids:
+                if nout==1:
+                    return noneval
+                else:
+                    return [noneval]*nout
+            return well.apply(func, applyto, noneval, nout)
+               
+        result = self.wells.applymap(applied_func)  
+        
+        if nout==1:
+            out = {outputs[0]:result}
+        else:
+            out = {}
+            for i,output in enumerate(outputs):
+                out[output] = result.applymap(lambda x: x[i])
+        self.extracted.update(out)
+            
+    def get_well_metadata(self, fields, noneval=nan, well_ids=None):
+        fields = to_list(fields)
+        func   = lambda x: [x.data.notes.get(f, None) for f in fields] 
+        self.apply(func, fields, 'fcs', noneval, well_ids)
         
 if __name__ == '__main__':
     plate = Plate('test', shape=(2,3))
-    print plate
-    print plate.wells 
-    print plate.well_IDS
+#     print plate
+#     print plate.wells 
+#     print plate.well_IDS
     
-    plate.wells['1']['A'].get_meta()
+    plate.apply(lambda x:x.ID, 'ID', applyto='sample', well_ids=['A1','B1'])
+    plate.get_well_metadata(['a'])
+    print plate.extracted
     
-    well_ids = ['A2' , 'B3']
-    print plate.get_wells(well_ids)
-    
-    plate.clear_well_data()  
-    plate.clear_well_data(well_ids)             
+#     plate.wells['1']['A'].get_meta()
+#     
+#     well_ids = ['A2' , 'B3']
+#     print plate.get_wells(well_ids)
+#     
+#     plate.clear_well_data()  
+#     plate.clear_well_data(well_ids)             
             
         
