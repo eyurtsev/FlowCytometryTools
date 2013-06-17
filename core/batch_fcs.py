@@ -50,7 +50,7 @@ class FCS_TO_CSV():
 
     def applyGates(self, gateCoordinates):
         #define a gate
-        print self.data.channels
+        #print self.data.channels
         self.xINDEX = self.data.channels.index('B1-A') # YFP
         self.yINDEX = self.data.channels.index('Y2-A') # RFP
         #self.yINDEX = self.data.channels.index('V2-A') # CFP?
