@@ -12,6 +12,12 @@ from fcm import loadFCS
 from pandas import DataFrame as DF
 from numpy import nan, unravel_index
 
+def get_meta_FCS(x, fields):
+    '''
+    TODO: change to extract data from other notes fields (not just 'text')
+    '''
+    return [x.notes.text[field] for field in fields]
+
 def get_files(dirname=None, pattern='*.fcs', recursive=True):
     '''
     Get all file names within a given directory those names match a
@@ -133,7 +139,7 @@ class Sample(object):
         Does NOT assign the data to self.data
         '''
         kwargs.setdefault('transform', None)
-        data = loadFCS(self.datafile, transform=None)
+        data = loadFCS(self.datafile, **kwargs)
         return data
     
     def set_data(self, data=None, datafile=None, readdata_kwargs={}):
@@ -154,9 +160,8 @@ class Sample(object):
     def get_metadata(self, fields):
         if self.data is None:
             raise Exception, 'Data must be read before extracting metadata.'
-        all_meta = self.data.notes
         fields = to_list(fields)
-        return dict( (field, all_meta[field]) for field in fields )
+        return get_meta_FCS(self.data, fields)
     
     def apply(self, func, applyto='FCS', noneval=nan, nout=1):
         '''
@@ -219,7 +224,8 @@ class Plate(object):
         self.row_labels = row_labels
         self.col_labels = col_labels
         self._make_wells(row_labels, col_labels)
-        self.set_datafiles(datafiles, datadir, pattern, recursive) 
+        self.set_datafiles(datafiles, datadir, pattern, recursive)
+        self.assign_datafiles_to_wells() 
 
     def __repr__(self): return repr(self.ID)
     
@@ -270,15 +276,13 @@ class Plate(object):
         if assignments is None: #guess assignments
             assignments = {}
             for datafile in self.datafiles:
-                ID = self._datafile_wellID_parser(datafile)
+                ID = self._datafile_wellID_parser(datafile, parser)
                 assignments[ID] = datafile
             
         wells = self.get_wells(assignments.keys())
         for well_id, datafile in assignments.iteritems():
             wells[well_id].datafile = datafile
-                
-            
-                    
+                          
     def set_datafiles(self, datafiles=None, datadir=None, 
                       pattern='*.fcs', recursive=True):
         '''
@@ -286,14 +290,15 @@ class Plate(object):
             Datafiles to parse.
             If None is given, parse self.datafiles 
         ''' 
-        if datadir is not None:
+        if datafiles is not None:
+            datafiles = to_list(datafiles)
+        else:
             datafiles = get_files(datadir, pattern, recursive)        
-        datafiles = to_list(datafiles)
         self.datafiles = datafiles
     
     @property
     def well_IDS(self):
-        return self.wells.values.flatten().tolist()
+        return [well.ID for well in self.wells.values.flatten()]
     
     def get_wells(self, well_ids):
         '''
@@ -353,17 +358,20 @@ class Plate(object):
             
     def get_well_metadata(self, fields, noneval=nan, well_ids=None):
         fields = to_list(fields)
-        func   = lambda x: [x.data.notes.get(f, None) for f in fields] 
+        func = lambda x: get_meta_FCS(x, fields)
         self.apply(func, fields, 'fcs', noneval, well_ids)
         
 if __name__ == '__main__':
-    plate = Plate('test', shape=(2,3))
+    datadir = '../tests/data/'
+#     print get_files(datadir)
+    plate = Plate('test', datadir=datadir, shape=(2,3))
 #     print plate
 #     print plate.wells 
 #     print plate.well_IDS
     
-    plate.apply(lambda x:x.ID, 'ID', applyto='sample', well_ids=['A1','B1'])
-    plate.get_well_metadata(['a'])
+#     plate.apply(lambda x:x.ID, 'ID', applyto='sample', well_ids=['A1','B1'])
+#     plate.apply(lambda x:x.shape[0], 'counts')
+    plate.get_well_metadata(['date', 'etim'])
     print plate.extracted
     
 #     plate.wells['1']['A'].get_meta()
