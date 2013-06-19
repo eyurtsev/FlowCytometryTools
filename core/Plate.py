@@ -223,6 +223,8 @@ class Plate(object):
             col_labels = self._default_labels('cols')
         self.row_labels = row_labels
         self.col_labels = col_labels
+        
+        self.wells_d = {}
         self._make_wells(row_labels, col_labels)
         self.set_datafiles(datafiles, datadir, pattern, recursive)
         self.assign_datafiles_to_wells() 
@@ -248,7 +250,9 @@ class Plate(object):
         for rlabel in row_labels:
             for clabel in col_labels:
                 ID = '%s%s' %(rlabel, clabel)
-                wells[clabel][rlabel] = Sample(ID)
+                well = Sample(ID)
+                wells[clabel][rlabel] = well
+                self.wells_d[well.ID] = well
         self.wells = wells 
     
     def _datafile_wellID_parser(self, datafile, parser):
@@ -305,8 +309,7 @@ class Plate(object):
         Return a dictionary of the wells that correspond
         to the requested ids.
         '''
-        inds = self.wells.applymap(lambda x:x.ID in well_ids)
-        return dict( (ID,well) for ID,well in zip(well_ids, self.wells[inds]) )
+        return dict( ((ID,self.wells_d[ID]) for ID in well_ids) )
     
     def clear_well_data(self, well_ids=None):
         if well_ids is None:
@@ -317,6 +320,7 @@ class Plate(object):
     def apply(self, func, outputs, applyto='FCS', noneval=nan,
               well_ids=None):
         '''
+        TODO: add optional argument to save the FCS data. Defaults to False.
         
         Parameters
         ----------
@@ -364,15 +368,16 @@ class Plate(object):
 if __name__ == '__main__':
     datadir = '../tests/data/'
 #     print get_files(datadir)
-    plate = Plate('test', datadir=datadir, shape=(2,3))
+    plate = Plate('test', datadir=datadir, shape=(4,5))
 #     print plate
 #     print plate.wells 
 #     print plate.well_IDS
     
 #     plate.apply(lambda x:x.ID, 'ID', applyto='sample', well_ids=['A1','B1'])
+    plate.apply(lambda x:x.datafile, 'file', applyto='sample')
 #     plate.apply(lambda x:x.shape[0], 'counts')
-    plate.get_well_metadata(['date', 'etim'])
-    print plate.extracted
+#     plate.get_well_metadata(['date', 'etim'])
+    print plate.extracted['file'].values
     
 #     plate.wells['1']['A'].get_meta()
 #     
