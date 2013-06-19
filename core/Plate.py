@@ -163,7 +163,7 @@ class Sample(object):
         fields = to_list(fields)
         return get_meta_FCS(self.data, fields)
     
-    def apply(self, func, applyto='FCS', noneval=nan, nout=1):
+    def apply(self, func, applyto='FCS', noneval=nan, nout=1, keepdata=False):
         '''
         Apply func either to self or to associated FCS data.
         If data is not already parsed, try and read it.
@@ -185,13 +185,15 @@ class Sample(object):
         if applyto == 'FCS':
             if self.data is not None:
                 data = self.data
-            if self.datafile is None:
+            elif self.datafile is None:
                 if nout==1:
                     return noneval
                 else:
                     return [noneval]*nout
             else:
                 data = self.read_data()
+                if keepdata:
+                    self.data = data
             return func(data)
         elif applyto == 'SAMPLE':
             return func(self)
@@ -318,9 +320,8 @@ class Plate(object):
             well.clear_data()
         
     def apply(self, func, outputs, applyto='FCS', noneval=nan,
-              well_ids=None):
+              well_ids=None, keepdata=False):
         '''
-        TODO: add optional argument to save the FCS data. Defaults to False.
         
         Parameters
         ----------
@@ -348,7 +349,7 @@ class Plate(object):
                     return noneval
                 else:
                     return [noneval]*nout
-            return well.apply(func, applyto, noneval, nout)
+            return well.apply(func, applyto, noneval, nout, keepdata)
                
         result = self.wells.applymap(applied_func)  
         
