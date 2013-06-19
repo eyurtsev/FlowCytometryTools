@@ -4,17 +4,17 @@ import fcm
 from fcm import loadFCS
 import fcm.graphics as graph
 import glob, csv, os, argparse
-import util
 import numpy
-import parsedatetime.parsedatetime as pdt
-import parsedatetime.parsedatetime_consts as pdc
 import datetime, time
-import FlyingButterfly.FlyingButterfly as FlyingButterfly
+try:
+    import FlyingButterfly.FlyingButterfly as FlyingButterfly
+except:
+    import warnings
+    warnings.warn("Failed to import FlyingButterfly module.\n" + 
+                  "Plotting is not supported.")
+
 from argparse import RawTextHelpFormatter
 
-import fnmatch
-import Tkinter, tkFileDialog
-import time
 
 HEADER_LIST = [ 'Experiment Name', 'Plate Name', 'Specimen Name', 'Well Name', 'Record Date', 'SAMPLE ID', '$OP', 'WELL ID', 'SampleID', 'All Events #Events', 'All Events Time Max', 'CR_CFP #Events' ]
 
@@ -75,6 +75,7 @@ class FCS_TO_CSV():
             self.gateList[thisKey]['#Events'] = numEvents
 
     def parseFilename(self):
+        import util
         basename = os.path.basename(self.filename)
         try:
             self.info['EID'] = float(util.parseFilename(basename, r'EID_(\d+\.\d+|\d+)'))
@@ -94,6 +95,9 @@ class FCS_TO_CSV():
             self.info['Plate Name'] = 'Unknown'
 
     def extractMeta(self):
+        import parsedatetime.parsedatetime as pdt
+        import parsedatetime.parsedatetime_consts as pdc
+        
         keyDict = {'Start Time' : 'btim',
                     'End Time' : 'etim',
                     'WELL ID' : 'src',
@@ -172,6 +176,9 @@ class FCS_TO_CSV():
 
 
 def acquireFiles():
+    import fnmatch
+    import Tkinter, tkFileDialog
+        
     root = Tkinter.Tk()
     dirname = tkFileDialog.askdirectory(parent=root,initialdir=os.curdir,title='Please select a directory')
     root.destroy()
