@@ -4,27 +4,22 @@ import fcm
 from fcm import loadFCS
 import fcm.graphics as graph
 import glob, csv, os, argparse
-import util
 import numpy
 import parsedatetime.parsedatetime as pdt
 import parsedatetime.parsedatetime_consts as pdc
 import datetime, time
-import FlyingButterfly.FlyingButterfly as FlyingButterfly
+
+from Utilities import graph, util
 from argparse import RawTextHelpFormatter
 
 import fnmatch
 import Tkinter, tkFileDialog
 import time
 
-HEADER_LIST = [ 'Experiment Name', 'Plate Name', 'Specimen Name', 'Well Name', 'Record Date', 'SAMPLE ID', '$OP', 'WELL ID', 'SampleID', 'All Events #Events', 'All Events Time Max', 'CR_CFP #Events' ]
-
 class FCS_TO_CSV():
     def __init__(self, filename, gateCoordinates=None):
         self.filename = filename
         self.info = {}
-        #print '-'
-        #print filename
-        #print '-'
 
         self.gateCoordinates = gateCoordinates
 
@@ -44,9 +39,10 @@ class FCS_TO_CSV():
                          'RY_RFP'  : {'original node name' : 'q2', 'color' : 'red'},
                          'RY_NF'   : {'original node name' : 'q3', 'color' : 'gray'},
                          'RY_YFP'  : {'original node name' : 'q4', 'color' : 'yellow'}}
-
         for thisKey in self.gateList.keys():
             self.gateList[thisKey]['#Events'] = 0
+            self.gateList[thisKey]['#Mean RFP'] = numpy.nan
+            self.gateList[thisKey]['#Mean YFP'] = numpy.nan
 
     def applyGates(self, gateCoordinates):
         #define a gate
@@ -69,10 +65,14 @@ class FCS_TO_CSV():
         for thisKey in self.gateList.keys():
             try:
                 self.data.tree.visit(thisKey)
+
                 numEvents = self.data.shape[0]
+
+                self.gateList[thisKey]['#Events'] = numEvents
+                self.gateList[thisKey]['#Mean RFP'] = self.data[:, self.yINDEX].mean()
+                self.gateList[thisKey]['#Mean YFP'] = self.data[:, self.xINDEX].mean()
             except:
-                numEvents = 0
-            self.gateList[thisKey]['#Events'] = numEvents
+                pass
 
     def parseFilename(self):
         basename = os.path.basename(self.filename)
@@ -129,7 +129,10 @@ class FCS_TO_CSV():
         gateKeys = list(self.gateList.keys())
         gateKeys.sort()
 
-        for key in gateKeys: outputHeader.append(key + ' #Events')
+        for key in gateKeys:
+            outputHeader.append(key + ' #Events')
+            outputHeader.append(key + ' #Mean RFP')
+            outputHeader.append(key + ' #Mean YFP')
 
         return outputHeader
 
@@ -139,21 +142,42 @@ class FCS_TO_CSV():
 
         for key, value in self.gateList.items():
             outputDict[key + ' #Events'] = value['#Events']
+            outputDict[key + ' #Mean RFP'] = value['#Mean RFP']
+            outputDict[key + ' #Mean YFP'] = value['#Mean YFP']
 
         return outputDict
 
     def getMeta(self):
         return self.data.notes
 
-    def plot(self, annotate=True, **args):
-        for thisKey in self.gateList.keys():
-            if not cmp(thisKey,'RY'): continue # Skip if it's the parent gate
+    def plot(self, annotate=True, numPoints=1000, **args):
+        """ Plots a 2D plot with the data point and the gate. 
+        Input:
+            annotate : bool
+                if True, the title, xlabel and ylabel are annotated on the plot
+            numPoints: integer
+                numPoints <= 0 : plots all points, otherwise plots a random subset of the points
+                numPoints > 0  : picks a random subset of points of size numPoints (if numPoints < total number)
 
-            try:
-                self.data.tree.visit(thisKey)
-                plt.scatter(self.data[:,self.xINDEX], self.data[:,self.yINDEX], edgecolors='none', color=self.gateList[thisKey]['color'], **args)
-            except:
-                pass
+            # TODO: the random subset is not actually random. It chooses points according to gate!!! BUG
+
+        """
+        indexes = numpy.random.permutation(numpy.shape(self.data)[0]) # Indexes to use for plotting data
+
+        if numPoints > 0 and numPoints < numpy.shape(self.data)[0]:
+            indexes = indexes[0:numPoints]
+
+        #for thisKey in self.gateList.keys():
+            #if not cmp(thisKey,'RY'): continue # Skip if it's the parent gate
+#
+            #try:
+                #self.data.tree.visit(thisKey)
+                #plt.scatter(self.data[indexes, self.xINDEX], self.data[indexes, self.yINDEX], edgecolors='none', color=self.gateList[thisKey]['color'], **args)
+            #except:
+                #pass
+
+        self.data.tree.visit('RY')
+        plt.scatter(self.data[indexes, self.xINDEX], self.data[indexes, self.yINDEX], edgecolors='none', color='Gray', **args)
         ## Draw gate
 
         plt.axvline(self.gateCoordinates[0])
@@ -164,7 +188,7 @@ class FCS_TO_CSV():
             plt.xlabel(self.data.channels[self.xINDEX])
             plt.ylabel(self.data.channels[self.yINDEX])
         else:
-            FlyingButterfly.hideAxes(plt.gca())
+            graph.hideAxes(plt.gca())
 
     def getInfo(self):
         return self.info
@@ -184,6 +208,60 @@ def acquireFiles():
     return matches
 
 
+def plotFCSFiles(fileList, gateCoordinates, numPoints=1000, save=False):
+    """
+    Plots FCS files.
+
+    Assumptions:
+        Assumes that the FCS files belong to a single plate.
+
+    Input:
+        fileList : list
+    """
+    if len(fileList) == 0:
+        raise Exception('Found no files matching regular expression : {}'.format(options.filename))
+    if len(fileList) == 1:
+        fileAnalyzed = FCS_TO_CSV(fileList[0], gateCoordinates)
+        fileAnalyzed.plot(numPoints=numPoints)
+        if save:
+            graph.saveFigure(fileList[0], tictoc=True, formats=['.jpg'])
+        plt.show()
+    else:
+        fig = plt.gcf()
+        ax_main = plt.gca()
+        plt.subplots_adjust(hspace=0,wspace=0)#, right=0.9)#, right=0.75)
+        xtick_labels = numpy.arange(12)+1
+        ytick_labels = ['ABCDEFGH'[i] for i in range(8)]
+
+        numRows = 8
+        numCols = 12
+
+        plt.xticks(numpy.linspace(0, 1, numCols+1)+1/2.0/(numCols+1.0), xtick_labels)
+        plt.yticks(numpy.linspace(1, 0, 9)-1/2.0/(numRows+1.0), ytick_labels)
+        plt.xlim(0, 1)
+        plt.ylim(0, 1)
+
+        for filename in fileList:
+            fileAnalyzed = FCS_TO_CSV(filename, gateCoordinates)
+            row = ord(fileAnalyzed.info['WELL ID'][0])-ord('A')
+            col = int(fileAnalyzed.info['WELL ID'][1:])
+            #print fileAnalyzed.info['WELL ID']
+            #print row, col
+            loc = col+row*12
+            #print loc
+            thisAxes = fig.add_subplot(numRows, numCols, col+row*12)
+            plt.ylim(0, 2*10**5)
+            plt.xlim(0, 2*10**5)
+
+            fileAnalyzed.plot(annotate=False, numPoints=numPoints, s=1)
+        mtitle='EID: {EID:n}, PID: {SAMPLE ID:n}\nName: {Plate Name}, Date: {Date}, End Time: {End Time}'.format(**fileAnalyzed.getInfo())
+        plt.suptitle(mtitle)
+
+        if save:
+            graph.saveFigure(fileAnalyzed.info['Plate Name'], tictoc=True, formats=['.jpg'])
+        plt.show()
+
+
 def main(options):
     #print 'Options passed: {}'.format(options)
     print os.curdir
@@ -191,54 +269,11 @@ def main(options):
 
     if fileList is None:
         fileList = acquireFiles()
-        #print('Found {} FCS files.'.format(len(fileList)))
-        #print('Detected files: {}'.format(fileList))
 
     gateCoordinates = options.gate_coordinates
 
     if options.plot:
-        if len(fileList) == 0:
-            raise Exception('Found no files matching regular expression : {}'.format(options.filename))
-        if len(fileList) == 1:
-            fileAnalyzed = FCS_TO_CSV(fileList[0], gateCoordinates)
-            fileAnalyzed.plot()
-            if options.save:
-                FlyingButterfly.saveFigure(fileList[0], tictoc=True, formats=['.jpg'])
-            plt.show()
-        else:
-            fig = plt.gcf()
-            ax_main = plt.gca()
-            plt.subplots_adjust(hspace=0,wspace=0)#, right=0.9)#, right=0.75)
-            xtick_labels = numpy.arange(12)+1
-            ytick_labels = ['ABCDEFGH'[i] for i in range(8)]
-
-            numRows = 8
-            numCols = 12
-
-            plt.xticks(numpy.linspace(0, 1, numCols+1)+1/2.0/(numCols+1.0), xtick_labels)
-            plt.yticks(numpy.linspace(1, 0, 9)-1/2.0/(numRows+1.0), ytick_labels)
-            plt.xlim(0, 1)
-            plt.ylim(0, 1)
-
-            for filename in fileList:
-                fileAnalyzed = FCS_TO_CSV(filename, gateCoordinates)
-                row = ord(fileAnalyzed.info['WELL ID'][0])-ord('A')
-                col = int(fileAnalyzed.info['WELL ID'][1:])
-                #print fileAnalyzed.info['WELL ID']
-                #print row, col
-                loc = col+row*12
-                #print loc
-                thisAxes = fig.add_subplot(numRows, numCols, col+row*12)
-                plt.ylim(0, 2*10**5)
-                plt.xlim(0, 2*10**5)
-
-                fileAnalyzed.plot(annotate=False, s=1)
-            mtitle='EID: {EID:n}, PID: {SAMPLE ID:n}\nName: {Plate Name}, Date: {Date}, End Time: {End Time}'.format(**fileAnalyzed.getInfo())
-            plt.suptitle(mtitle)
-
-            if options.save:
-                FlyingButterfly.saveFigure(fileAnalyzed.info['Plate Name'], tictoc=True, formats=['.jpg'])
-            plt.show()
+        plotFCSFiles(fileList, gateCoordinates, numPoints=options.num_points, save=options.save)
 
     elif options.analyze:
         print 'analyzing'
@@ -262,22 +297,21 @@ def main(options):
                         print('{:.2f}% complete'.format(index * 1.0 / len(fileList)*100.0))
             toc = time.time()
 
-            print('Process took {}'.format(toc-tic))
+            print('This script took {} seconds to run.'.format(toc-tic))
 
-        #for filename in fileList:
-            #plt.close()
-            #fileAnalyzed = FCS_TO_CSV(filename, gateCoordinates)
-            #fileAnalyzed.plot()
-            #FlyingButterfly.saveFigure(filename, formats=['.png'])
-
-def parser():
-    examples = {'e1' : '\tTo plot all the fcs files in the directory sample_data: \n\t\tpython batch_fcs.py -f sample_data/*.fcs -p',
-                'e2' : '\tTo plot all the fcs files in the directory sample_data and save to file: \n\t\tpython batch_fcs.py -f sample_data/*.fcs -p -s',
-                'e3' : '\tTo analyze and save all the fcs files in the directory sample_data to file: \n\t\tpython batch_fcs.py -f sample_data/*.fcs -a -o output.csv',
-                'e4' : '\tTo analyze and save all the fcs files within a selectable subdirectory (brings out an interface): \n\t\tpython batch_fcs.py -a -o output.csv',
-            }
-
-    epilog = 'Examples of use:\n{e1}\n{e2}\n{e3}\n{e4}'.format(**examples)
+def parseInput():
+    """
+    Examples of use:
+    To plot all the fcs files in the directory sample_data:
+		python batch_fcs.py -f sample_data/*.fcs -p',
+    To plot all the fcs files in the directory sample_data and save to file:
+		python batch_fcs.py -f sample_data/*.fcs -p -s',
+    To analyze and save all the fcs files in the directory sample_data to file:
+		python batch_fcs.py -f sample_data/*.fcs -a -o output.csv',
+    To analyze and save all the fcs files within a selectable subdirectory (brings out an interface):
+		python batch_fcs.py -a -o output.csv',
+    """
+    epilog = parseInput.__doc__
 
     parser = argparse.ArgumentParser(epilog=epilog, formatter_class=RawTextHelpFormatter)
 
@@ -287,16 +321,16 @@ def parser():
     parser.add_argument("-c", "--gate-coordinates", dest="gate_coordinates", nargs='+', type=float, help="coordinate gate")
 
     parser.add_argument("-p", "--plot", dest="plot", action="store_true", help="plot fcs file(s)")
+    parser.add_argument("-n", "--num_points", dest="num_points", type=int, default=1000.0, help="number of points to plot")
     parser.add_argument("-s", "--save plot", dest="save", action="store_true", help="save fcs plot")
     parser.add_argument("-a", "--analyze", dest="analyze", action="store_true", help="output to a csv file")
     parser.add_argument("-o", "--csv", dest="csv_filename", help="filename for csv output", default='temp.csv')
 
-    parser.add_argument("-q", "--quiet",
-                      action="store_false", dest="verbose", default=True,
+    parser.add_argument("-q", "--quiet", action="store_false", dest="verbose", default=True,
                       help="don't print status messages to stdout")
 
     return parser.parse_args()
 
 if __name__ == '__main__':
-    pArgs = parser()
+    pArgs = parseInput()
     main(pArgs)
