@@ -41,7 +41,7 @@ def plotFCM(data, channel_names, transform=(None, None), plot2d_type='dot2d', **
         each element is set to None or 'logicle'
         if 'logicle' then channel data is transformed with logicle transformation
 
-    plot2d_type : 'dot2d', 'hist2d'
+    plot2d_type : 'dot2d', 'hist2d', 'pseudo with bilinear'
 
     Returns
     -------
@@ -59,10 +59,11 @@ def plotFCM(data, channel_names, transform=(None, None), plot2d_type='dot2d', **
             data.logicle(channels=[channel])
 
     if len(channelIndexList) == 1:
-        # Then histogram plot
+        # 1d so histogram plot
         ch1i = channelIndexList[0]
         plt.xlabel(channel_names[0])
         pHandle = plt.hist(data[:, ch1i], **kwargs)
+
     elif len(channelIndexList) == 2:
         x = data[:, channelIndexList[0]] # index of first channels name
         y = data[:, channelIndexList[1]] # index of seconds channels name
