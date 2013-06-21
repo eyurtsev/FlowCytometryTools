@@ -12,6 +12,7 @@ except ImportError:
 
 from pandas import DataFrame as DF
 from numpy import nan, unravel_index
+from pylab import sca
 
 def save(obj, path):
     """
@@ -23,11 +24,11 @@ def save(obj, path):
     path : string
         File path
     """
-    f = open(path, 'wb')
-    try:
-        pickle.dump(obj, f, protocol=pickle.HIGHEST_PROTOCOL)
-    finally:
-        f.close()
+    with open(path, 'wb') as f:
+        try:
+            pickle.dump(obj, f, protocol=pickle.HIGHEST_PROTOCOL)
+        except:
+            print('Pickling failed for object {}, path {}'.format(obj, path))
 
 
 def load(path):
@@ -136,7 +137,7 @@ class BaseSample(BaseObject):
             self.data = self.read_data(**readdata_kwargs)
         else:
             self.data = None
-    
+
     def read_data(self, **kwargs):
         '''
         This function should be overwritten for each 
@@ -155,6 +156,22 @@ class BaseSample(BaseObject):
             if datafile is not None:
                 self.datafile = datafile
             self.data = self.read_data(**readdata_kwargs)     
+
+    def get_data(self, **kwargs):
+        '''
+        quick fix for working with data.
+        TODO
+        To Jonathan: can you add a property or else a function that will correctly
+        return the data that I should be working with?
+        probably add a call to this method from within apply function
+        '''
+        if self.data is not None:
+            return self.data
+        elif self.datafile is not None:
+            return self.read_data(**kwargs)
+        else:
+            return None
+    
     
     def clear_data(self):
         self.data = None
@@ -174,7 +191,7 @@ class BaseSample(BaseObject):
         specific data type.
         '''
         pass
-    
+
     def apply(self, func, applyto='data', noneval=nan, nout=1, keepdata=False):
         '''
         Apply func either to self or to associated FCS data.
@@ -371,7 +388,103 @@ class BasePlate(BaseObject):
         fields = to_list(fields)
         func = lambda x: x.get_metadata(fields)
         self.apply(func, fields, 'sample', noneval, well_ids)
-  
+
+
+    def plot(self, func, applyto='data', well_ids=None, row_labels=None, col_labels=None,
+                xaxislim=None, yaxislim=None,
+                row_label_xoffset=-0.1, col_label_yoffset=-0.3,
+                hide_tick_labels=True, hide_tick_lines=True,
+                hspace=0, wspace=0, row_labels_kwargs={}, col_labels_kwargs={}):
+        '''
+        Creates subplots for each well in the plate. Uses func to plot on each axis.
+        Follow with a call to matplotlibs show() in order to see the plot.
+
+        TODO: Finish documentation, document plot function also in utilities.graph
+        fix col_label, row_label offsets to use figure coordinates
+
+        @author: Eugene Yurtsev
+
+        Parameters
+        ----------
+        func : dict
+            Each func value is a callable that accepts a Sample
+            object, and an axis reference and plots on the current axis.
+            return values from func are ignored
+            NOTE: if using applyto='sample', the function
+            when querying for data should make sure that the data
+            actually exists
+        applyto : 'sample' | 'data'
+        well_ids : None
+        col_labels : str
+            labels for the columns if None default labels are used
+        row_labels : str
+            labels for the rows if None default labels are used
+        xaxislim : 2-tuple
+            min and max x value for each subplot
+            if None, the limits are automatically determined for each subplot
+
+        Returns
+        -------
+        gHandleList: list
+            gHandleList[0] -> reference to main axis
+            gHandleList[1] -> a list of lists
+                example: gHandleList[1][0][2] returns the subplot in row 0 and column 2
+
+        Examples
+        ---------
+            def y(well, ax):
+                data = well.get_data()
+                if data is None:
+                    return None
+                graph.plotFCM(data, 'Y2-A')
+            def z(data, ax):
+                plot(data[0:100, 1], data[0:100, 2])
+            plate.plot(y, applyto='sample');
+            plate.plot(z, applyto='data');
+
+        '''
+        # Acquire call arguments to be passed to create plate layout
+        callArgs = locals().copy() # This statement must remain first. The copy is just defensive.
+        callArgs.pop('self') # self does not exist in createPlateLayout
+        callArgs.pop('func') # func does not exist in createPlateLayout
+        callArgs.pop('applyto') # func does not exist in createPlateLayout
+        callArgs.pop('well_ids') # func does not exist in createPlateLayout
+        callArgs['rowNum'] = self.shape[0]
+        callArgs['colNum'] = self.shape[1]
+
+        if row_labels == None: callArgs['row_labels'] = self.row_labels
+        if col_labels == None: callArgs['col_labels'] = self.col_labels
+
+        # TODO: decide on naming convention
+        try:
+            from utilities import graph
+        except:
+            from Utilities import graph
+
+        gHandleList = graph.createPlateLayout(**callArgs)
+
+        well_ids = to_list(well_ids)
+
+        for row, row_label in enumerate(self.row_labels):
+            for col, col_label in enumerate(self.col_labels):
+                if well_ids and self.wells[col_label][row_label].ID not in well_ids:
+                    break
+
+                ax = gHandleList[1][row][col]
+                sca(ax) # sets the current axis
+
+                #self.wells[col_label][row_label].plot(func, ax) # ??
+                if applyto == 'sample':
+                    func(self.wells[col_label][row_label], ax) # reminder: pandas row/col order is reversed
+                elif applyto == 'data':
+                    data = self.wells[col_label][row_label].get_data()
+                    if data is not None:
+                        func(data, ax)
+                else:
+                    raise ValueError, 'Encountered unsupported value {} for applyto paramter.'.format(applyto)
+
+        sca(gHandleList[0]) # sets to the main axis -- more intuitive
+        return gHandleList
 
 if __name__ == '__main__':
     pass
