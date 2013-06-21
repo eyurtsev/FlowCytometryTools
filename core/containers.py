@@ -5,6 +5,7 @@ Created on Jun 14, 2013
 '''
 from fcm import loadFCS
 from bases import BaseSample, BasePlate, to_list
+import graph
 
 class FCSample(BaseSample):
     '''
@@ -43,7 +44,8 @@ class FCSample(BaseSample):
             return self.get_metadata('src')[0]
         except:
             raise Exception("The keyword 'src' does not exist in the following FCS file: {}".format(self.datafile))
-    def plotFCM(self, channel_names, transform=(None, None), plot2d_type='dot2d', **kwargs):
+
+    def plot(self, channel_names, transform=(None, None), plot2d_type='dot2d', **kwargs):
         '''
         Plots the flow cytometry data associated with the sample on the current axis.
         Follow with a call to matplotlibs show() in order to see the plot.
@@ -60,14 +62,17 @@ class FCSample(BaseSample):
             each element is set to None or 'logicle'
             if 'logicle' then channel data is transformed with logicle transformation
 
+
         plot2d_type : 'dot2d', 'hist2d'
 
         Returns
         -------
         None: if no data is loaded
         gHandle: reference to axis
+
+
+        TODO: fix default value of transform... need cycling function?
         '''
-        import graph
         data = self.get_data()
         if data is None:
             return None
@@ -81,7 +86,24 @@ class FCPlate(BasePlate):
     '''
     _sample_class = FCSample
 
-        
+    def plot(self, channel_names, transform=(None, None), plot2d_type='dot2d', grid_plot_kwargs={}, **kwargs):
+        """
+        For details see documentation for FCSample.plot
+        Use grid_plot_kwargs to pass keyword arguments to the grid_plot function.
+        (For options see grid_plot documentation)
+
+
+        Returns
+        -------
+        gHandleList: list
+            gHandleList[0] -> reference to main axis
+            gHandleList[1] -> a list of lists
+                example: gHandleList[1][0][2] returns the subplot in row 0 and column 2
+        """
+        def plotSampleDataFunction(data):
+            return graph.plotFCM(data, channel_names, transform=transform, plot2d_type=plot2d_type, **kwargs)
+        return self.grid_plot(plotSampleDataFunction, **grid_plot_kwargs)
+
 if __name__ == '__main__':
     datadir = '../tests/data/'
 #     print get_files(datadir)
