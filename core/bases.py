@@ -390,7 +390,7 @@ class BasePlate(BaseObject):
         self.apply(func, fields, 'sample', noneval, well_ids)
 
 
-    def plot(self, func, applyto='data', well_ids=None, row_labels=None, col_labels=None,
+    def grid_plot(self, func, applyto='data', well_ids=None, row_labels=None, col_labels=None,
                 xaxislim=None, yaxislim=None,
                 row_label_xoffset=-0.1, col_label_yoffset=-0.3,
                 hide_tick_labels=True, hide_tick_lines=True,
@@ -407,8 +407,8 @@ class BasePlate(BaseObject):
         Parameters
         ----------
         func : dict
-            Each func value is a callable that accepts a Sample
-            object, and an axis reference and plots on the current axis.
+            Each func is a callable that accepts a Sample
+            object (with an optional axis reference) and plots on the current axis.
             return values from func are ignored
             NOTE: if using applyto='sample', the function
             when querying for data should make sure that the data
@@ -445,10 +445,7 @@ class BasePlate(BaseObject):
         '''
         # Acquire call arguments to be passed to create plate layout
         callArgs = locals().copy() # This statement must remain first. The copy is just defensive.
-        callArgs.pop('self') # self does not exist in createPlateLayout
-        callArgs.pop('func') # func does not exist in createPlateLayout
-        callArgs.pop('applyto') # func does not exist in createPlateLayout
-        callArgs.pop('well_ids') # func does not exist in createPlateLayout
+        [callArgs.pop(varname) for varname in  ['self', 'func', 'applyto', 'well_ids']] # pop args
         callArgs['rowNum'] = self.shape[0]
         callArgs['colNum'] = self.shape[1]
 
@@ -473,13 +470,15 @@ class BasePlate(BaseObject):
                 ax = gHandleList[1][row][col]
                 sca(ax) # sets the current axis
 
-                #self.wells[col_label][row_label].plot(func, ax) # ??
                 if applyto == 'sample':
                     func(self.wells[col_label][row_label], ax) # reminder: pandas row/col order is reversed
                 elif applyto == 'data':
                     data = self.wells[col_label][row_label].get_data()
                     if data is not None:
-                        func(data, ax)
+                        if func.func_code.co_argcount == 1:
+                            func(data)
+                        else:
+                            func(data, ax)
                 else:
                     raise ValueError, 'Encountered unsupported value {} for applyto paramter.'.format(applyto)
 
