@@ -43,9 +43,9 @@ class FCSample(BaseSample):
             return self.get_metadata('src')[0]
         except:
             raise Exception("The keyword 'src' does not exist in the following FCS file: {}".format(self.datafile))
-    def plot(self, channel_names, transform=(None, None), plot2d_type='dot2d', **kwargs):
+    def plotFCM(self, channel_names, transform=(None, None), plot2d_type='dot2d', **kwargs):
         '''
-        Plots the sample on the current axis.
+        Plots the flow cytometry data associated with the sample on the current axis.
         Follow with a call to matplotlibs show() in order to see the plot.
 
         Parameters
@@ -64,11 +64,15 @@ class FCSample(BaseSample):
 
         Returns
         -------
+        None: if no data is loaded
         gHandle: reference to axis
         '''
         import graph
-        data = self.read_data()
-        return graph.plotFCM(data, channel_names, transform=transform, plot2d_type=plot2d_type, **kwargs)
+        data = self.get_data()
+        if data is None:
+            return None
+        else:
+            return graph.plotFCM(data, channel_names, transform=transform, plot2d_type=plot2d_type, **kwargs)
 
 
 class FCPlate(BasePlate):
@@ -76,6 +80,7 @@ class FCPlate(BasePlate):
     A class for holding flow cytometry plate data.
     '''
     _sample_class = FCSample
+
         
 if __name__ == '__main__':
     datadir = '../tests/data/'
