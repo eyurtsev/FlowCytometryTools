@@ -61,7 +61,6 @@ def plotFCM(data, channel_names, transform=(None, None), plot2d_type='dot2d', **
     if len(channelIndexList) == 1:
         # 1d so histogram plot
         ch1i = channelIndexList[0]
-        plt.xlabel(channel_names[0])
         pHandle = plt.hist(data[:, ch1i], **kwargs)
 
     elif len(channelIndexList) == 2:
@@ -77,9 +76,6 @@ def plotFCM(data, channel_names, transform=(None, None), plot2d_type='dot2d', **
         else:
             raise Exception('Not a valid plot type')
 
-        # Label the plot
-        plt.xlabel(channel_names[0])
-        plt.ylabel(channel_names[1])
     return pHandle
 
 
