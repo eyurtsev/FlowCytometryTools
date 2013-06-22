@@ -4,7 +4,7 @@ from bases import to_list
 import numpy
 import matplotlib.pylab as plt
 
-def plot_2dhistogram(x, y, bins=200, **kwargs):
+def plot_histogram2d(x, y, bins=200, **kwargs):
     '''
     Plots a 2D histogram given x, y and number of bins
     '''
@@ -70,7 +70,7 @@ def plotFCM(data, channel_names, transform=(None, None), plot2d_type='dot2d', **
         if plot2d_type == 'dot2d':
             pHandle = plt.scatter(x, y, **kwargs)
         elif plot2d_type == 'hist2d':
-            pHandle = plot_2dhistogram(x, y, **kwargs)
+            pHandle = plot_histogram2d(x, y, **kwargs)
         elif plot2d_type =='pseudo with bilinear':
             pHandle = pseudocolor_bilinear_interpolate(x, y, **kwargs)
         else:
