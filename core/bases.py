@@ -13,6 +13,7 @@ except ImportError:
 from pandas import DataFrame as DF
 from numpy import nan, unravel_index
 from pylab import sca
+from utilities.util import get_files
 
 def save(obj, path):
     """
@@ -49,47 +50,6 @@ def load(path):
         return pickle.load(f)
     finally:
         f.close()
-
-
-def get_files(dirname=None, pattern='*.fcs', recursive=True):
-    '''
-    Get all file names within a given directory those names match a
-    given pattern.  
-    
-    Parameters
-    ----------
-    dirname : str | None 
-        Directory containing the datafiles.
-        If None is given, open a dialog box. 
-    pattern : str
-        Return only files whose names match the specified pattern.
-    recursive : bool
-        True : Search recursively within all sub-directories.
-        False : Search only in given directory.
-        
-    Returns
-    -------
-    matches: list
-       List of file names (including full path). 
-    '''
-    import os, fnmatch, glob
-    
-    # get dirname from user if not given
-    if dirname is None:
-        import Tkinter, tkFileDialog
-        root = Tkinter.Tk()
-        dirname = tkFileDialog.askdirectory(parent=root,initialdir=os.curdir,title='Please select a directory')
-        root.destroy()
-    
-    # find all files in dirname that match pattern
-    if recursive: # search subdirs
-        matches = []
-        for root, dirnames, filenames in os.walk(dirname):
-            for filename in fnmatch.filter(filenames, pattern):
-                matches.append(os.path.join(root, filename))        
-    else:
-        matches = glob.glob(dirname + pattern)
-    return matches
 
 
 def to_list(obj):
@@ -237,10 +197,10 @@ class BasePlate(BaseObject):
     '''
     _sample_class = BaseSample
     
-    def __init__(self, ID, 
+    def __init__(self, ID,
                  shape=(8,12), row_labels=None, col_labels=None, 
                  datafiles=None, datadir=None, 
-                 pattern='*', recursive=True):
+                 pattern='*', recursive=False):
         '''
         Constructor
         
