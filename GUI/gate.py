@@ -17,6 +17,11 @@ from FlowCytometryTools import plotFCM
 def euclid_distance((x1, y1), (x2, y2)):
     return numpy.sqrt((x1-x2)**2 + (y1 - y2)**2)
 
+
+def debugging_print(mystr, quiet=True):
+    if not quiet:
+        print(mystr)
+
 ###################
 # DEFINITIONS 
 ###################
@@ -80,23 +85,13 @@ class Filter(object):
         self.fig = gateKeeper.fig
         self.ax = gateKeeper.ax
         self.connect()
-        print 'Just created a new gate: ' + str(self)
+        debugging_print('Just created a new gate: ' + str(self))
 
     def __repr__(self):
-        return "{} ({}, {}, {})".format(self.__class__, self.vert, self.channels, self.name)
+        return "{0} ({1}, {2}, {3})".format(self.__class__, self.vert, self.channels, self.name)
 
-
-    #def __repr__(self):
-        #return "{} ({}, {}, {}, {})".format(self.__class__, self.vert, self.channels, self.name, self.state)
-
-    #def __str__(self):
-        #return "<{} ({}) on {}>".format(self.__class__, self.name, self.channels)
-
-    # Used for debugging
     def __str__(self):
         return self.__repr__()
-    #def __str__(self):
-        #return "<{} ({}) on {} state {}>".format(self.__class__, self.name, self.channels, self.state)
 
     def set_state(self, state):
         self.state = state
@@ -117,20 +112,20 @@ class Filter(object):
                 self.fig.canvas.mpl_disconnect(cid)
 
     def on_mouse_motion(self, event):
-        print 'on_mouse_motion: not defined'
+        debugging_print('on_mouse_motion: not defined')
 
     def on_release(self, event):
         'on release we reset the press data'
-        print 'on_release: not defined'
+        debugging_print('on_release: not defined')
 
     def on_mouse_pick(self, event):
         util.raiseNotDefined()
 
     def on_press(self, event):
-        print 'on_press: not defined'
+        debugging_print('on_press: not defined')
 
     def on_keyboard_press(self, event):
-        print 'on_keyboard_press: not defined'
+        debugging_print('on_keyboard_press: not defined')
 
     def get_control_artist(self):
         util.raiseNotDefined('The control artist has not been defined for the given gate.')
@@ -203,8 +198,8 @@ class QuadGate(Filter):
         self.fig.canvas.draw()
 
     def on_press(self, event):
-        print 'Quad Gate. Mouse motion: '
-        print self
+        debugging_print('Quad Gate. Mouse motion: ')
+        debugging_print(self)
         if event.inaxes != self.ax: return
 
         if self.state == 'Active':
@@ -215,9 +210,9 @@ class QuadGate(Filter):
 
 
     def on_mouse_motion(self, event):
-        print 'Quad Gate. Mouse motion: '
-        print self
-        #print self.state
+        debugging_print('Quad Gate. Mouse motion: ')
+        debugging_print(self)
+        #debugging_print(self.state)
         if self.state == 'Moving Vertix':
             self.vert = (event.xdata, event.ydata)
             self.draw()
@@ -292,9 +287,9 @@ class PolygonGate(Filter):
         distancesList = [(euclid_distance(currentCoordinate, thisVertix), thisIndex, thisVertix) for thisIndex, thisVertix in enumerate(self.get_vertices())]
         distancesList.sort(key = lambda x : x[0])
         distance, closestVerticIndex, closestVertixPosition = distancesList[0]
-        print 'Computing Closest'
-        print distancesList[0]
-        print closestVerticIndex
+        debugging_print('Computing Closest')
+        debugging_print(distancesList[0])
+        debugging_print(closestVerticIndex)
         return distance, closestVerticIndex, closestVertixPosition
 
     def add_vertix_to_growing_polygon(self, vertix):
@@ -342,8 +337,8 @@ class PolygonGate(Filter):
 
     def on_press(self, event):
         'on button press we will see if the mouse is over us and store some data'
-        print 'mouse press'
-        print self
+        debugging_print('mouse press')
+        debugging_print(self)
         if event.inaxes != self.ax: return
 
         #if self.state == 'Inactive' and self.gateKeeper.state not in [STATE_GK.START_DRAWING, STATE_GK.KEEP_DRAWING]:
@@ -359,7 +354,7 @@ class PolygonGate(Filter):
                 self.gateKeeper.set_state(STATE_GK.WAITING)
         elif self.state == 'Active':
             if self.contains(event):
-                print('contains the event.')
+                debugging_print('contains the event.')
                 self.info = self.get_closest_vertix((event.xdata, event.ydata))
                 self.set_state('Moving Vertix')
             else:
@@ -369,15 +364,15 @@ class PolygonGate(Filter):
 
     def on_mouse_motion(self, event):
         'on motion we will move the rect if the mouse is over us'
-        print self
+        debugging_print(self)
         if self.state == 'Inactive':
             return
         elif self.state == 'Creating Gate':
-            print 'mouse moving'
+            debugging_print('mouse moving')
             lastVertix = self.vert[-1]
             potentialVertixPosition = (event.xdata, event.ydata)
-            print potentialVertixPosition
-            print lastVertix
+            debugging_print(potentialVertixPosition)
+            debugging_print(lastVertix)
             line_xydata = zip(lastVertix, potentialVertixPosition)
 
             if self.lineToProposedVertix is None:
@@ -477,16 +472,16 @@ class GateKeeper():
 
     def on_mouse_motion(self, event):
         """ Motion events. """
-        print 'Gate Keeper state: ', self.state
+        debugging_print('Gate Keeper state: ', self.state)
         if self.state == STATE_GK.START_DRAWING_QUAD_GATE:
             if self.cursorWidget == None:
                 self.cursorWidget = Cursor(self.ax)
 
     def on_mouse_press(self, event):
         """ Button press events. """
-        print 'Mouse Press. Gate Keeper state: ', self.state
+        debugging_print('Mouse Press. Gate Keeper state: ', self.state)
         if self.state == STATE_GK.WAITING:
-            print 'Selecting gates...'
+            debugging_print('Selecting gates...')
             # Quick and dirty code here. Can optimize
 
             ## Choose gate
@@ -511,10 +506,10 @@ class GateKeeper():
 
                 # Now let's put the active gate on the top layer...
                 self.bring_gate_to_top_layer(thisGate)
-                print 'Gate on top layer is: '
-                print thisGate
+                debugging_print('Gate on top layer is: ')
+                debugging_print(thisGate)
         elif self.state == STATE_GK.START_DRAWING:
-            print 'Creating a polygon gate'
+            debugging_print('Creating a polygon gate')
             self.inactivate_all_gates()
             gate = PolygonGate(vert=None, channels=GateKeeper.current_channels, name='Polygon Gate', gateKeeper=self)
             self.add_gate(gate)
@@ -557,8 +552,8 @@ class GateKeeper():
 
     def show_visible_gates(self):
         for thisGate in GateKeeper.gateList:
-            print thisGate.channels
-            print GateKeeper.current_channels
+            debugging_print(thisGate.channels)
+            debugging_print(GateKeeper.current_channels)
             if thisGate.channels == GateKeeper.current_channels:
                 thisGate.set_visible(True)
             else:
@@ -579,7 +574,7 @@ class GateKeeper():
         if event.key == 'c':
             self.set_state(STATE_GK.START_DRAWING)
         elif event.key == 'w':
-            print GateKeeper.gateList
+            debugging_print(GateKeeper.gateList)
 
     def add_gate(self, gate):
         """ Adds the current gate to the gate list. """
@@ -596,8 +591,8 @@ class GateKeeper():
     def get_active_gate(self):
         for thisGate in GateKeeper.gateList:
             if thisGate.is_active():
-                print 'Active gate is: '
-                print thisGate
+                debugging_print('Active gate is: ')
+                debugging_print(thisGate)
                 return thisGate
 
     def set_state(self, state):
@@ -685,8 +680,8 @@ class GateKeeper():
 
         numDataPoints = len(self.dataxy)
 
-        print 'Data points length'
-        print numDataPoints
+        debugging_print('Data points length')
+        debugging_print(numDataPoints)
 
         if isinstance(gate, PolygonGate):
             facecolors = self.collection.get_facecolors()
