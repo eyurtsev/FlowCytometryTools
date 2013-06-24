@@ -704,6 +704,8 @@ class GateKeeper():
             filepath = dialogs.open_file_dialog('Select an FCS file to load', 'FCS files (*.fcs)|*.fcs')
         if filepath is not None:
             self.data = loadFCS(filepath)
+            if GateKeeper.current_channels == None:
+                GateKeeper.current_channels = self.data.channels[0:2] # Assigns first two channels by default if none have been specified yet.
             self.plot_data()
 
     def load_gates(self, filepath=None):
