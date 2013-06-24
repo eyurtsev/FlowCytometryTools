@@ -68,6 +68,6 @@ def launchGUI(fcs_filepath=None, channel_names=None, gate_path=None):
         return GateKeeper.gateList
 
 if __name__ == '__main__':
-    filename = glob.glob('../tests/data/*.fcs')[0]
-    print launchGUI(filename, channel_names=['B1-A', 'Y2-A'])
-    #launchGUI()
+    #filename = glob.glob('../tests/data/*.fcs')[0]
+    #print launchGUI(filename, channel_names=['B1-A', 'Y2-A'])
+    launchGUI(channel_names=['B1-A', 'Y2-A'])
