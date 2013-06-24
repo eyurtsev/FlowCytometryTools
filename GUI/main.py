@@ -35,15 +35,16 @@ def launchGUI(fcs_filepath=None, channel_names=None, gate_path=None):
 
 
     def list_gates(*args):
-        print 'Gates created\n' + 80*'-'
-        print '\n'.join([str(g) for g in GateKeeper.gateList])
-        #print(GateKeeper.gateList)
+        print('='*80)
+        print('Gates created\n' + 80*'-')
+        print('\n'.join([str(g) for g in GateKeeper.gateList]))
 
     def load_fcs(*args):
         gateKeeper.load_fcs()
 
     def create_poly_gate(*args):
         gateKeeper.set_state(STATE_GK.START_DRAWING)
+
     def create_quad_gate(*args):
         gateKeeper.set_state(STATE_GK.START_DRAWING_QUAD_GATE)
 
@@ -78,5 +79,5 @@ def launchGUI(fcs_filepath=None, channel_names=None, gate_path=None):
 
 if __name__ == '__main__':
     filename = glob.glob('../tests/data/*.fcs')[0]
-    print launchGUI(filename, channel_names=['B1-A', 'Y2-A'])
+    print(launchGUI(filename, channel_names=['B1-A', 'Y2-A']))
     #launchGUI(channel_names=['B1-A', 'Y2-A'])
