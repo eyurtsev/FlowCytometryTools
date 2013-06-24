@@ -418,7 +418,7 @@ class BasePlate(BaseObject):
         except:
             from Utilities import graph
 
-        gHandleList = graph.createPlateLayout(**callArgs)
+        gHandleList = graph.create_plate_layout(**callArgs)
 
         well_ids = to_list(well_ids)
 
