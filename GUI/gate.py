@@ -5,7 +5,7 @@ from matplotlib.widgets import Button, Cursor
 from matplotlib.collections import RegularPolyCollection
 from matplotlib.nxutils import points_inside_poly
 from matplotlib.colors import colorConverter
-from utilities import dialogs
+from GoreUtilities import dialogs
 import numpy
 from fcm import loadFCS
 from FlowCytometryTools import plotFCM
