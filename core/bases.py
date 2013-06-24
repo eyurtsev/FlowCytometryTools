@@ -13,7 +13,7 @@ except ImportError:
 from pandas import DataFrame as DF
 from numpy import nan, unravel_index
 from pylab import sca
-from utilities.util import get_files
+from GoreUtilities.util import get_files
 
 def save(obj, path):
     """

@@ -1,4 +1,4 @@
-from utilities.util import initialize_object_by_folder_grouping
+from GoreUtilities.util import initialize_object_by_folder_grouping
 import os
 
 def build_FCplate_collection(dirname='.', pattern='*.fcs', recursive=True):
