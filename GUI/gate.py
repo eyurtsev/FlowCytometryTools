@@ -82,19 +82,21 @@ class Filter(object):
         self.connect()
         print 'Just created a new gate: ' + str(self)
 
-    #def __repr__(self):
-        #return "{} ({}, {}, {})".format(self.__class__, self.vert, self.channels, self.name)
-
-
     def __repr__(self):
-        return "{} ({}, {}, {}, {})".format(self.__class__, self.vert, self.channels, self.name, self.state)
+        return "{} ({}, {}, {})".format(self.__class__, self.vert, self.channels, self.name)
+
+
+    #def __repr__(self):
+        #return "{} ({}, {}, {}, {})".format(self.__class__, self.vert, self.channels, self.name, self.state)
 
     #def __str__(self):
         #return "<{} ({}) on {}>".format(self.__class__, self.name, self.channels)
 
     # Used for debugging
     def __str__(self):
-        return "<{} ({}) on {} state {}>".format(self.__class__, self.name, self.channels, self.state)
+        return self.__repr__()
+    #def __str__(self):
+        #return "<{} ({}) on {} state {}>".format(self.__class__, self.name, self.channels, self.state)
 
     def set_state(self, state):
         self.state = state
@@ -459,7 +461,7 @@ class GateKeeper():
 
     def connect(self):
         #self.cidrelease = self.fig.canvas.mpl_connect('button_release_event', self.on_release)
-        #self.cidmotion  = self.fig.canvas.mpl_connect('motion_notify_event', self.on_mouse_motion)
+        self.cidmotion  = self.fig.canvas.mpl_connect('motion_notify_event', self.on_mouse_motion)
         self.cidpress   = self.fig.canvas.mpl_connect('button_press_event',  self.on_mouse_press)
         self.cidkey     = self.fig.canvas.mpl_connect('key_press_event',  self.on_keyboard_press)
         self.cidpick    = self.fig.canvas.mpl_connect('pick_event', self.on_mouse_pick)
