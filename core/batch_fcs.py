@@ -4,17 +4,18 @@ import fcm
 from fcm import loadFCS
 import fcm.graphics as graph
 import glob, csv, os, argparse
+import util
 import numpy
+import parsedatetime.parsedatetime as pdt
+import parsedatetime.parsedatetime_consts as pdc
 import datetime, time
-try:
-    import FlyingButterfly.FlyingButterfly as FlyingButterfly
-except:
-    import warnings
-    warnings.warn("Failed to import FlyingButterfly module.\n" + 
-                  "Plotting is not supported.")
 
+from Utilities import graph, util
 from argparse import RawTextHelpFormatter
 
+import fnmatch
+import Tkinter, tkFileDialog
+import time
 
 HEADER_LIST = [ 'Experiment Name', 'Plate Name', 'Specimen Name', 'Well Name', 'Record Date', 'SAMPLE ID', '$OP', 'WELL ID', 'SampleID', 'All Events #Events', 'All Events Time Max', 'CR_CFP #Events' ]
 
@@ -75,7 +76,6 @@ class FCS_TO_CSV():
             self.gateList[thisKey]['#Events'] = numEvents
 
     def parseFilename(self):
-        import util
         basename = os.path.basename(self.filename)
         try:
             self.info['EID'] = float(util.parseFilename(basename, r'EID_(\d+\.\d+|\d+)'))
@@ -95,9 +95,6 @@ class FCS_TO_CSV():
             self.info['Plate Name'] = 'Unknown'
 
     def extractMeta(self):
-        import parsedatetime.parsedatetime as pdt
-        import parsedatetime.parsedatetime_consts as pdc
-        
         keyDict = {'Start Time' : 'btim',
                     'End Time' : 'etim',
                     'WELL ID' : 'src',
@@ -168,7 +165,7 @@ class FCS_TO_CSV():
             plt.xlabel(self.data.channels[self.xINDEX])
             plt.ylabel(self.data.channels[self.yINDEX])
         else:
-            FlyingButterfly.hideAxes(plt.gca())
+            graph.hideAxes(plt.gca())
 
     def getInfo(self):
         return self.info
@@ -191,6 +188,60 @@ def acquireFiles():
     return matches
 
 
+def plotFCSFiles(fileList, gateCoordinates, numPoints=1000, save=False):
+    """
+    Plots FCS files.
+
+    Assumptions:
+        Assumes that the FCS files belong to a single plate.
+
+    Input:
+        fileList : list
+    """
+    if len(fileList) == 0:
+        raise Exception('Found no files matching regular expression : {}'.format(options.filename))
+    if len(fileList) == 1:
+        fileAnalyzed = FCS_TO_CSV(fileList[0], gateCoordinates)
+        fileAnalyzed.plot(numPoints=numPoints)
+        if save:
+            graph.saveFigure(fileList[0], tictoc=True, formats=['.jpg'])
+        plt.show()
+    else:
+        fig = plt.gcf()
+        ax_main = plt.gca()
+        plt.subplots_adjust(hspace=0,wspace=0)#, right=0.9)#, right=0.75)
+        xtick_labels = numpy.arange(12)+1
+        ytick_labels = ['ABCDEFGH'[i] for i in range(8)]
+
+        numRows = 8
+        numCols = 12
+
+        plt.xticks(numpy.linspace(0, 1, numCols+1)+1/2.0/(numCols+1.0), xtick_labels)
+        plt.yticks(numpy.linspace(1, 0, 9)-1/2.0/(numRows+1.0), ytick_labels)
+        plt.xlim(0, 1)
+        plt.ylim(0, 1)
+
+        for filename in fileList:
+            fileAnalyzed = FCS_TO_CSV(filename, gateCoordinates)
+            row = ord(fileAnalyzed.info['WELL ID'][0])-ord('A')
+            col = int(fileAnalyzed.info['WELL ID'][1:])
+            #print fileAnalyzed.info['WELL ID']
+            #print row, col
+            loc = col+row*12
+            #print loc
+            thisAxes = fig.add_subplot(numRows, numCols, col+row*12)
+            plt.ylim(0, 2*10**5)
+            plt.xlim(0, 2*10**5)
+
+            fileAnalyzed.plot(annotate=False, numPoints=numPoints, s=1)
+        mtitle='EID: {EID:n}, PID: {SAMPLE ID:n}\nName: {Plate Name}, Date: {Date}, End Time: {End Time}'.format(**fileAnalyzed.getInfo())
+        plt.suptitle(mtitle)
+
+        if save:
+            graph.saveFigure(fileAnalyzed.info['Plate Name'], tictoc=True, formats=['.jpg'])
+        plt.show()
+
+
 def main(options):
     #print 'Options passed: {}'.format(options)
     print os.curdir
@@ -204,48 +255,7 @@ def main(options):
     gateCoordinates = options.gate_coordinates
 
     if options.plot:
-        if len(fileList) == 0:
-            raise Exception('Found no files matching regular expression : {}'.format(options.filename))
-        if len(fileList) == 1:
-            fileAnalyzed = FCS_TO_CSV(fileList[0], gateCoordinates)
-            fileAnalyzed.plot()
-            if options.save:
-                FlyingButterfly.saveFigure(fileList[0], tictoc=True, formats=['.jpg'])
-            plt.show()
-        else:
-            fig = plt.gcf()
-            ax_main = plt.gca()
-            plt.subplots_adjust(hspace=0,wspace=0)#, right=0.9)#, right=0.75)
-            xtick_labels = numpy.arange(12)+1
-            ytick_labels = ['ABCDEFGH'[i] for i in range(8)]
-
-            numRows = 8
-            numCols = 12
-
-            plt.xticks(numpy.linspace(0, 1, numCols+1)+1/2.0/(numCols+1.0), xtick_labels)
-            plt.yticks(numpy.linspace(1, 0, 9)-1/2.0/(numRows+1.0), ytick_labels)
-            plt.xlim(0, 1)
-            plt.ylim(0, 1)
-
-            for filename in fileList:
-                fileAnalyzed = FCS_TO_CSV(filename, gateCoordinates)
-                row = ord(fileAnalyzed.info['WELL ID'][0])-ord('A')
-                col = int(fileAnalyzed.info['WELL ID'][1:])
-                #print fileAnalyzed.info['WELL ID']
-                #print row, col
-                loc = col+row*12
-                #print loc
-                thisAxes = fig.add_subplot(numRows, numCols, col+row*12)
-                plt.ylim(0, 2*10**5)
-                plt.xlim(0, 2*10**5)
-
-                fileAnalyzed.plot(annotate=False, s=1)
-            mtitle='EID: {EID:n}, PID: {SAMPLE ID:n}\nName: {Plate Name}, Date: {Date}, End Time: {End Time}'.format(**fileAnalyzed.getInfo())
-            plt.suptitle(mtitle)
-
-            if options.save:
-                FlyingButterfly.saveFigure(fileAnalyzed.info['Plate Name'], tictoc=True, formats=['.jpg'])
-            plt.show()
+        plotFCSFiles(fileList, gateCoordinates, numPoints=options.num_points, save=options.save)
 
     elif options.analyze:
         print 'analyzing'
@@ -269,22 +279,21 @@ def main(options):
                         print('{:.2f}% complete'.format(index * 1.0 / len(fileList)*100.0))
             toc = time.time()
 
-            print('Process took {}'.format(toc-tic))
+            print('This script took {} seconds to run.'.format(toc-tic))
 
-        #for filename in fileList:
-            #plt.close()
-            #fileAnalyzed = FCS_TO_CSV(filename, gateCoordinates)
-            #fileAnalyzed.plot()
-            #FlyingButterfly.saveFigure(filename, formats=['.png'])
-
-def parser():
-    examples = {'e1' : '\tTo plot all the fcs files in the directory sample_data: \n\t\tpython batch_fcs.py -f sample_data/*.fcs -p',
-                'e2' : '\tTo plot all the fcs files in the directory sample_data and save to file: \n\t\tpython batch_fcs.py -f sample_data/*.fcs -p -s',
-                'e3' : '\tTo analyze and save all the fcs files in the directory sample_data to file: \n\t\tpython batch_fcs.py -f sample_data/*.fcs -a -o output.csv',
-                'e4' : '\tTo analyze and save all the fcs files within a selectable subdirectory (brings out an interface): \n\t\tpython batch_fcs.py -a -o output.csv',
-            }
-
-    epilog = 'Examples of use:\n{e1}\n{e2}\n{e3}\n{e4}'.format(**examples)
+def parseInput():
+    """
+    Examples of use:
+    To plot all the fcs files in the directory sample_data:
+		python batch_fcs.py -f sample_data/*.fcs -p',
+    To plot all the fcs files in the directory sample_data and save to file:
+		python batch_fcs.py -f sample_data/*.fcs -p -s',
+    To analyze and save all the fcs files in the directory sample_data to file:
+		python batch_fcs.py -f sample_data/*.fcs -a -o output.csv',
+    To analyze and save all the fcs files within a selectable subdirectory (brings out an interface):
+		python batch_fcs.py -a -o output.csv',
+    """
+    epilog = parseInput.__doc__
 
     parser = argparse.ArgumentParser(epilog=epilog, formatter_class=RawTextHelpFormatter)
 
@@ -305,5 +314,5 @@ def parser():
     return parser.parse_args()
 
 if __name__ == '__main__':
-    pArgs = parser()
+    pArgs = parseInput()
     main(pArgs)
