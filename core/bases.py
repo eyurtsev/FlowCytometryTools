@@ -414,9 +414,9 @@ class BasePlate(BaseObject):
 
         # TODO: decide on naming convention
         try:
-            from utilities import graph
+            from GoreUtilities import graph
         except:
-            from Utilities import graph
+            from GoreUtilities import graph
 
         gHandleList = graph.create_plate_layout(**callArgs)
 
