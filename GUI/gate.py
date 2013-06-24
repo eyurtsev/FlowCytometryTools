@@ -459,7 +459,7 @@ class GateKeeper():
 
     def connect(self):
         #self.cidrelease = self.fig.canvas.mpl_connect('button_release_event', self.on_release)
-        self.cidmotion  = self.fig.canvas.mpl_connect('motion_notify_event', self.on_mouse_motion)
+        #self.cidmotion  = self.fig.canvas.mpl_connect('motion_notify_event', self.on_mouse_motion)
         self.cidpress   = self.fig.canvas.mpl_connect('button_press_event',  self.on_mouse_press)
         self.cidkey     = self.fig.canvas.mpl_connect('key_press_event',  self.on_keyboard_press)
         self.cidpick    = self.fig.canvas.mpl_connect('pick_event', self.on_mouse_pick)

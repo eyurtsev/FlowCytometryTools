@@ -30,8 +30,8 @@ def launchGUI(fcs_filepath=None, channel_names=None, gate_path=None):
     ### Create Buttons ###
     ######################
 
-    buttonSizes = [0.05, 0.05, 0.12, 0.15]
-    buttonSpacing = 0.12
+    buttonSpacing = 0.15
+    buttonSizes = [0.05, 0.05, buttonSpacing, 0.15]
 
 
     def list_gates(*args):
@@ -47,7 +47,7 @@ def launchGUI(fcs_filepath=None, channel_names=None, gate_path=None):
             #{'Label' : 'Save Current\nGates to File',     'Button Location' : buttonSizes, 'event': lambda do : gateKeeper.save_gates('Gate File (*.xml)|*.xml')},
             {'Label' : 'List Gates',                      'Button Location' : buttonSizes, 'event': list_gates},
             {'Label' : 'Polygon Gate',                    'Button Location' : buttonSizes, 'event': lambda do : gateKeeper.set_state(STATE_GK.START_DRAWING)},
-            {'Label' : 'Quad Gate',                       'Button Location' : buttonSizes, 'event': lambda do : gateKeeper.set_state(STATE_GK.START_DRAWING_QUAD_GATE)},
+            #{'Label' : 'Quad Gate',                       'Button Location' : buttonSizes, 'event': lambda do : gateKeeper.set_state(STATE_GK.START_DRAWING_QUAD_GATE)},
             {'Label' : 'Delete Gate',                     'Button Location' : buttonSizes, 'event': lambda do : gateKeeper.set_state(STATE_GK.DELETE_GATE)},
             {'Label' : 'Quit',                            'Button Location' : buttonSizes, 'event': lambda do : pl.close()}]
 
