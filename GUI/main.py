@@ -31,25 +31,32 @@ def launchGUI(fcs_filepath=None, channel_names=None, gate_path=None):
     ######################
 
     buttonSpacing = 0.15
-    buttonSizes = [0.05, 0.05, buttonSpacing, 0.15]
+    buttonSizes = [0.05, 0.05, buttonSpacing-0.03, 0.15]
 
 
     def list_gates(*args):
-        print(GateKeeper.gateList)
+        print 'Gates created\n' + 80*'-'
+        print '\n'.join([str(g) for g in GateKeeper.gateList])
+        #print(GateKeeper.gateList)
 
     def load_fcs(*args):
         gateKeeper.load_fcs()
 
+    def create_poly_gate(*args):
+        gateKeeper.set_state(STATE_GK.START_DRAWING)
+    def create_quad_gate(*args):
+        gateKeeper.set_state(STATE_GK.START_DRAWING_QUAD_GATE)
 
     buttonList = [
             {'Label' : 'Load FCS\nFile',                  'Button Location' : buttonSizes, 'event': load_fcs},
             #{'Label' : 'Load Gates\nfrom File',           'Button Location' : buttonSizes, 'event': lambda do : gateKeeper.load_gates('Choose a gates file', '*.xml')},
             #{'Label' : 'Save Current\nGates to File',     'Button Location' : buttonSizes, 'event': lambda do : gateKeeper.save_gates('Gate File (*.xml)|*.xml')},
             {'Label' : 'List Gates',                      'Button Location' : buttonSizes, 'event': list_gates},
-            {'Label' : 'Polygon Gate',                    'Button Location' : buttonSizes, 'event': lambda do : gateKeeper.set_state(STATE_GK.START_DRAWING)},
-            #{'Label' : 'Quad Gate',                       'Button Location' : buttonSizes, 'event': lambda do : gateKeeper.set_state(STATE_GK.START_DRAWING_QUAD_GATE)},
+            {'Label' : 'Polygon Gate',                    'Button Location' : buttonSizes, 'event': create_poly_gate},
+            {'Label' : 'Quad Gate',                       'Button Location' : buttonSizes, 'event': create_quad_gate},
             {'Label' : 'Delete Gate',                     'Button Location' : buttonSizes, 'event': lambda do : gateKeeper.set_state(STATE_GK.DELETE_GATE)},
-            {'Label' : 'Quit',                            'Button Location' : buttonSizes, 'event': lambda do : pl.close()}]
+            #{'Label' : 'Quit',                            'Button Location' : buttonSizes, 'event': lambda do : pl.close()}]
+            ]
 
     for thisIndex, thisButton in enumerate(buttonList):
         thisButton['Button Location'][0] = 0.05 + thisIndex * buttonSpacing
@@ -58,6 +65,8 @@ def launchGUI(fcs_filepath=None, channel_names=None, gate_path=None):
         thisButton['Reference'].on_clicked(thisButton['event'])
 
     GateKeeper.current_channels = channel_names
+
+    pl.sca(ax)
 
     if fcs_filepath is not None:
         gateKeeper.load_fcs(fcs_filepath)
@@ -68,6 +77,6 @@ def launchGUI(fcs_filepath=None, channel_names=None, gate_path=None):
         return GateKeeper.gateList
 
 if __name__ == '__main__':
-    #filename = glob.glob('../tests/data/*.fcs')[0]
-    #print launchGUI(filename, channel_names=['B1-A', 'Y2-A'])
-    launchGUI(channel_names=['B1-A', 'Y2-A'])
+    filename = glob.glob('../tests/data/*.fcs')[0]
+    print launchGUI(filename, channel_names=['B1-A', 'Y2-A'])
+    #launchGUI(channel_names=['B1-A', 'Y2-A'])
