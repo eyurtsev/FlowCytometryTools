@@ -1,11 +1,10 @@
 #!/usr/bin/env python
 import pylab as pl
-import util
 from matplotlib.widgets import Button, Cursor
 from matplotlib.collections import RegularPolyCollection
 from matplotlib.nxutils import points_inside_poly
 from matplotlib.colors import colorConverter
-from GoreUtilities import dialogs
+from GoreUtilities import dialogs, util
 import numpy
 from fcm import loadFCS
 from FlowCytometryTools import plotFCM
