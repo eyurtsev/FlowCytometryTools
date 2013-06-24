@@ -6,26 +6,17 @@ import fcm.graphics as graph
 import glob, csv, os, argparse
 import util
 import numpy
-import parsedatetime.parsedatetime as pdt
-import parsedatetime.parsedatetime_consts as pdc
 import datetime, time
 
 from Utilities import graph, util
 from argparse import RawTextHelpFormatter
 
-import fnmatch
-import Tkinter, tkFileDialog
 import time
-
-HEADER_LIST = [ 'Experiment Name', 'Plate Name', 'Specimen Name', 'Well Name', 'Record Date', 'SAMPLE ID', '$OP', 'WELL ID', 'SampleID', 'All Events #Events', 'All Events Time Max', 'CR_CFP #Events' ]
 
 class FCS_TO_CSV():
     def __init__(self, filename, gateCoordinates=None):
         self.filename = filename
         self.info = {}
-        #print '-'
-        #print filename
-        #print '-'
 
         self.gateCoordinates = gateCoordinates
 
@@ -112,17 +103,17 @@ class FCS_TO_CSV():
         if self.info['SAMPLE ID'] == numpy.nan: # Thist must be called after parseFilename has been called
             self.info['SAMPLE ID'] = self.info['cells']
 
-        c = pdc.Constants()
-        p = pdt.Calendar(c)
+        #c = pdc.Constants()
+        #p = pdt.Calendar(c)
 
         #date=datetime.datetime(*p.parse(self.info['Date'] + ' ' + self.info['Start Time'])[0][:6]) # Not sure if this code is correct
         #self.info['Time Stamp'] = time.mktime(date.timetuple()) # Not sure if this code is correct
         self.info['Record Date'] = self.info['Date'] + ' ' + self.info['Start Time']
 
-        tic = datetime.datetime(*p.parse(self.info['Start Time'])[0][:6])
-        toc = datetime.datetime(*p.parse(self.info['End Time'])[0][:6])
-        time_diff = toc - tic
-        self.info['All Events Time Max'] = time_diff.total_seconds()*100.0
+        #tic = datetime.datetime(*p.parse(self.info['Start Time'])[0][:6])
+        #toc = datetime.datetime(*p.parse(self.info['End Time'])[0][:6])
+        #time_diff = toc - tic
+        self.info['All Events Time Max'] = 0 #time_diff.total_seconds()*100.0
 
     def getOutputHeader(self):
         outputHeader = list(self.info.keys())
