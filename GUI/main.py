@@ -1,36 +1,26 @@
 #!/usr/bin/env python
-import matplotlib.pyplot as plt
 import numpy
-import util
+import matplotlib.pylab as pl
 from matplotlib.widgets import Button
-from matplotlib.collections import RegularPolyCollection
-from matplotlib.nxutils import points_inside_poly
-from matplotlib.colors import colorConverter
-from dialogs import *
 import glob
-import fcm
-from fcm import loadFCS
-from gate import PolygonGate, GateKeeper, STATE_GK
-
+from gate import GateKeeper, STATE_GK
 
 #### KNOWN BUGS
 ### 1. I have an extra vertix somewhere [ should be fixed had to do with moving vertices first / last vertix separately. (strange matplotlib behavior)
 ### 2. It's too slow: coloring too many of the points
 ### 3. create gate -> delete gate -> create gate and cannot move vertix
+### 4. after changing the axis (calling the wx widgets dialog) if the mouse hovers over the matplotlib toolbar (at the bottom) the program crashes.
 
-class DataSet():
-    def __init__(self, data, channelList):
-        self.data = data
-        self.channelList = channelList
+def launchGUI(fcs_filepath=None, channel_names=None, gate_path=None):
+    '''
+        launches the GUI
+    '''
 
-    def getChannelList(self):
-        return self.channelList
+    ######################
+    # Create window
+    ######################
 
-    def getChannelIndex(self, channel):
-        return self.getChannelList().index(channel)
-
-def main():
-    fig = plt.figure()
+    fig = pl.figure()
     fig.canvas.set_window_title('FCS GUI')
     ax = fig.add_axes([0.15, 0.30, 0.7, 0.60])
     #ax = fig.add_subplot(111)
@@ -43,42 +33,41 @@ def main():
     buttonSizes = [0.05, 0.05, 0.12, 0.15]
     buttonSpacing = 0.12
 
+
+    def list_gates(*args):
+        print(GateKeeper.gateList)
+
+    def load_fcs(*args):
+        gateKeeper.load_fcs()
+
+
     buttonList = [
-            {'Label' : 'Load FCS\nFile',                  'Button Location' : buttonSizes, 'event': lambda do : openFile('Choose an FCS file', '*.fcs')},
-            {'Label' : 'Load Gates\nfrom File',           'Button Location' : buttonSizes, 'event':lambda do : openFile('Choose a gates file', '*.xml')},
-            {'Label' : 'Save Current\nGates to File',     'Button Location' : buttonSizes, 'event':lambda do : saveFile('Gate File (*.xml)|*.xml')},
-            {'Label' : 'Polygon Gate',                    'Button Location' : buttonSizes, 'event': lambda do : gateKeeper.setState(STATE_GK.START_DRAWING)},
-            {'Label' : 'Quad Gate',                       'Button Location' : buttonSizes, 'event': lambda do : gateKeeper.setState(STATE_GK.START_DRAWING_QUAD_GATE)},
-            {'Label' : 'Delete Gate',                     'Button Location' : buttonSizes, 'event':lambda do : gateKeeper.setState(STATE_GK.DELETE_GATE)},
-            {'Label' : 'Quit',                            'Button Location' : buttonSizes, 'event':lambda do : plt.close()}]
+            {'Label' : 'Load FCS\nFile',                  'Button Location' : buttonSizes, 'event': load_fcs},
+            #{'Label' : 'Load Gates\nfrom File',           'Button Location' : buttonSizes, 'event': lambda do : gateKeeper.load_gates('Choose a gates file', '*.xml')},
+            #{'Label' : 'Save Current\nGates to File',     'Button Location' : buttonSizes, 'event': lambda do : gateKeeper.save_gates('Gate File (*.xml)|*.xml')},
+            {'Label' : 'List Gates',                      'Button Location' : buttonSizes, 'event': list_gates},
+            {'Label' : 'Polygon Gate',                    'Button Location' : buttonSizes, 'event': lambda do : gateKeeper.set_state(STATE_GK.START_DRAWING)},
+            {'Label' : 'Quad Gate',                       'Button Location' : buttonSizes, 'event': lambda do : gateKeeper.set_state(STATE_GK.START_DRAWING_QUAD_GATE)},
+            {'Label' : 'Delete Gate',                     'Button Location' : buttonSizes, 'event': lambda do : gateKeeper.set_state(STATE_GK.DELETE_GATE)},
+            {'Label' : 'Quit',                            'Button Location' : buttonSizes, 'event': lambda do : pl.close()}]
 
     for thisIndex, thisButton in enumerate(buttonList):
         thisButton['Button Location'][0] = 0.05 + thisIndex * buttonSpacing
-        thisButton['Axes'] = plt.axes(thisButton['Button Location'])
+        thisButton['Axes'] = pl.axes(thisButton['Button Location'])
         thisButton['Reference'] = Button(thisButton['Axes'], thisButton['Label'])
         thisButton['Reference'].on_clicked(thisButton['event'])
 
+    GateKeeper.current_channels = channel_names
 
-    numPoints = 100
-    tt = numpy.linspace(0, 5, numPoints)
+    if fcs_filepath is not None:
+        gateKeeper.load_fcs(fcs_filepath)
 
-    x = numpy.random.random((1, numPoints)).flatten() + tt
-    y = numpy.random.random((1, numPoints)).flatten() - tt
-    z = numpy.sin(x) * y
+    pl.show()
 
-    filename = glob.glob('../sample_data/*.fcs')[0]
-    data = loadFCS(filename)
-    #data = DataSet(data.
-    #print numpy.shape(data)
-
-    #return
-
-    #data = DataSet(numpy.r_['0, 2', x, y, z].T, ['x', 'y', 'z'])
-    gateKeeper.addData(data)
-    gateKeeper.plotData()
-
-
-    plt.show()
+    if len(GateKeeper.gateList) is not 0:
+        return GateKeeper.gateList
 
 if __name__ == '__main__':
-    main()
+    filename = glob.glob('../tests/data/*.fcs')[0]
+    print launchGUI(filename, channel_names=['B1-A', 'Y2-A'])
+    #launchGUI()
