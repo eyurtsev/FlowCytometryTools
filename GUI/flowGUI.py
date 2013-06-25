@@ -77,7 +77,24 @@ def launchGUI(fcs_filepath=None, channel_names=None, gate_path=None):
     if len(GateKeeper.gateList) is not 0:
         return GateKeeper.gateList
 
+def parseInput():
+    """
+    Examples of use:
+        Opens up the specified FCS file with channels showing B1-A and Y2-A
+        python flowGUI.py ../tests/data/EY_2013-05-03_EID_214_PID_1120_Piperacillin_Well_B7.001.fcs -c B1-A Y2-A
+    """
+    import argparse
+    epilog = parseInput.__doc__
+
+    parser = argparse.ArgumentParser(epilog=epilog, formatter_class=argparse.RawTextHelpFormatter)
+    parser.add_argument(metavar="FILE", dest="filename", help='fcs file to open', default=None)
+
+    parser.add_argument("-c", "--channel-names", dest="channel_names", nargs='+', help="channel names to plot on the x and y axis")
+
+    return parser.parse_args()
+
+
+
 if __name__ == '__main__':
-    filename = glob.glob('../tests/data/*.fcs')[0]
-    print(launchGUI(filename, channel_names=['B1-A', 'Y2-A']))
-    #launchGUI(channel_names=['B1-A', 'Y2-A'])
+    pArgs = parseInput()
+    launchGUI(pArgs.filename, pArgs.channel_names)
