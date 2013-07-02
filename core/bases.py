@@ -370,7 +370,7 @@ class BasePlate(BaseObject):
         except:
             from GoreUtilities import graph
 
-        gHandleList = graph.create_plate_layout(**callArgs)
+        gHandleList = graph.create_grid_layout(**callArgs)
 
         well_ids = to_list(well_ids)
 
