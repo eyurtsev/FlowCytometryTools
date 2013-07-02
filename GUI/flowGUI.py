@@ -11,7 +11,7 @@ from gate import GateKeeper, STATE_GK
 ### 3. create gate -> delete gate -> create gate and cannot move vertix
 ### 4. after changing the axis (calling the wx widgets dialog) if the mouse hovers over the matplotlib toolbar (at the bottom) the program crashes.
 
-def launchGUI(fcs_filepath=None, channel_names=None, gate_path=None):
+def sample_viewer(fcs_filepath=None, channel_names=None, gate_path=None):
     '''
         launches the GUI
     '''
@@ -97,4 +97,4 @@ def parseInput():
 
 if __name__ == '__main__':
     pArgs = parseInput()
-    launchGUI(pArgs.filename, pArgs.channel_names)
+    sample_viewer(pArgs.filename, pArgs.channel_names)
