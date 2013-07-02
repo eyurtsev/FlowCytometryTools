@@ -4,7 +4,8 @@ Created on Jun 14, 2013
 @author: jonathanfriedman
 '''
 from fcm import loadFCS
-from bases import BaseSample, BasePlate, to_list
+from bases import BaseSample, BasePlate
+from GoreUtilities.util import to_list
 import graph
 
 class FCSample(BaseSample):
@@ -78,6 +79,23 @@ class FCSample(BaseSample):
             return None
         else:
             return graph.plotFCM(data, channel_names, transform=transform, plot2d_type=plot2d_type, **kwargs)
+
+    def view(self, channel_names=None):
+        '''
+        Loads the current FCS sample viewer
+
+        Parameters
+        ----------
+        channel_names : str | list of str
+            Names of channels to load by default
+
+        Returns
+        -------
+
+        Output from sample_viewer
+        '''
+        from FlowCytometryTools import flowGUI
+        return flowGUI.sample_viewer(self.datafile, channel_names=channel_names)
 
 
 class FCPlate(BasePlate):
