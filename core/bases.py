@@ -5,67 +5,11 @@ Created on Jun 18, 2013
 
 Base objects for sample and plate objects.
 '''
-try:
-    import cPickle as pickle
-except ImportError:
-    import pickle
-
 from pandas import DataFrame as DF
 from numpy import nan, unravel_index
 from pylab import sca
-from GoreUtilities.util import get_files
+from GoreUtilities.util import get_files, save, load, to_list
 
-def save(obj, path):
-    """
-    Pickle (serialize) object to input file path
-
-    Parameters
-    ----------
-    obj : any object
-    path : string
-        File path
-    """
-    with open(path, 'wb') as f:
-        try:
-            pickle.dump(obj, f, protocol=pickle.HIGHEST_PROTOCOL)
-        except:
-            print('Pickling failed for object {}, path {}'.format(obj, path))
-
-
-def load(path):
-    """
-    Load pickled object from the specified file path.
-
-    Parameters
-    ----------
-    path : string
-        File path
-
-    Returns
-    -------
-    unpickled : type of object stored in file
-    """
-    f = open(path, 'rb')
-    try:
-        return pickle.load(f)
-    finally:
-        f.close()
-
-
-def to_list(obj):
-    '''
-    Convert an object to a list if it is not already 
-    a non-string iterable.
-    '''
-    if obj is None:
-        return obj
-    if isinstance(obj, basestring):
-        l = [obj]
-    elif not hasattr(obj, '__iter__'):
-        l = list(obj)
-    else:
-        l = obj
-    return l
 
 class BaseObject(object):
     '''
@@ -332,7 +276,15 @@ class BasePlate(BaseObject):
                     return noneval
                 else:
                     return [noneval]*nout
-            return well.apply(func, applyto, noneval, nout, keepdata)
+            result = well.apply(func, applyto, noneval, nout, keepdata)
+            if result is not None:
+                return result
+            else:
+                if nout==1:
+                    return noneval
+                else:
+                    return [noneval]*nout
+
                
         result = self.wells.applymap(applied_func)  
         
