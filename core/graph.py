@@ -7,17 +7,33 @@ from bases import to_list
 import numpy
 import pylab as pl
 import matplotlib
+from fcm import PolyGate, QuadGate
 
 def plot_histogram2d(x, y, bins=200, ax=None, **kwargs):
     '''
     Plots a 2D histogram given x, y and number of bins
+
     Parameters
     ----------
-    x
-    y
-    bins
-    ax
-    norm
+    x : array
+        array of x coordinates
+    y : array
+        array of y coordinates
+    bins : int
+        number of bins to break the data into
+    ax : reference to axis
+        axis to plot on
+    kwargs : kwargs
+        passed to pcolormesh
+
+    Plotting Defaults
+    -----------------
+        kwargs.setdefault('cmap', pl.cm.Reds)
+        kwargs.setdefault('norm', matplotlib.colors.LogNorm())
+
+    Returns
+    -------
+    Reference to plot
     '''
     if ax == None:
         ax = pl.gca()
@@ -105,19 +121,17 @@ def plotFCM(data, channel_names, transform=(None, None), plot2d_type='dot2d', ax
     return pHandle
 
 
-def plot_gate(gate_type, channel_names, coordinates, gate_name=None):
+def plot_gate(gate_type, coordinates, ax=None, gate_name=None, *args, **kwargs):
     '''
-    TODO: Implement
     Plots a gate on the current axis.
+
+    TODO: Implement Interval Gate
+    TODO: This function should not rescale (probably)
 
     Parameters
     ----------
     gate_type : 'quad', 'polygon', 'interval', 'threshold'
         specifies the shape of the gate
-    channel_names : str | iterable of str
-        name (names) channels to plot.
-        given a single channel plots a histogram
-        given two channels produces a 2d plot
     coordinates : tuple
         For:
             'quad'     gate : a tuple of two numbers (x, y)
@@ -135,13 +149,47 @@ def plot_gate(gate_type, channel_names, coordinates, gate_name=None):
     -------
     reference to plot
     '''
-    pass
+    if gate_type == 'quad':
+        return plot_quad_gate(coordinates[0], coordinates[1], ax=ax, *args, **kwargs)
+    elif gate_type == 'polygon':
+        return plot_polygon_gate(coordinates, ax=ax, *args, **kwargs)
 
-def plot_quad_gate(x, y, *args, **kwargs):
-    ''' 
+
+def plot_quad_gate(x, y, ax=None, *args, **kwargs):
+    '''
     Plots a quad gate.
     vertical line at x
     horizontal line at y
+    TODO: This function should not rescale (probably)
     '''
+    if ax == None:
+        ax = pl.gca()
+    kwargs.setdefault('color', 'black')
     pl.axvline(x, *args, **kwargs)
     pl.axhline(y, *args, **kwargs)
+
+def plot_polygon_gate(coordinateList, ax=None, *args, **kwargs):
+    '''
+    Plots a polygon gate on the current axis.
+    (Just calls the polygon function)
+    TODO: This function should not rescale (probably)
+
+    Parameters
+    ----------
+    coordinates : a list of 3 or more 2-tuples
+            i.e. [(x1, y1), (x2, y2), (x3, y3), ...]
+
+    *args, **kwargs are passed to the Polygon function
+
+    Returns
+    -------
+    Created artist
+    '''
+    if ax == None:
+        ax = pl.gca()
+
+    kwargs.setdefault('fill', False)
+    kwargs.setdefault('color', 'black')
+    poly = pl.Polygon(coordinateList, *args, **kwargs)
+    return ax.add_artist(poly)
+
