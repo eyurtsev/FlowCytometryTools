@@ -1,1 +1,13 @@
 * For each sample / measurement, add reference to parent collection / plate
+* Should there be an extracted dictionary for each well? (the apply call for a sample is different than the apply for a plate)
+
+* There may be issues with logicle transformation currently. plotting may cause the transformation to be applied twice!
+
+
+What would be nice to have:
+
+1. FCM data be addressable by channel names instead of indexes
+    this could help avoid really non-obvious problems when fcs files have been collected with different settings
+    and user does not use name_to_index attribute
+
+2. function used with apply to return a dictionary instead of just the values... ??

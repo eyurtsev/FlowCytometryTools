@@ -3,7 +3,7 @@
 Modules contains graphing routines common for flow cytometry files.
 """
 from fcm.graphics.util import bilinear_interpolate
-from bases import to_list
+from GoreUtilities.util import to_list
 import numpy
 import pylab as pl
 import matplotlib
