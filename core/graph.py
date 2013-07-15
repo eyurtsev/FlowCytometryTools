@@ -61,7 +61,9 @@ def pseudocolor_bilinear_interpolate(x, y, edgecolors='none', ax=None, **kwargs)
     z = bilinear_interpolate(x, y)
     return ax.scatter(x, y, c=z, s=s, edgecolors=edgecolors, **kwargs)
 
-def plotFCM(data, channel_names, transform=(None, None), plot2d_type='dot2d', ax=None, **kwargs):
+def plotFCM(data, channel_names, transform=(None, None), plot2d_type='dot2d', ax=None,
+                autolabel=True, xlabel_kwargs={}, ylabel_kwargs={},
+                **kwargs):
     '''
     Plots the sample on the current axis.
     Follow with a call to matplotlibs show() in order to see the plot.
@@ -80,6 +82,9 @@ def plotFCM(data, channel_names, transform=(None, None), plot2d_type='dot2d', ax
 
     plot2d_type : 'dot2d', 'hist2d', 'pseudo with bilinear'
 
+    autolabel : False | True
+        If True the x and y axes are labeled automatically.
+
     ax : reference | None
         specifies which axis to plot on
 
@@ -88,6 +93,9 @@ def plotFCM(data, channel_names, transform=(None, None), plot2d_type='dot2d', ax
     pHandle: reference to plot
     '''
     if ax == None: ax = pl.gca()
+
+    xlabel_kwargs.setdefault('size', 14)
+    ylabel_kwargs.setdefault('size', 14)
 
     # Find indexes of the channels
     channel_names = to_list(channel_names)
@@ -105,6 +113,7 @@ def plotFCM(data, channel_names, transform=(None, None), plot2d_type='dot2d', ax
         ch1i = channelIndexList[0]
         pHandle = ax.hist(data[:, ch1i], **kwargs)
 
+
     elif len(channelIndexList) == 2:
         x = data[:, channelIndexList[0]] # index of first channels name
         y = data[:, channelIndexList[1]] # index of seconds channels name
@@ -116,10 +125,14 @@ def plotFCM(data, channel_names, transform=(None, None), plot2d_type='dot2d', ax
         elif plot2d_type == 'pseudo with bilinear':
             pHandle = pseudocolor_bilinear_interpolate(x, y, ax=ax, **kwargs)
         else:
-            raise Exception('Not a valid plot type')
+            raise Exception("Not a valid plot type. Must be 'dot2', 'hist2d' or 'pseudo with bilinear'")
+
+    if autolabel:
+        y_label_text = 'Counts' if len(channelIndexList) == 1 else channel_names[1]
+        ax.set_xlabel(channel_names[0], **xlabel_kwargs)
+        ax.set_ylabel(y_label_text, **ylabel_kwargs)
 
     return pHandle
-
 
 def plot_gate(gate_type, coordinates, ax=None, gate_name=None, *args, **kwargs):
     '''
@@ -153,7 +166,6 @@ def plot_gate(gate_type, coordinates, ax=None, gate_name=None, *args, **kwargs):
         return plot_quad_gate(coordinates[0], coordinates[1], ax=ax, *args, **kwargs)
     elif gate_type == 'polygon':
         return plot_polygon_gate(coordinates, ax=ax, *args, **kwargs)
-
 
 def plot_quad_gate(x, y, ax=None, *args, **kwargs):
     '''
