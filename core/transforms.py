@@ -4,8 +4,12 @@ The forward transformations all refer to transforming the
 raw data off the machine (i.e. a log transformation is the forword
 and an exponential is its inverse).
 
+References:
+Bagwell. Cytometry Part A, 2005.
+Parks, Roederer, and Moore. Cytometry Part A, 2006.
+Trotter, Joseph. In Current Protocols in Cytometry. John Wiley & Sons, Inc., 2001.
+
 TODO:
-- Add references to papers to module and specific functions (including numbers of specific eqs.)
 - Add scale parameters (r,d) to glog (if needed?)
 - Implement logicle transformation.
 '''
