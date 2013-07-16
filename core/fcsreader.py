@@ -11,7 +11,7 @@ try:
     import pandas
     pandas_found = True
 except ImportError:
-    print('You do not have pandas installed, so the loadFCS function can only be used together with numpy.')
+    print('You do not have pandas installed, so the parse_fcs function can only be used together with numpy.')
     pandas_found = False
 except:
     print('Your pandas is improperly configured.')
@@ -195,18 +195,18 @@ class FCS_Parser(object):
         return self._data
 
 
-def loadFCS(path, meta_data_only=False, output_format='pandas', compensate=False):
+def parse_fcs(path, meta_data_only=False, output_format='DataFrame', compensate=False):
     """
-    Loads an FCS file at the location specified by the path.
+    Parse an fcs file at the location specified by the path.
 
     Parameters
     ----------
     path : str
-        Path of FCS file
+        Path of .fcs file
     meta_data_only : bool
-        If True, the loadFCS only returns the meta_data (the TEXT segment of the FCS file)
-    output_format : 'pandas' | 'numpy'
-        If set to 'pandas' the returned
+        If True, the parse_fcs only returns the meta_data (the TEXT segment of the FCS file)
+    output_format : 'DataFrame' | 'ndarray'
+        If set to 'DataFrame' the returned
 
     Returns
     -------
@@ -216,15 +216,15 @@ def loadFCS(path, meta_data_only=False, output_format='pandas', compensate=False
     if meta_data is False:
         a 3-tuple with
             the first element the meta_data (dictionary)
-            the second element the data (in either pandas or numpy format)
+            the second element the data (in either DataFrame or numpy format)
             the third element a tuple containing the names of the channels (only for numpy output)
 
     Examples
     --------
     fname = '../tests/data/EY_2013-05-03_EID_214_PID_1120_Piperacillin_Well_B7.001.fcs'
-    meta = loadFCS(fname, meta_data_only=True)
-    meta, data_pandas = loadFCS(fname, meta_data_only=False, output_format='pandas')
-    meta, data_numpy, channels  = loadFCS(fname, meta_data_only=False, output_format='numpy')
+    meta = parse_fcs(fname, meta_data_only=True)
+    meta, data_pandas = parse_fcs(fname, meta_data_only=False, output_format='DataFrame')
+    meta, data_numpy, channels  = parse_fcs(fname, meta_data_only=False, output_format='ndarray')
     """
     if compensate == True:
         raise_parser_feature_not_implemented('Compensation has not been implemented yet.')
@@ -235,18 +235,18 @@ def loadFCS(path, meta_data_only=False, output_format='pandas', compensate=False
 
     if meta_data_only:
         return meta
-    elif output_format == 'pandas':
+    elif output_format == 'DataFrame':
         """ Constructs pandas DF object """
         if pandas_found == False:
             raise Exception('You do not have pandas installed.')
         data = parsed_FCS.data
         data = pandas.DataFrame(data, columns=parsed_FCS.channel_names)
         return meta, data
-    elif output_format == 'numpy':
+    elif output_format == 'ndarray':
         """ Constructs numpy matrix """
         return meta, parsed_FCS.data, channel_names
     else:
-        raise Exception("The output_format must be either 'numpy' or 'pandas'")
+        raise Exception("The output_format must be either 'ndarray' or 'DataFrame'")
 
 
 
@@ -255,7 +255,7 @@ def loadFCS(path, meta_data_only=False, output_format='pandas', compensate=False
 ###################
 
 def compare_against_fcm():
-    from fcm import loadFCS
+    from fcm import loadFCS as parse_fcs
     print 'Comparing fcm reader and EYs reader'
     import time
     tic = time.time()
@@ -264,7 +264,7 @@ def compare_against_fcm():
 
     for i in range(1):
         x = FCS_Parser(fname).get_data()
-        y = loadFCS(fname, transform=None, auto_comp=False)
+        y = parse_fcs(fname, transform=None, auto_comp=False)
 
 
     #import FlyingButterfly
@@ -286,9 +286,10 @@ if __name__ == '__main__':
     #fname = '../tests/data/AY_2013-06-08_gasperm_ecoli_Well_B1.001.fcs'
     #fname = '../tests/data/AY_2013-06-08_gasperm_ecoli_Well_B2.001.fcs'
     fname = '../tests/data/EY_2013-05-03_EID_214_PID_1120_Piperacillin_Well_B7.001.fcs'
-    meta = loadFCS(fname, meta_data_only=True)
-    meta, data_pandas = loadFCS(fname, meta_data_only=False, output_format='pandas')
-    meta, data_numpy, channels  = loadFCS(fname, meta_data_only=False, output_format='numpy')
+    meta = parse_fcs(fname, meta_data_only=True)
+    meta, data_pandas = parse_fcs(fname, meta_data_only=False, output_format='DataFrame')
+    meta, data_numpy, channels  = parse_fcs(fname, meta_data_only=False, output_format='ndarray')
+    print 'hello'
 
 
 
