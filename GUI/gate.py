@@ -4,7 +4,7 @@ from matplotlib.widgets import Button, Cursor
 from matplotlib.collections import RegularPolyCollection
 from matplotlib.nxutils import points_inside_poly
 from matplotlib.colors import colorConverter
-from GoreUtilities import dialogs, util
+from GoreUtilities import util
 import numpy
 from fcm import loadFCS
 from FlowCytometryTools import plotFCM
@@ -526,6 +526,7 @@ class GateKeeper():
         ''' Function controls the x and y labels. Upon clicking on them the user can change what is plotted on the
             x and y axis.
         '''
+        from GoreUtilities import dialogs
         if event.artist == self.xlabelArtist:
             userchoice = dialogs.select_option_dialog('Select channel for x axis', self.data.channels)
 
@@ -697,6 +698,7 @@ class GateKeeper():
     def load_fcs(self, filepath=None):
         ''' '''
         if filepath is None:
+            from GoreUtilities import dialogs
             filepath = dialogs.open_file_dialog('Select an FCS file to load', 'FCS files (*.fcs)|*.fcs')
         if filepath is not None:
             self.data = loadFCS(filepath)
