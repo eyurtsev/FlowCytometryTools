@@ -142,9 +142,10 @@ class BasePlate(BaseObject):
     _sample_class = BaseSample
     
     def __init__(self, ID,
-                 shape=(8,12), row_labels=None, col_labels=None, 
-                 datafiles=None, datadir=None, 
-                 pattern='*', recursive=False):
+                 shape=(8,12), row_labels=None, col_labels=None,
+                 datafiles=None, datadir=None,
+                 pattern='*.fcs', recursive=False,
+                 parser='name'):
         '''
         Constructor
         
@@ -165,7 +166,7 @@ class BasePlate(BaseObject):
         self.wells_d = {}
         self._make_wells(row_labels, col_labels)
         self.set_datafiles(datafiles, datadir, pattern, recursive)
-        self.assign_datafiles_to_wells() 
+        self.assign_datafiles_to_wells(parser=parser)
     
     def _default_labels(self, axis):
         import string
@@ -194,7 +195,7 @@ class BasePlate(BaseObject):
             i,j = unravel_index(number, self.shape)
             return self.wells.values[i,j].ID
         elif parser == 'read':
-            sample = self._sample_class(datafile)
+            sample = self._sample_class(ID='temporary', datafile=datafile)
             return sample.ID_from_data()
         else:
             raise ValueError,  'Encountered unsupported value "%s" for parser paramter.' %parser 
@@ -217,7 +218,7 @@ class BasePlate(BaseObject):
             wells[well_id].datafile = datafile
                           
     def set_datafiles(self, datafiles=None, datadir=None, 
-                      pattern='*', recursive=True):
+                      pattern='*.fcs', recursive=True):
         '''
         datafiles : str| iterable of str | None
             Datafiles to parse.

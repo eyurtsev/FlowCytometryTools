@@ -119,7 +119,7 @@ class FCPlate(BasePlate):
                 example: gHandleList[1][0][2] returns the subplot in row 0 and column 2
         """
         def plotSampleDataFunction(data):
-            return graph.plotFCM(data, channel_names, transform=transform, plot2d_type=plot2d_type, **kwargs)
+            return graph.plotFCM(data, channel_names, transform=transform, plot2d_type=plot2d_type, autolabel=False, **kwargs)
         return self.grid_plot(plotSampleDataFunction, **grid_plot_kwargs)
 
 if __name__ == '__main__':
