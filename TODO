@@ -11,3 +11,6 @@ What would be nice to have:
     and user does not use name_to_index attribute
 
 2. function used with apply to return a dictionary instead of just the values... ??
+
+3. Print on FCPlate should show loaded data not the underlying DataFrame
+
