@@ -175,10 +175,9 @@ class FCS_Parser(object):
         num_events = text['$TOT'] # Number of events recorded
         num_pars   = text['$PAR'] # Number of parameters recorded
 
-        # TODO: Kill white space in $byteord
-        if text['$BYTEORD'] == '1,2,3,4' or text['$BYTEORD'] == '1,2':
+        if text['$BYTEORD'].strip() == '1,2,3,4' or text['$BYTEORD'].strip() == '1,2':
             endian = '<'
-        elif text['$BYTEORD'] == '4,3,2,1' or text['$BYTEORD'] == '2,1':
+        elif text['$BYTEORD'].strip() == '4,3,2,1' or text['$BYTEORD'].strip() == '2,1':
             endian = '>'
 
         conversion_dict = {'F' : 'f4', 'D' : 'f8'} # matching FCS naming convention with numpy naming convention f4 - 4 byte (32 bit) single precision float
