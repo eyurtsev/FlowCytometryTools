@@ -77,8 +77,11 @@ class FCS_Parser(object):
             header[field] = int(file_handle.read(8))
 
         if header['data start'] == 0 or header['data end'] == 0:
-            raise_parser_feature_not_implemented("""The FCS file is big. The locations of data start and end are located in the TEXT section of the data. However,
+            raise_parser_feature_not_implemented("""The locations of data start and end are located in the TEXT section of the data. However,
             this parser cannot handle this case yet. Please send the sample fcs file to the developer. """)
+
+        if header['analysis start'] != 0:
+            warnings.warn('There appears to be some information in the ANALYSIS segment of file {0}. However, might be unable to read it correctly.'.format(self.path))
 
         self.annotation['header'] = header
 
@@ -105,22 +108,23 @@ class FCS_Parser(object):
 
         raw_text_segments = raw_text[1:-1].split(delimiter) # Using 1:-1 to remove first and last characters which should be reserved for delimiter
         keys, values = raw_text_segments[0::2], raw_text_segments[1::2]
-        text = {str(key).lower() : value for key, value in zip(keys, values)} # Build dictionary
+        text = {key : value for key, value in zip(keys, values)} # Build dictionary
 
         ####
         # Extract channel names and convert some of the channel properties and other fields into numeric data types (from string)
         # Note: do not use regular expressions for manipulations here. Regular expressions are too heavy in terms of computation time.
-        pars = int(text['$par'])
-        if '$p0b' in keys: # Checking whether channel number count starts from 0 or from 1
-            par_number_list = range(0, pars) # Channel number count starts from 0
+        pars = int(text['$PAR'])
+        if '$P0B' in keys: # Checking whether channel number count starts from 0 or from 1
+            self.channel_numbers = range(0, pars) # Channel number count starts from 0
         else:
-            par_number_list = range(1, pars + 1) # Channel numbers start from 1
+            self.channel_numbers = range(1, pars + 1) # Channel numbers start from 1
 
-        self.channel_names = tuple([text['$p{0}n'.format(i)] for i in par_number_list])
+        self.channel_names = tuple([text['$P{0}N'.format(i)] for i in self.channel_numbers])
 
         # Convert some of the fields into integer values
-        keys_encoding_bits = ['$p{0}b'.format(i) for i in par_number_list]
-        add_keys_to_convert_to_int = ['$nextdata', '$par', '$tot']
+        keys_encoding_bits  = ['$P{0}B'.format(i) for i in self.channel_numbers]
+        keys_encoding_range = ['$P{0}R'.format(i) for i in self.channel_numbers]
+        add_keys_to_convert_to_int = ['$NEXTDATA', '$PAR', '$TOT']
 
         keys_to_convert_to_int = keys_encoding_bits + add_keys_to_convert_to_int
 
@@ -144,17 +148,17 @@ class FCS_Parser(object):
         text = self.annotation['text']
         keys = text.keys()
 
-        if '$nextdata' in text and text['$nextdata'] != 0:
-            raise_parser_feature_not_implemented('Not implemented $nextdata is not 0')
+        if '$NEXTDATA' in text and text['$NEXTDATA'] != 0:
+            raise_parser_feature_not_implemented('Not implemented $NEXTDATA is not 0')
 
-        if '$mode' not in text or text['$mode'] != 'L':
+        if '$MODE' not in text or text['$MODE'] != 'L':
             raise_parser_feature_not_implemented('Mode not implemented')
 
-        if '$p0b' in keys:
+        if '$P0B' in keys:
             raise_parser_feature_not_implemented('Not expecting a parameter starting at 0')
 
-        if text['$byteord'] not in ["1,2,3,4", "4,3,2,1", "1,2", "2,1"]:
-            raise_parser_feature_not_implemented('$byteord {} not implemented'.format(text['$byteord']))
+        if text['$BYTEORD'] not in ["1,2,3,4", "4,3,2,1", "1,2", "2,1"]:
+            raise_parser_feature_not_implemented('$BYTEORD {} not implemented'.format(text['$BYTEORD']))
 
         # TODO: check logarithmic amplification
 
@@ -163,24 +167,24 @@ class FCS_Parser(object):
         """ Reads the DATA segment of the FCS file. """
         self.check_assumptions()
         header, text = self.annotation['header'], self.annotation['text'] # For convenience
-        num_events = text['$tot'] # Number of events recorded
-        num_pars   = text['$par'] # Number of parameters recorded
+        num_events = text['$TOT'] # Number of events recorded
+        num_pars   = text['$PAR'] # Number of parameters recorded
 
         # TODO: Kill white space in $byteord
-        if text['$byteord'] == '1,2,3,4' or text['$byteord'] == '1,2':
+        if text['$BYTEORD'] == '1,2,3,4' or text['$BYTEORD'] == '1,2':
             endian = '<'
-        elif text['$byteord'] == '4,3,2,1' or text['$byteord'] == '2,1':
+        elif text['$BYTEORD'] == '4,3,2,1' or text['$BYTEORD'] == '2,1':
             endian = '>'
 
         conversion_dict = {'F' : 'f4', 'D' : 'f8'} # matching FCS naming convention with numpy naming convention f4 - 4 byte (32 bit) single precision float
 
-        if text['$datatype'] not in conversion_dict.keys():
-            raise_parser_feature_not_implemented('$datatype = {0} is not yet supported.'.format(text['$datatype']))
+        if text['$DATATYPE'] not in conversion_dict.keys():
+            raise_parser_feature_not_implemented('$DATATYPE = {0} is not yet supported.'.format(text['$DATATYPE']))
 
-        dtype = '{endian}{numerical_type}'.format(endian=endian, numerical_type=conversion_dict[text['$datatype']])
+        dtype = '{endian}{numerical_type}'.format(endian=endian, numerical_type=conversion_dict[text['$DATATYPE']])
 
         # Calculations to figure out data types of each of parameters
-        bytes_per_par_list   = [text['$p{0}b'.format(i)] / 8  for i in range(1, num_pars+1)]
+        bytes_per_par_list   = [text['$P{0}B'.format(i)] / 8  for i in self.channel_numbers]
         par_numeric_type_list   = ['{endian}f{size}'.format(endian=endian, size=bytes_per_par) for bytes_per_par in bytes_per_par_list]
         bytes_per_event = sum(bytes_per_par_list)
         total_bytes = bytes_per_event * num_events
