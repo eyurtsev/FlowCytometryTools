@@ -27,12 +27,6 @@ def raise_parser_feature_not_implemented(message):
 
     raise Exception(message)
 
-
-def parse_text(raw_text, fcs_version, flow_cytometer=None):
-    """ """
-    pass
-
-
 class FCS_Parser(object):
     """
     A Parser for .fcs files.
@@ -41,14 +35,13 @@ class FCS_Parser(object):
 
     self.annotation['header'] holds the parsed HEADER segment
     self.annotation['text'] holds the parsed TEXT segment
+
     self.data holds the parsed DATA segment
-    self.analysis holds the parsed ANALYSIS segment (Not yet implemented.)
+    self.analysis holds the ANALYSIS segment as read from the file
 
     For convenience the names of the channels are available in:
     self.channel_names holds the names of the channels
     """
-    #TODO Implement return ANALYSIS segment
-
     def __init__(self, path, read_data=True):
         self._data = None
         self.annotation = {}
@@ -140,6 +133,18 @@ class FCS_Parser(object):
             #print key, text[key]
         #raise Exception('here')
 
+    def read_analysis(self, file_handle):
+        """
+        Reads the ANALYSIS segment of the FCS file and stores it in self.analysis
+        Warning: This has never been tested with an actual fcs file that contains an analysis segment.
+        """
+        start = self.annotation['header']['analysis start']
+        end = self.annotation['header']['analysis end']
+        if start != 0 and end != 0:
+            file_handle.seek(self.start, 0)
+            self._analysis = file_handle.read(self.end - self.start)
+        else:
+            self._analysis = ''
 
     def check_assumptions(self):
         """
@@ -210,6 +215,13 @@ class FCS_Parser(object):
                 self.read_data()
         return self._data
 
+    @property
+    def analysis(self):
+        """ Holds the parsed ANALYSIS segment of the FCS file. """
+        if self._analysis == '':
+            with open(self.path, 'rb') as f:
+                self.read_analysis()
+        return self._analysis
 
 def parse_fcs(path, meta_data_only=False, output_format='DataFrame', compensate=False):
     """
@@ -263,8 +275,6 @@ def parse_fcs(path, meta_data_only=False, output_format='DataFrame', compensate=
         return meta, parsed_FCS.data, channel_names
     else:
         raise Exception("The output_format must be either 'ndarray' or 'DataFrame'")
-
-
 
 ###################
 ### Test code #####
