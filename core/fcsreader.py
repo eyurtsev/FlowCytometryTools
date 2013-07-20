@@ -1,10 +1,12 @@
 #!/usr/bin/env python
-# A script to read FCS 3.0 formatted file.
+# A script to read FCS 3.0 formatted file (and potentially FCS 2.0 and 3.1)
 # Eugene Yurtsev 07/20/2013
 # (I do not promise this works)
 # Distributed under the MIT License
+# TODO: Throw an error if there is logarithmic amplification (or else implement support for it)
 import sys
 import numpy
+import warnings
 
 try:
     import pandas
@@ -34,7 +36,8 @@ def parse_text(raw_text, fcs_version, flow_cytometer=None):
 class FCS_Parser(object):
     """
     A Parser for .fcs files.
-    Supports FCS3.0 standard only.
+    Should work for FCS 3.0
+    May work for other FCS formats (2.0, 3.1)
 
     self.annotation['header'] holds the parsed HEADER segment
     self.annotation['text'] holds the parsed TEXT segment
@@ -65,8 +68,8 @@ class FCS_Parser(object):
         header = {}
         header['FCS format'] = file_handle.read(6)
 
-        #if header['FCS format'] != 'FCS3.0':
-            #raise_parser_feature_not_implemented('Parser implemented only for FCS 3.0 files')
+        if header['FCS format'] != 'FCS3.0':
+            warnings.warn("""This parser was designed with the FCS 3.0 format in mind. It may or may not work for other FCS formats.""")
 
         file_handle.read(4) # 4 space characters after the FCS format
 
@@ -87,43 +90,43 @@ class FCS_Parser(object):
         Converting all meta keywords to lower case.
         """
         header = self.annotation['header'] # For convenience
+
+        #####
+        # Read in the TEXT segment of the FCS file
         file_handle.seek(header['text start'], 0)
+        raw_text = file_handle.read(header['text end'] - header['text start'] + 1).strip()
 
-        raw_text = file_handle.read(header['text end'] - header['text start']) # Made a change here that's specific for 3.0
-
-        delimiter = raw_text.strip()[0] # Strip to remove white spaces that may arise due to differences in FCS formats
+        #####
+        # Parse the TEXT segment of the FCS file into a python dictionary
+        delimiter = raw_text[0] # Remove white spaces that may arise due to differences in FCS formats
 
         if raw_text[-1] != delimiter:
             raise_parser_feature_not_implemented('Parser expects the same delimiter character in beginning and end of TEXT segment')
 
         raw_text_segments = raw_text[1:-1].split(delimiter) # Using 1:-1 to remove first and last characters which should be reserved for delimiter
-
         keys, values = raw_text_segments[0::2], raw_text_segments[1::2]
-
         text = {str(key).lower() : value for key, value in zip(keys, values)} # Build dictionary
 
+        ####
+        # Extract channel names and convert some of the channel properties and other fields into numeric data types (from string)
+        # Note: do not use regular expressions for manipulations here. Regular expressions are too heavy in terms of computation time.
         pars = int(text['$par'])
-        self.channel_names = tuple([text['$p{0}n'.format(num+1)] for num in range(pars)])
+        if '$p0b' in keys: # Checking whether channel number count starts from 0 or from 1
+            par_number_list = range(0, pars) # Channel number count starts from 0
+        else:
+            par_number_list = range(1, pars + 1) # Channel numbers start from 1
 
-        ## The lists are necessary to optimize the for loop. Regular expressions appear to be too heavy the way I was using them
-        # TO DO Improve speed here. Stop loop through keys and access fields directly
-        par_b_list = ['$p{0}b'.format(i+1) for i in range(pars)]
-        par_d_list = ['$p{0}d'.format(i+1) for i in range(pars)]
-        int_key_list = ['$nextdata', '$par', '$tot']
+        self.channel_names = tuple([text['$p{0}n'.format(i)] for i in par_number_list])
 
-        # Converting a few of the fields into numeric values
-        for key, value in text.items():
-            if key in par_b_list is not None or key in int_key_list:
-                text[key] = int(value)
+        # Convert some of the fields into integer values
+        keys_encoding_bits = ['$p{0}b'.format(i) for i in par_number_list]
+        add_keys_to_convert_to_int = ['$nextdata', '$par', '$tot']
 
-            # Parameter that indicates log amplification
-            if key in par_d_list:
-                nums = value.split(',')
-                print nums
-                #text[key] = [float(num) for num in nums]
+        keys_to_convert_to_int = keys_encoding_bits + add_keys_to_convert_to_int
 
-                #if text[key] != [0.0, 0.0]:
-                    #raise_parser_feature_not_implemented('Log amplification in parameter: {0}'.format(key))
+        for key in keys_to_convert_to_int:
+            value = text[key]
+            text[key] = int(value)
 
         self.annotation['text'] = text
 
@@ -152,6 +155,8 @@ class FCS_Parser(object):
 
         if text['$byteord'] not in ["1,2,3,4", "4,3,2,1", "1,2", "2,1"]:
             raise_parser_feature_not_implemented('$byteord {} not implemented'.format(text['$byteord']))
+
+        # TODO: check logarithmic amplification
 
 
     def read_data(self, file_handle):
