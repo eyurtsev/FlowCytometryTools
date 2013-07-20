@@ -89,15 +89,22 @@ class FCS_Parser(object):
 
         #####
         # Read in the TEXT segment of the FCS file
+        # There are some differences in how the 
         file_handle.seek(header['text start'], 0)
-        raw_text = file_handle.read(header['text end'] - header['text start'] + 1).strip()
+        raw_text = file_handle.read(header['text end'] - header['text start'] + 1)
 
         #####
         # Parse the TEXT segment of the FCS file into a python dictionary
-        delimiter = raw_text[0] # Remove white spaces that may arise due to differences in FCS formats
+        delimiter = raw_text[0]
 
         if raw_text[-1] != delimiter:
-            raise_parser_feature_not_implemented('Parser expects the same delimiter character in beginning and end of TEXT segment')
+            raw_text = raw_text.strip()
+            if raw_text[-1] != delimiter:
+                print 'The first two characters were: '
+                print repr(raw_text[:2])
+                print 'The last two characters were: '
+                print repr(raw_text[-2:])
+                raise_parser_feature_not_implemented('Parser expects the same delimiter character in beginning and end of TEXT segment')
 
         raw_text_segments = raw_text[1:-1].split(delimiter) # Using 1:-1 to remove first and last characters which should be reserved for delimiter
         keys, values = raw_text_segments[0::2], raw_text_segments[1::2]
@@ -166,7 +173,6 @@ class FCS_Parser(object):
             raise_parser_feature_not_implemented('$BYTEORD {} not implemented'.format(text['$BYTEORD']))
 
         # TODO: check logarithmic amplification
-
 
     def read_data(self, file_handle):
         """ Reads the DATA segment of the FCS file. """
