@@ -1,9 +1,8 @@
 #!/usr/bin/env python
 # A script to read FCS 3.0 formatted file.
-# Eugene Yurtsev 07/08/2013
+# Eugene Yurtsev 07/20/2013
 # (I do not promise this works)
 # Distributed under the MIT License
-
 import sys
 import numpy
 
@@ -13,21 +12,28 @@ try:
 except ImportError:
     print('You do not have pandas installed, so the parse_fcs function can only be used together with numpy.')
     pandas_found = False
-except:
-    print('Your pandas is improperly configured.')
+except Exception as e:
+    print('Your pandas is improperly configured. It raised the following error {0}'.format(e))
     pandas_found = False
-
 
 def raise_parser_feature_not_implemented(message):
     print """ Some of the parser features have not yet been implemented.
-    If you would like to see this feature implemented, please send a sample FCS file
-    to the developers.
-    The following problem was encountered with your FCS file: """
+              If you would like to see this feature implemented, please send a sample FCS file
+              to the developers.
+              The following problem was encountered with your FCS file:
+              {0} """.format(message)
+
     raise Exception(message)
+
+
+def parse_text(raw_text, fcs_version, flow_cytometer=None):
+    """ """
+    pass
+
 
 class FCS_Parser(object):
     """
-    A Parser for FCS files.
+    A Parser for .fcs files.
     Supports FCS3.0 standard only.
 
     self.annotation['header'] holds the parsed HEADER segment
@@ -59,8 +65,8 @@ class FCS_Parser(object):
         header = {}
         header['FCS format'] = file_handle.read(6)
 
-        if header['FCS format'] != 'FCS3.0':
-            raise_parser_feature_not_implemented('Parser implemented only for FCS 3.0 files')
+        #if header['FCS format'] != 'FCS3.0':
+            #raise_parser_feature_not_implemented('Parser implemented only for FCS 3.0 files')
 
         file_handle.read(4) # 4 space characters after the FCS format
 
@@ -83,9 +89,9 @@ class FCS_Parser(object):
         header = self.annotation['header'] # For convenience
         file_handle.seek(header['text start'], 0)
 
-        raw_text = file_handle.read(header['text end'] - header['text start'] + 1)
+        raw_text = file_handle.read(header['text end'] - header['text start']) # Made a change here that's specific for 3.0
 
-        delimiter = raw_text[0]
+        delimiter = raw_text.strip()[0] # Strip to remove white spaces that may arise due to differences in FCS formats
 
         if raw_text[-1] != delimiter:
             raise_parser_feature_not_implemented('Parser expects the same delimiter character in beginning and end of TEXT segment')
@@ -113,10 +119,11 @@ class FCS_Parser(object):
             # Parameter that indicates log amplification
             if key in par_d_list:
                 nums = value.split(',')
-                text[key] = [float(num) for num in nums]
+                print nums
+                #text[key] = [float(num) for num in nums]
 
-                if text[key] != [0.0, 0.0]:
-                    raise_parser_feature_not_implemented('Log amplification in parameter: {0}'.format(key))
+                #if text[key] != [0.0, 0.0]:
+                    #raise_parser_feature_not_implemented('Log amplification in parameter: {0}'.format(key))
 
         self.annotation['text'] = text
 
