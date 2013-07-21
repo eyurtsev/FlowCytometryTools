@@ -202,6 +202,8 @@ class BasePlate(BaseObject):
     
     def assign_datafiles_to_wells(self, assignments=None, parser='name'):
         '''
+        TODO: support input of mapping dictionary of assignments
+
         assignments : dict
             keys    = well ids
             values = data file names (str)

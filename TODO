@@ -3,6 +3,7 @@
 
 * There may be issues with logicle transformation currently. plotting may cause the transformation to be applied twice!
 
+* add copy method to all containers.
 
 What would be nice to have:
 
