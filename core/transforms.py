@@ -211,21 +211,21 @@ def transform_frame(frame, transform, direction='forward',
                     channels=None, args=(), **kwargs):
     '''
     Apply transform to specified channels. 
+    Return only values of specified channels.
     
     TODO: add detailed doc
     '''
-    transformed = frame.copy()
     if hasattr(transform, '__call__'):
         tfun = transform
     elif hasattr(transform, 'lower'):
         tfun = get_transform(transform, direction)
     else:
         raise TypeError, 'Unsupported transform type: %s' %type(transform)
-
     if channels is None:
         channels = frame.columns
-    for c in channels:
-        transformed[c] = frame[c].apply(tfun, *args, **kwargs)
+    if isinstance(channels, basestring):
+        channels = (channels,)
+    transformed = frame.filter(channels).apply(tfun, *args, **kwargs)
     return transformed
 
 if __name__ == '__main__':
