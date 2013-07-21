@@ -12,6 +12,7 @@ Trotter, Joseph. In Current Protocols in Cytometry. John Wiley & Sons, Inc., 200
 TODO:
 - Add scale parameters (r,d) to glog (if needed?)
 - Implement logicle transformation.
+- Add support for transforming a numpy array
 '''
 from numpy import (log, log10, exp, where, sign, vectorize, 
                    min, max, linspace, logspace, r_, abs, asarray)
@@ -19,7 +20,6 @@ from numpy import (log, log10, exp, where, sign, vectorize,
 _machine_max = 2**18
 _l_mmax = log10(_machine_max)
 _display_max = 10**4.5
-
 
 def tlog(x, th=1, r=_display_max, d=_l_mmax):
     '''
@@ -180,6 +180,53 @@ def hlog(x, b=100, r=_display_max, d=_l_mmax,
             y = find_inv(x)
     return y
 
+
+_canonical_names = {
+'hlog':     'hlog',
+'hyperlog': 'hlog',
+'glog':     'glog',
+'tlog':     'tlog',
+}
+
+def _get_canonical_name(name):
+        return _canonical_names.get(name.lower(), None)
+
+name_transforms = {
+'hlog': {'forward':hlog, 'inverse':hlog_inv},
+'glog': {'forward':glog, 'inverse':glog_inv},
+'tlog': {'forward':tlog, 'inverse':tlog_inv},
+}
+
+def get_transform(name, direction='forward'):
+    '''
+    Direction : 'forward' | 'inverse'
+    '''
+    cannonical_name = _get_canonical_name(name)
+    if cannonical_name is None:
+        raise ValueError, 'Unknown transform: %s' %name
+    else:
+        return name_transforms[cannonical_name][direction]
+
+def transform_frame(frame, transform, direction='forward',
+                    channels=None, args=(), **kwargs):
+    '''
+    Apply transform to specified channels. 
+    
+    TODO: add detailed doc
+    '''
+    transformed = frame.copy()
+    if hasattr(transform, '__call__'):
+        tfun = transform
+    elif hasattr(transform, 'lower'):
+        tfun = get_transform(transform, direction)
+    else:
+        raise TypeError, 'Unsupported transform type: %s' %type(transform)
+
+    if channels is None:
+        channels = frame.columns
+    for c in channels:
+        transformed[c] = frame[c].apply(tfun, *args, **kwargs)
+    return transformed
 
 if __name__ == '__main__':
     y1 = -1
