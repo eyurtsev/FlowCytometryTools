@@ -2,9 +2,13 @@
 Created on Jun 14, 2013
 
 @author: jonathanfriedman
+
+TODO:
+- transition from fcm data&reader to pandas and Eugene's parser
+- add transforms to sample
 '''
 from fcm import loadFCS
-from bases import BaseSample, BasePlate
+from bases import BaseSample, BaseSampleCollection, BasePlate
 from GoreUtilities.util import to_list
 import graph
 
@@ -97,6 +101,11 @@ class FCSample(BaseSample):
         from FlowCytometryTools import flowGUI
         return flowGUI.sample_viewer(self.datafile, channel_names=channel_names)
 
+class FCSampleCollection(BaseSampleCollection):
+    '''
+    A dict-like class for holding flow cytometry samples.
+    '''
+    _sample_class = FCSample
 
 class FCPlate(BasePlate):
     '''

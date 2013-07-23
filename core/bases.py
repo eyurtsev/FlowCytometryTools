@@ -4,6 +4,13 @@ Created on Jun 18, 2013
 @author: jonathanfriedman
 
 Base objects for sample and plate objects.
+
+TODO:
+- make plate a subclass of collection
+- consider converting init methods to accepting data, and adding
+factory methods for construction from files.
+- consider always reading in data in samples, perhaps storing on disk
+using shelve|PyTables|pandas HDFStore
 '''
 from pandas import DataFrame as DF
 from numpy import nan, unravel_index
@@ -75,11 +82,10 @@ class BaseSample(BaseObject):
             return self.read_data(**kwargs)
         else:
             return None
-    
-    
+
     def clear_data(self):
         self.data = None
-    
+
     def ID_from_data(self):
         '''
         Get sample ID from loaded data.
@@ -88,7 +94,7 @@ class BaseSample(BaseObject):
         specific data type.
         '''
         pass
-    
+
     def get_metadata(self, fields):
         '''
         This function should be overwritten for each 
@@ -96,9 +102,9 @@ class BaseSample(BaseObject):
         '''
         pass
 
-    def apply(self, func, applyto='data', noneval=nan, nout=1, keepdata=False):
+    def apply(self, func, applyto='data', noneval=nan, setdata=False):
         '''
-        Apply func either to self or to associated FCS data.
+        Apply func either to self or to associated data.
         If data is not already parsed, try and read it.
         
         Parameters
@@ -111,21 +117,20 @@ class BaseSample(BaseObject):
             'sample' : apply to sample object itself. 
         noneval : obj
             Value returned if applyto is 'data' but no data is available.
-        nout : int
-            number of outputs from func.
-        '''         
+        setdata : bool
+            Used only if data is not already set.
+            If true parsed data will be assigned to self.data
+            Otherwise data will be discarded at end of apply.
+        '''
         applyto = applyto.lower()
         if applyto == 'data':
             if self.data is not None:
                 data = self.data
             elif self.datafile is None:
-                if nout==1:
-                    return noneval
-                else:
-                    return [noneval]*nout
+                return noneval
             else:
                 data = self.read_data()
-                if keepdata:
+                if setdata:
                     self.data = data
             return func(data)
         elif applyto == 'sample':
@@ -134,7 +139,136 @@ class BaseSample(BaseObject):
             raise ValueError, 'Encountered unsupported value "%s" for applyto paramter.' %applyto       
 
 BaseWell = BaseSample
+
+import collections
+class BaseSampleCollection(collections.MutableMapping):
+    '''
+    A collection of samples
+    '''
+    _sample_class = BaseSample #to be replaced when inheriting
+    
+    def __init__(self, ID, datafiles=None, datadir=None,
+                 pattern='*.fcs', recursive=False,
+                 parser='name'):
+        '''
+        Constructor
         
+        datafiles : str| iterable of str | None
+            Datafiles to parse.
+            If None is given, parse self.datafiles 
+        '''
+        self.ID = ID
+        self.data = {}
+        self.set_datafiles(datafiles, datadir, pattern, recursive)
+        self._create_samples_from_datafile(parser=parser)
+
+    # ----------------------
+    # MutableMapping methods
+    # ----------------------
+    def __repr__(self):
+        return repr(self.data)
+
+    def __getitem__(self, key):
+        return self.data[key]
+
+    def __setitem__(self, key, value):
+        self.data[key] = value
+
+    def __delitem__(self, key):
+        del self.data[key]
+
+    def __iter__(self):
+        return iter(self.data)
+
+    def __len__(self):
+        return len(self.data)
+
+    # ----------------------
+    # Init support methods
+    # ----------------------
+    def set_datafiles(self, datafiles=None, datadir=None, 
+                      pattern='*.fcs', recursive=True):
+        '''
+        datafiles : str| iterable of str | None
+            Datafiles to parse.
+        ''' 
+        if datafiles is not None:
+            datafiles = to_list(datafiles)
+        else:
+            datafiles = get_files(datadir, pattern, recursive)        
+        self.datafiles = datafiles
+
+    def _assign_IDS_to_datafiles(self, parser):
+        '''
+        Assign sample IDS to self.datafiles using specified parser.
+        Return a dict of ID:datafile
+        '''
+        if isinstance(parser, collections.Mapping):
+            fparse = lambda x: parser[x]
+        elif hasattr(parser, '__call__'):
+            fparse = parser
+        elif parser == 'name':
+            fparse = lambda x: x.split('_')[-1].split('.')[0]
+        elif parser == 'number':
+            fparse = lambda x: int(x.split('.')[-2])
+        elif parser == 'read':
+            fparse = lambda x: self._sample_class(ID='temporary', datafile=x).ID_from_data()
+        else:
+            raise ValueError,  'Encountered unsupported value "%s" for parser paramter.' %parser 
+        d = dict( (fparse(dfile), dfile) for dfile in self.datafiles )
+        return d
+
+    def _create_samples_from_datafile(self, parser):
+        d = self._assign_IDS_to_datafiles(parser)
+        for ID, dfile in d.iteritems():
+                self[ID] = self._sample_class(ID, datafile=dfile)
+
+    # ----------------------
+    # User methods
+    # ----------------------
+    def apply(self, func, ids=None, applyto='data', 
+              noneval=nan, setdata=False):
+        '''
+        Apply func to each of the specified samples.
+        
+        Parameters
+        ----------
+        func : dict 
+            Each func value is a callable that accepts a Sample 
+            object and returns a single number/string. 
+        ids : hashable| iterable of hashables | None
+            IDs of well to apply function to.
+            If None is given
+        applyto : 'data' | 'sample'
+            'data'   : apply to samples associated data
+            'sample' : apply to sample objects themselves.
+        noneval : obj
+            Value returned if applyto is 'data' but no data is available.
+        setdata : bool
+            Used only if data is not already set.
+            If true parsed data will be assigned to self.data
+            Otherwise data will be discarded at end of apply.
+        ''' 
+        if ids is None:
+            ids = self.keys()
+        else:
+            ids = to_list(ids)
+        result = dict( (i, self[i].apply(func, applyto, noneval, setdata)) for i in ids )
+        return result
+
+    def clear_sample_data(self, ids=None):
+        if ids is None:
+            ids = self.iterkeys()
+        for i in ids:
+            self[i].clear_data()
+
+    def get_sample_metadata(self, fields, ids=None, noneval=nan):
+        fields = to_list(fields)
+        func = lambda x: x.get_metadata(fields)
+        return self.apply(func, ids=ids, applyto='sample', 
+                          noneval=noneval)
+
+
 class BasePlate(BaseObject):
     '''
     A class for holding plate data.
@@ -250,7 +384,7 @@ class BasePlate(BaseObject):
             well.clear_data()
         
     def apply(self, func, outputs, applyto='data', noneval=nan,
-              well_ids=None, keepdata=False):
+              well_ids=None, setdata=False):
         '''
         
         Parameters
@@ -279,7 +413,7 @@ class BasePlate(BaseObject):
                     return noneval
                 else:
                     return [noneval]*nout
-            result = well.apply(func, applyto, noneval, nout, keepdata)
+            result = well.apply(func, applyto, noneval, nout, setdata)
             if result is not None:
                 return result
             else:
