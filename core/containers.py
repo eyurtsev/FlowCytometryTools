@@ -6,8 +6,10 @@ Created on Jun 14, 2013
 TODO:
 - transition from fcm data&reader to pandas and Eugene's parser
 - add transforms to sample
+- dedicated dict-like metadata. support striping "$" and lowercase. 
+Also handles the nested dictionary better.
 '''
-from fcm import loadFCS
+from FlowCytometryTools import parse_fcs
 from bases import BaseSample, BaseSampleCollection, BasePlate
 from GoreUtilities.util import to_list
 import graph
@@ -24,19 +26,18 @@ class FCSample(BaseSample):
         return the resulting object.
         Does NOT assign the data to self.data
         '''
-        kwargs.setdefault('transform', None)
-        data = loadFCS(self.datafile, **kwargs)
-        return data
+        meta, data = parse_fcs(self.datafile, **kwargs)
+        return meta, data
     
     def get_metadata(self, fields, kwargs={}):
         '''
-        TODO: change to extract data from other notes fields (not just 'text')
+        TODO: change to extract data from other metadata fields (not just 'text')
         '''
 #         if self.data is None:
 #             raise Exception, 'Data must be read before extracting metadata.'
         fields = to_list(fields)
-        func = lambda x: [x.notes.text[field] for field in fields]
-        kwargs.setdefault('nout',len(fields))
+        func = lambda x: [x.meta['text'][field] for field in fields]
+        kwargs.setdefault('applyto', 'sample')
         return self.apply(func, **kwargs)
 
     def ID_from_data(self):

@@ -45,28 +45,35 @@ class BaseSample(BaseObject):
         self.ID = ID
         self.datafile = datafile
         if readdata:
-            self.data = self.read_data(**readdata_kwargs)
+            meta, data = self.read_data(**readdata_kwargs)
+            self.data = data
+            self.meta = meta
         else:
             self.data = None
+            self.meta = None
 
     def read_data(self, **kwargs):
         '''
         This function should be overwritten for each 
-        specific data type.
+        specific data type. 
+        This function should return metadata, data.
         '''
         pass
     
-    def set_data(self, data=None, datafile=None, readdata_kwargs={}):
+    def set_data(self, data=None, meta=None, datafile=None, readdata_kwargs={}):
         '''
-        Assign a value to Sample.data. 
+        Assign values to self.data and self.meta. 
         Data is not returned
         '''
         if data is not None:
             self.data = data
+            self.meta = meta
         else:
             if datafile is not None:
                 self.datafile = datafile
-            self.data = self.read_data(**readdata_kwargs)     
+            meta, data = self.read_data(**readdata_kwargs)
+            self.data = data
+            self.meta = meta
 
     def get_data(self, **kwargs):
         '''
@@ -262,11 +269,24 @@ class BaseSampleCollection(collections.MutableMapping):
         for i in ids:
             self[i].clear_data()
 
-    def get_sample_metadata(self, fields, ids=None, noneval=nan):
+    def get_sample_metadata(self, fields, ids=None, noneval=nan,
+                            output_format='DataFrame'):
+        '''
+        '''
         fields = to_list(fields)
         func = lambda x: x.get_metadata(fields)
-        return self.apply(func, ids=ids, applyto='sample', 
+        meta_d = self.apply(func, ids=ids, applyto='sample', 
                           noneval=noneval)
+        if output_format is 'dict':
+            return meta_d
+        elif output_format is 'DataFrame':
+            from pandas import DataFrame as DF
+            meta_df = DF(meta_d, index=fields)
+            return meta_df
+        else:
+            msg = ("The output_format must be either 'dict' or 'DataFrame'. " +
+                   "Encounterd unsupported value %s." %repr(output_format))
+            raise Exception(msg)
 
 
 class BasePlate(BaseObject):
