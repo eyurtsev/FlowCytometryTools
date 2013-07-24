@@ -57,7 +57,7 @@ class FCSample(BaseSample):
         except:
             raise Exception("The keyword 'src' does not exist in the following FCS file: {}".format(self.datafile))
 
-    def plot(self, channel_names, transform=(None, None), plot2d_type='dot2d', **kwargs):
+    def plot(self, channel_names, transform=(None, None), kind='histogram', **kwargs):
         '''
         Plots the flow cytometry data associated with the sample on the current axis.
         Follow with a call to matplotlibs show() in order to see the plot.
@@ -75,7 +75,7 @@ class FCSample(BaseSample):
             if 'logicle' then channel data is transformed with logicle transformation
 
 
-        plot2d_type : 'dot2d', 'hist2d'
+        kind : 'scatter', 'histogram'
 
         Returns
         -------
@@ -85,11 +85,11 @@ class FCSample(BaseSample):
 
         TODO: fix default value of transform... need cycling function?
         '''
-        data = self.get_data()
+        data = self.get_data()[1] # The index is to keep only the data part (removing the meta data)
         if data is None:
             return None
         else:
-            return graph.plotFCM(data, channel_names, transform=transform, plot2d_type=plot2d_type, **kwargs)
+            return graph.plotFCM(data, channel_names, transform=transform, kind=kind, **kwargs)
 
     def view(self, channel_names=None):
         '''
@@ -120,7 +120,7 @@ class FCPlate(BasePlate):
     '''
     _sample_class = FCSample
 
-    def plot(self, channel_names, transform=(None, None), plot2d_type='dot2d', grid_plot_kwargs={}, **kwargs):
+    def plot(self, channel_names, transform=(None, None), kind='histogram', grid_plot_kwargs={}, **kwargs):
         """
         For details see documentation for FCSample.plot
         Use grid_plot_kwargs to pass keyword arguments to the grid_plot function.
@@ -135,8 +135,19 @@ class FCPlate(BasePlate):
                 example: gHandleList[1][0][2] returns the subplot in row 0 and column 2
         """
         def plotSampleDataFunction(data):
-            return graph.plotFCM(data, channel_names, transform=transform, plot2d_type=plot2d_type, autolabel=False, **kwargs)
+            """ Function assumes that data is returned as a 2-tuple. The first element is the meta data, the second is the DataFrame """
+            return graph.plotFCM(data[1], channel_names, transform=transform, kind=kind, autolabel=False, **kwargs)
         return self.grid_plot(plotSampleDataFunction, **grid_plot_kwargs)
+
+    @property
+    def layout(self):
+        def data_assigned(well):
+            if well.datafile != None:
+                return 'Y'
+            else:
+                return 'N'
+
+        return self.wells.applymap(data_assigned)
 
 if __name__ == '__main__':
     datadir = '../tests/data/'

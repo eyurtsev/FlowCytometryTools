@@ -2,12 +2,10 @@
 """
 Modules contains graphing routines common for flow cytometry files.
 """
-from fcm.graphics.util import bilinear_interpolate
 from GoreUtilities.util import to_list
 import numpy
 import pylab as pl
 import matplotlib
-from fcm import PolyGate, QuadGate
 
 def plot_histogram2d(x, y, bins=200, ax=None, **kwargs):
     '''
@@ -28,7 +26,7 @@ def plot_histogram2d(x, y, bins=200, ax=None, **kwargs):
 
     Plotting Defaults
     -----------------
-        kwargs.setdefault('cmap', pl.cm.Reds)
+        kwargs.setdefault('cmap', pl.cm.copper)
         kwargs.setdefault('norm', matplotlib.colors.LogNorm())
 
     Returns
@@ -38,7 +36,7 @@ def plot_histogram2d(x, y, bins=200, ax=None, **kwargs):
     if ax == None:
         ax = pl.gca()
 
-    kwargs.setdefault('cmap', pl.cm.Reds)
+    kwargs.setdefault('cmap', pl.cm.copper)
     kwargs.setdefault('norm', matplotlib.colors.LogNorm())
 
     # Estimate the 2D histogram
@@ -50,18 +48,7 @@ def plot_histogram2d(x, y, bins=200, ax=None, **kwargs):
     masked_hist = numpy.ma.masked_where(counts_hist == 0, counts_hist)
     return ax.pcolormesh(xedges, yedges, masked_hist, **kwargs)
 
-def pseudocolor_bilinear_interpolate(x, y, edgecolors='none', ax=None, **kwargs):
-    '''
-    Pseudocolor plot based on FCMs bilinear interpolate function.
-    '''
-    if ax == None: ax = pl.gca()
-
-    # Set pretty defaults for plotting
-    kwargs.setdefault('s', 1)
-    z = bilinear_interpolate(x, y)
-    return ax.scatter(x, y, c=z, s=s, edgecolors=edgecolors, **kwargs)
-
-def plotFCM(data, channel_names, transform=(None, None), plot2d_type='dot2d', ax=None,
+def plotFCM(data, channel_names, transform=(None, None), kind='histogram', ax=None,
                 autolabel=True, xlabel_kwargs={}, ylabel_kwargs={},
                 **kwargs):
     '''
@@ -80,7 +67,8 @@ def plotFCM(data, channel_names, transform=(None, None), plot2d_type='dot2d', ax
         each element is set to None or 'logicle'
         if 'logicle' then channel data is transformed with logicle transformation
 
-    plot2d_type : 'dot2d', 'hist2d', 'pseudo with bilinear'
+    kind : 'scatter' | 'histogram'
+        Specifies the kind of plot to use for plotting the data (only applies to 2D plots).
 
     autolabel : False | True
         If True the x and y axes are labeled automatically.
@@ -94,41 +82,36 @@ def plotFCM(data, channel_names, transform=(None, None), plot2d_type='dot2d', ax
     '''
     if ax == None: ax = pl.gca()
 
-    xlabel_kwargs.setdefault('size', 14)
-    ylabel_kwargs.setdefault('size', 14)
+    xlabel_kwargs.setdefault('size', 16)
+    ylabel_kwargs.setdefault('size', 16)
 
-    # Find indexes of the channels
     channel_names = to_list(channel_names)
-    channelIndexList = [data.name_to_index(channel) for channel in channel_names]
 
     # Transform data
-    transformList = to_list(transform)
+    #transformList = to_list(transform)
 
-    for channel, transformType in zip(channelIndexList, transformList):
-        if transformType == 'logicle':
-            data.logicle(channels=[channel])
 
-    if len(channelIndexList) == 1:
+    if len(channel_names) == 1:
         # 1d so histogram plot
-        ch1i = channelIndexList[0]
-        pHandle = ax.hist(data[:, ch1i], **kwargs)
+        kwargs.setdefault('color', 'gray')
+        kwargs.setdefault('histtype', 'stepfilled')
 
+        pHandle = data[channel_names[0]].hist(ax = ax, **kwargs)
 
-    elif len(channelIndexList) == 2:
-        x = data[:, channelIndexList[0]] # index of first channels name
-        y = data[:, channelIndexList[1]] # index of seconds channels name
+    elif len(channel_names) == 2:
+        x = data[channel_names[0]] # index of first channels name
+        y = data[channel_names[1]] # index of first channels name
 
-        if plot2d_type == 'dot2d':
+        if kind == 'scatter':
+            kwargs.setdefault('edgecolor', 'none')
             pHandle = ax.scatter(x, y, **kwargs)
-        elif plot2d_type == 'hist2d':
+        elif kind == 'histogram':
             pHandle = plot_histogram2d(x, y, ax=ax, **kwargs)
-        elif plot2d_type == 'pseudo with bilinear':
-            pHandle = pseudocolor_bilinear_interpolate(x, y, ax=ax, **kwargs)
         else:
-            raise Exception("Not a valid plot type. Must be 'dot2', 'hist2d' or 'pseudo with bilinear'")
+            raise Exception("Not a valid plot type. Must be 'scatter', 'histogram'")
 
     if autolabel:
-        y_label_text = 'Counts' if len(channelIndexList) == 1 else channel_names[1]
+        y_label_text = 'Counts' if len(channel_names) == 1 else channel_names[1]
         ax.set_xlabel(channel_names[0], **xlabel_kwargs)
         ax.set_ylabel(y_label_text, **ylabel_kwargs)
 
