@@ -281,36 +281,6 @@ def parse_fcs(path, meta_data_only=False, output_format='DataFrame', compensate=
     else:
         raise Exception("The output_format must be either 'ndarray' or 'DataFrame'")
 
-###################
-### Test code #####
-###################
-
-def compare_against_fcm():
-    from fcm import loadFCS as parse_fcs
-    print 'Comparing fcm reader and EYs reader'
-    import time
-    tic = time.time()
-    fname = './tests/sample_data/2.fcs'
-    #fname = './tests/sample_data/Miltenyi.fcs'
-
-    for i in range(1):
-        x = FCS_Parser(fname).get_data()
-        y = parse_fcs(fname, transform=None, auto_comp=False)
-
-
-    #import FlyingButterfly
-    #from FlyingButterfly.FlyingButterfly import set_pret
-    print y[:22, 6] - x[:22, 6]
-    #print x[:2, :]
-
-    toc = time.time()
-    print toc-tic
-    #tic = time.time()
-    #toc = time.time()
-
-    #print toc-tic
-
-
 if __name__ == '__main__':
     import glob
     fname = glob.glob('../tests/data/Plate01/*.fcs')[0]
