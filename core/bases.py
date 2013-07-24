@@ -40,40 +40,66 @@ class BaseSample(BaseObject):
     a single well or a single tube.
     '''
     
-    def __init__(self, ID, datafile=None, 
-                 readdata=False, readdata_kwargs={}):
+    def __init__(self, ID,  
+                 datafile=None, readdata=False, readdata_kwargs={},
+                 metafile=None, readmeta=True,  readmeta_kwargs={}):
         self.ID = ID
         self.datafile = datafile
+        self.metafile = metafile
         if readdata:
-            meta, data = self.read_data(**readdata_kwargs)
+            data = self.read_data(**readdata_kwargs)
             self.data = data
-            self.meta = meta
         else:
             self.data = None
-            self.meta = None
 
     def read_data(self, **kwargs):
         '''
         This function should be overwritten for each 
         specific data type. 
-        This function should return metadata, data.
         '''
         pass
     
-    def set_data(self, data=None, meta=None, datafile=None, readdata_kwargs={}):
+    def read_meta(self, **kwargs):
+        '''
+        This function should be overwritten for each 
+        specific data type. 
+        '''
+        pass
+
+    def _set_attr_from_file(self, name, value=None, path=None, 
+                            reader_kwargs={}):
+        '''
+        Assign values to attribute of self.
+        Attribute values can be passed by user or read from file.
+        If read from file: 
+            i) the method used to read the file is 'self.read_[attr name]'
+            (e.g. for an attribute named 'meta' 'self.read_meta' 
+            will be used).
+            ii) the file path will also be set to an attribute
+            named: '[attr name]file'. (e.g. for an attribute named 
+            'meta' a 'metafile' attribute will be created).
+        '''
+        if value is not None:
+            setattr(self, name, value)
+        else:
+            if path is not None:
+                setattr(self, name+'file', path)
+            value = getattr(self, 'read_%s' %name)(**reader_kwargs)
+        setattr(self, name, value)
+
+    def set_data(self, data=None, datafile=None, **kwargs):
         '''
         Assign values to self.data and self.meta. 
         Data is not returned
         '''
-        if data is not None:
-            self.data = data
-            self.meta = meta
-        else:
-            if datafile is not None:
-                self.datafile = datafile
-            meta, data = self.read_data(**readdata_kwargs)
-            self.data = data
-            self.meta = meta
+        self._set_attr_from_file('data', data, datafile, **kwargs)
+
+    def set_meta(self, meta=None, metafile=None, **kwargs):
+        '''
+        Assign values to self.data and self.meta. 
+        Data is not returned
+        '''
+        self._set_attr_from_file('meta', meta, metafile, **kwargs)
 
     def get_data(self, **kwargs):
         '''
@@ -89,9 +115,6 @@ class BaseSample(BaseObject):
             return self.read_data(**kwargs)
         else:
             return None
-
-    def clear_data(self):
-        self.data = None
 
     def ID_from_data(self):
         '''
@@ -153,7 +176,7 @@ class BaseSampleCollection(collections.MutableMapping):
     A collection of samples
     '''
     _sample_class = BaseSample #to be replaced when inheriting
-    
+
     def __init__(self, ID, datafiles=None, datadir=None,
                  pattern='*.fcs', recursive=False,
                  parser='name'):
@@ -263,11 +286,15 @@ class BaseSampleCollection(collections.MutableMapping):
         result = dict( (i, self[i].apply(func, applyto, noneval, setdata)) for i in ids )
         return result
 
+    def _clear_sample_attr(self, attr, ids=None):
+        fun = lambda x: setattr(x, attr, None)
+        self.apply(fun, ids=ids, applyto='sample')
+
     def clear_sample_data(self, ids=None):
-        if ids is None:
-            ids = self.iterkeys()
-        for i in ids:
-            self[i].clear_data()
+        self._clear_sample_attr('data', ids=None)
+
+    def clear_sample_meta(self, ids=None):
+        self._clear_sample_attr('meta', ids=None)
 
     def get_sample_metadata(self, fields, ids=None, noneval=nan,
                             output_format='DataFrame'):

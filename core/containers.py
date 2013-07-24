@@ -6,8 +6,7 @@ Created on Jun 14, 2013
 TODO:
 - transition from fcm data&reader to pandas and Eugene's parser
 - add transforms to sample
-- dedicated dict-like metadata. support striping "$" and lowercase. 
-Also handles the nested dictionary better.
+- implement read_metadata.
 '''
 from FlowCytometryTools import parse_fcs
 from bases import BaseSample, BaseSampleCollection, BasePlate
@@ -19,7 +18,7 @@ class FCSample(BaseSample):
     A class for holding flow cytometry data from
     a single well or a single tube.
     '''
-    
+
     def read_data(self, **kwargs):
         '''
         Read the datafile specified in Sample.datafile and 
@@ -27,8 +26,15 @@ class FCSample(BaseSample):
         Does NOT assign the data to self.data
         '''
         meta, data = parse_fcs(self.datafile, **kwargs)
-        return meta, data
-    
+        return data
+
+    def read_meta(self, **kwargs):
+        '''
+        '''
+        kwargs['meta_data_only'] = True
+        meta = parse_fcs(self.datafile, **kwargs)
+        return meta
+
     def get_metadata(self, fields, kwargs={}):
         '''
         TODO: change to extract data from other metadata fields (not just 'text')
