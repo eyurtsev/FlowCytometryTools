@@ -17,6 +17,25 @@ from numpy import nan, unravel_index
 from pylab import sca
 from GoreUtilities.util import get_files, save, load, to_list
 
+def _assign_IDS_to_datafiles(datafiles, parser, sample_class=None):
+    '''
+    Assign sample IDS to datafiles using specified parser.
+    Return a dict of ID:datafile
+    '''
+    if isinstance(parser, collections.Mapping):
+        fparse = lambda x: parser[x]
+    elif hasattr(parser, '__call__'):
+        fparse = parser
+    elif parser == 'name':
+        fparse = lambda x: x.split('_')[-1].split('.')[0]
+    elif parser == 'number':
+        fparse = lambda x: int(x.split('.')[-2])
+    elif parser == 'read':
+        fparse = lambda x: sample_class(ID='temporary', datafile=x).ID_from_data()
+    else:
+        raise ValueError,  'Encountered unsupported value "%s" for parser paramter.' %parser 
+    d = dict( (fparse(dfile), dfile) for dfile in datafiles )
+    return d
 
 class BaseObject(object):
     '''
@@ -168,7 +187,6 @@ class BaseSample(BaseObject):
         '''
         pass
 
-
     def apply(self, func, applyto='data', noneval=nan, setdata=False):
         '''
         Apply func either to self or to associated data.
@@ -214,20 +232,37 @@ class BaseSampleCollection(collections.MutableMapping):
     '''
     _sample_class = BaseSample #to be replaced when inheriting
 
-    def __init__(self, ID, datafiles=None, datadir=None,
-                 pattern='*.fcs', recursive=False,
-                 parser='name'):
+    def __init__(self, ID, samples):
         '''
         Constructor
         
-        datafiles : str| iterable of str | None
-            Datafiles to parse.
-            If None is given, parse self.datafiles 
+        samples : mappable | iterable
+            values are samples of appropriate type.
         '''
         self.ID = ID
         self.data = {}
-        self.set_datafiles(datafiles, datadir, pattern, recursive)
-        self._create_samples_from_datafile(parser=parser)
+        if isinstance(samples, collections.Mapping):
+            self.update(samples)
+        else:
+            for s in samples:
+                self[s.ID] = s 
+
+    @classmethod
+    def from_files(cls, ID, datafiles, parser='name'):
+        '''
+        TODO: allow different sample IDs and collection keys
+        '''
+        d = _assign_IDS_to_datafiles(datafiles, parser, cls._sample_class)
+        samples = []
+        for ID, dfile in d.iteritems():
+                samples.append(cls._sample_class(ID, datafile=dfile))
+        return cls(ID, samples)
+
+    @classmethod
+    def from_path(cls, ID, path, pattern='*.fcs', recursive=False,
+                  parser='name'):
+        datafiles = get_files(path, pattern, recursive)
+        return cls.from_files(ID, datafiles, parser)
 
     # ----------------------
     # MutableMapping methods
@@ -239,6 +274,10 @@ class BaseSampleCollection(collections.MutableMapping):
         return self.data[key]
 
     def __setitem__(self, key, value):
+        if not isinstance(value, self._sample_class):
+            msg = ('Collection of type %s can only contain object of type %s.\n' %(type(self), type(self._sample_class)) +
+                   'Encountered type %s.' %type(value))
+            raise TypeError, msg
         self.data[key] = value
 
     def __delitem__(self, key):
