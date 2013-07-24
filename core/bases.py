@@ -55,6 +55,16 @@ class BaseSample(BaseObject):
         else:
             self.meta = None
 
+    # ----------------------
+    # Methods of exposing underlying data
+    # ----------------------
+    def __contains__(self, key):
+        return self.data.__contains__(key)
+
+    def __getitem__(self, key):
+        return self.data.__getitem__(key)
+
+    # ----------------------
     def read_data(self, **kwargs):
         '''
         This function should be overwritten for each 
