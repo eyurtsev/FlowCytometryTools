@@ -33,14 +33,14 @@ class FCS_Parser(object):
     Should work for FCS 3.0
     May work for other FCS formats (2.0, 3.1)
 
-    self.annotation['header'] holds the parsed HEADER segment
-    self.annotation['text'] holds the parsed TEXT segment
+    self.annotation: a dictionary holding the parsed content of the TEXT segment
+                     In addition, a key called __header__ has been added to this dictionary
+                     It specifies the information parsed from the FCS file HEADER segment.
+                     (This won't be necessary for most users.)
 
     self.data holds the parsed DATA segment
-    self.analysis holds the ANALYSIS segment as read from the file
-
-    For convenience the names of the channels are available in:
-    self.channel_names holds the names of the channels
+    self.analysis holds the ANALYSIS segment as read from the file.
+    self.channel_names holds the names of the channels (for convenience)
     """
     def __init__(self, path, read_data=True):
         self._data = None
@@ -76,7 +76,7 @@ class FCS_Parser(object):
         if header['analysis start'] != 0:
             warnings.warn('There appears to be some information in the ANALYSIS segment of file {0}. However, might be unable to read it correctly.'.format(self.path))
 
-        self.annotation['header'] = header
+        self.annotation['__header__'] = header
 
 
     def read_text(self, file_handle):
@@ -85,7 +85,7 @@ class FCS_Parser(object):
         This is the meta data associated with the FCS file.
         Converting all meta keywords to lower case.
         """
-        header = self.annotation['header'] # For convenience
+        header = self.annotation['__header__'] # For convenience
 
         #####
         # Read in the TEXT segment of the FCS file
@@ -132,7 +132,7 @@ class FCS_Parser(object):
             value = text[key]
             text[key] = int(value)
 
-        self.annotation['text'] = text
+        self.annotation.update(text)
 
         ### Keep for debugging
         #key_list = self.header['text'].keys()
@@ -145,8 +145,8 @@ class FCS_Parser(object):
         Reads the ANALYSIS segment of the FCS file and stores it in self.analysis
         Warning: This has never been tested with an actual fcs file that contains an analysis segment.
         """
-        start = self.annotation['header']['analysis start']
-        end = self.annotation['header']['analysis end']
+        start = self.annotation['__header__']['analysis start']
+        end = self.annotation['__header__']['analysis end']
         if start != 0 and end != 0:
             file_handle.seek(self.start, 0)
             self._analysis = file_handle.read(self.end - self.start)
@@ -157,7 +157,7 @@ class FCS_Parser(object):
         """
         Checks the FCS file to make sure that some of the assumptions made by the parser are met.
         """
-        text = self.annotation['text']
+        text = self.annotation
         keys = text.keys()
 
         if '$NEXTDATA' in text and text['$NEXTDATA'] != 0:
@@ -177,7 +177,7 @@ class FCS_Parser(object):
     def read_data(self, file_handle):
         """ Reads the DATA segment of the FCS file. """
         self.check_assumptions()
-        header, text = self.annotation['header'], self.annotation['text'] # For convenience
+        header, text = self.annotation['__header__'], self.annotation # For convenience
         num_events = text['$TOT'] # Number of events recorded
         num_pars   = text['$PAR'] # Number of parameters recorded
 
@@ -194,7 +194,7 @@ class FCS_Parser(object):
         dtype = '{endian}{numerical_type}'.format(endian=endian, numerical_type=conversion_dict[text['$DATATYPE']])
 
         # Calculations to figure out data types of each of parameters
-        bytes_per_par_list   = [text['$P{0}B'.format(i)] / 8  for i in self.channel_numbers]
+        bytes_per_par_list   = [text['$P{0}B'.format(i)] / 8  for i in self.channel_numbers] # $PnB specifies the number of bits reserved for a measurement of parameter n
         par_numeric_type_list   = ['{endian}f{size}'.format(endian=endian, size=bytes_per_par) for bytes_per_par in bytes_per_par_list]
         bytes_per_event = sum(bytes_per_par_list)
         total_bytes = bytes_per_event * num_events
@@ -312,15 +312,12 @@ def compare_against_fcm():
 
 
 if __name__ == '__main__':
-    #fname = '../tests/data/AY_2013-06-08_gasperm_ecoli_Well_A1.001.fcs'
-    #fname = '../tests/data/AY_2013-06-08_gasperm_ecoli_Well_A2.001.fcs'
-    #fname = '../tests/data/AY_2013-06-08_gasperm_ecoli_Well_B1.001.fcs'
-    #fname = '../tests/data/AY_2013-06-08_gasperm_ecoli_Well_B2.001.fcs'
-    fname = '../tests/data/EY_2013-05-03_EID_214_PID_1120_Piperacillin_Well_B7.001.fcs'
+    import glob
+    fname = glob.glob('../tests/data/Plate01/*.fcs')[0]
+    #fname = '../tests/data/EY_2013-05-03_EID_214_PID_1120_Piperacillin_Well_B7.001.fcs'
     meta = parse_fcs(fname, meta_data_only=True)
     meta, data_pandas = parse_fcs(fname, meta_data_only=False, output_format='DataFrame')
     meta, data_numpy, channels  = parse_fcs(fname, meta_data_only=False, output_format='ndarray')
-    print 'hello'
 
 
 
