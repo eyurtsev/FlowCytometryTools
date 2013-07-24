@@ -248,7 +248,7 @@ class BaseSample(BaseObject):
 BaseWell = BaseSample
 
 import collections
-class BaseSampleCollection(collections.MutableMapping):
+class BaseSampleCollection(collections.MutableMapping, BaseObject):
     '''
     A collection of samples
     '''
