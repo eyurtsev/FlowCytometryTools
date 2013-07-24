@@ -19,6 +19,17 @@ class FCSample(BaseSample):
     a single well or a single tube.
     '''
 
+    @property
+    def channels(self):
+        '''
+        TODO: get the channels from the metadata toavoid having to 
+        load the data
+        '''
+        if self.data is not None:
+            return list(self.data.columns)
+        else:
+            return None
+
     def read_data(self, **kwargs):
         '''
         Read the datafile specified in Sample.datafile and 
