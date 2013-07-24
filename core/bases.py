@@ -52,6 +52,28 @@ class BaseObject(object):
     def load(cls, path):
         return load(path)
 
+    @property
+    def _constructor(self):
+        return self.__class__
+    
+    def copy(self, deep=True):
+        """
+        Make a copy of this object
+
+        Parameters
+        ----------
+        deep : boolean, default True
+            Make a deep copy, i.e. also copy data
+
+        Returns
+        -------
+        copy : type of caller
+        """
+        from copy import copy, deepcopy
+        if deep:
+            return deepcopy(self)
+        else:
+            return copy(self)
 
 class BaseSample(BaseObject):
     '''
