@@ -35,14 +35,14 @@ class FCSample(BaseSample):
         meta = parse_fcs(self.datafile, **kwargs)
         return meta
 
-    def get_metadata(self, fields, kwargs={}):
+    def get_meta_fields(self, fields, kwargs={}):
         '''
         TODO: change to extract data from other metadata fields (not just 'text')
         '''
 #         if self.data is None:
 #             raise Exception, 'Data must be read before extracting metadata.'
         fields = to_list(fields)
-        func = lambda x: [x.meta['text'][field] for field in fields]
+        func = lambda x: [x.get_meta()[field] for field in fields]
         kwargs.setdefault('applyto', 'sample')
         return self.apply(func, **kwargs)
 

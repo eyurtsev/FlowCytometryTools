@@ -47,10 +47,13 @@ class BaseSample(BaseObject):
         self.datafile = datafile
         self.metafile = metafile
         if readdata:
-            data = self.read_data(**readdata_kwargs)
-            self.data = data
+            self.set_data(datafile=datafile, **readdata_kwargs)
         else:
             self.data = None
+        if readmeta:
+            self.set_meta(metafile=metafile, **readmeta_kwargs)
+        else:
+            self.meta = None
 
     def read_data(self, **kwargs):
         '''
@@ -66,8 +69,7 @@ class BaseSample(BaseObject):
         '''
         pass
 
-    def _set_attr_from_file(self, name, value=None, path=None, 
-                            reader_kwargs={}):
+    def _set_attr_from_file(self, name, value=None, path=None, **kwargs):
         '''
         Assign values to attribute of self.
         Attribute values can be passed by user or read from file.
@@ -84,7 +86,7 @@ class BaseSample(BaseObject):
         else:
             if path is not None:
                 setattr(self, name+'file', path)
-            value = getattr(self, 'read_%s' %name)(**reader_kwargs)
+            value = getattr(self, 'read_%s' %name)(**kwargs)
         setattr(self, name, value)
 
     def set_data(self, data=None, datafile=None, **kwargs):
@@ -101,20 +103,51 @@ class BaseSample(BaseObject):
         '''
         self._set_attr_from_file('meta', meta, metafile, **kwargs)
 
+    def _get_attr_from_file(self, name, **kwargs):
+        '''
+        return values of attribute of self.
+        Attribute values can the ones assigned already, or the read for 
+        the corresponding file.
+        If read from file: 
+            i) the method used to read the file is 'self.read_[attr name]'
+            (e.g. for an attribute named 'meta' 'self.read_meta' 
+            will be used).
+            ii) the file path will be the one specified in an attribute
+            named: '[attr name]file'. (e.g. for an attribute named 
+            'meta' a 'metafile' attribute will be created).
+        '''
+        current_value = getattr(self, name)
+        current_path  = getattr(self, name+'file')
+        if current_value is not None:
+            value = current_value
+        elif current_path is not None:
+            value = getattr(self, 'read_%s' %name)(**kwargs)
+        else:
+            value = None
+        return value
+
     def get_data(self, **kwargs):
         '''
-        quick fix for working with data.
-        TODO
-        To Jonathan: can you add a property or else a function that will correctly
-        return the data that I should be working with?
-        probably add a call to this method from within apply function
+        Get the sample data.
+        If data is not set, read from 'self.datafile' using 'self.read_data'.
         '''
-        if self.data is not None:
-            return self.data
-        elif self.datafile is not None:
-            return self.read_data(**kwargs)
-        else:
-            return None
+        return self._get_attr_from_file('data', **kwargs)
+
+    def get_meta(self, **kwargs):
+        '''
+        Get the sample metadata.
+        If not metadata is not set, read from 'self.metafile' using 'self.read_meta'.
+        '''
+        return self._get_attr_from_file('meta', **kwargs)
+
+    def get_meta_fields(self, fields, **kwargs):
+        '''
+        Get specific fields of associated metadata.
+        
+        This function should be overwritten for each 
+        specific data type.
+        '''
+        pass
 
     def ID_from_data(self):
         '''
@@ -125,12 +158,6 @@ class BaseSample(BaseObject):
         '''
         pass
 
-    def get_metadata(self, fields):
-        '''
-        This function should be overwritten for each 
-        specific data type.
-        '''
-        pass
 
     def apply(self, func, applyto='data', noneval=nan, setdata=False):
         '''
@@ -301,7 +328,7 @@ class BaseSampleCollection(collections.MutableMapping):
         '''
         '''
         fields = to_list(fields)
-        func = lambda x: x.get_metadata(fields)
+        func = lambda x: x.get_meta_fields(fields)
         meta_d = self.apply(func, ids=ids, applyto='sample', 
                           noneval=noneval)
         if output_format is 'dict':
@@ -482,7 +509,7 @@ class BasePlate(BaseObject):
             
     def get_well_metadata(self, fields, noneval=nan, well_ids=None):
         fields = to_list(fields)
-        func = lambda x: x.get_metadata(fields)
+        func = lambda x: x.get_meta_fields(fields)
         self.apply(func, fields, 'sample', noneval, well_ids)
 
 
