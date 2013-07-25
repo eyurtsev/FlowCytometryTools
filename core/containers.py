@@ -4,9 +4,6 @@ Created on Jun 14, 2013
 @author: jonathanfriedman
 
 TODO:
-- transition from fcm data&reader to pandas and Eugene's parser
-- add transforms to sample
-- implement read_metadata.
 '''
 from FlowCytometryTools import parse_fcs
 from bases import BaseSample, BaseSampleCollection, BasePlate
