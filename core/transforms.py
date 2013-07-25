@@ -156,7 +156,7 @@ def hlog(x, b=100, r=_display_max, d=_l_mmax,
     from scipy.optimize import brentq
 
     hlog_obj = lambda y, x, b, r, d: hlog_inv(y, b, r, d) - x
-    find_inv = vectorize(lambda x: brentq(hlog_obj, -1.01*r, 1.01*r, 
+    find_inv = vectorize(lambda x: brentq(hlog_obj, -2*r, 2*r, 
                                         args=(x, b, r, d)))    
     if not hasattr(x, '__len__'): #if transforming a single number
         y = find_inv(x)
@@ -207,7 +207,7 @@ def get_transform(name, direction='forward'):
     else:
         return name_transforms[cannonical_name][direction]
 
-def transform_frame(frame, transform, direction='forward',channels=None,
+def transform_frame(frame, transform, channels=None, direction='forward',
                      return_all=True, args=(), **kwargs):
     '''
     Apply transform to specified channels. 
