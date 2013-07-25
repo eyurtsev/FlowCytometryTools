@@ -119,6 +119,21 @@ class FCSample(BaseSample):
         from FlowCytometryTools import flowGUI
         return flowGUI.sample_viewer(self.datafile, channel_names=channel_names)
 
+    def transform(self, transform, channels=None, direction='forward',  
+                  return_all=True, args=(), **kwargs):
+        '''
+        Apply transform to specified channels. 
+        Return a new sample with transformed data.
+        '''
+        from transforms import transform_frame
+        data = self.get_data()
+        tdata = transform_frame(data, transform, channels, direction,
+                                           return_all, args, **kwargs)
+        tsample = self.copy()
+        tsample.set_data(data=tdata)
+        return tsample
+        
+
 class FCSampleCollection(BaseSampleCollection):
     '''
     A dict-like class for holding flow cytometry samples.
