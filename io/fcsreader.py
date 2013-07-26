@@ -24,8 +24,7 @@ def raise_parser_feature_not_implemented(message):
               to the developers.
               The following problem was encountered with your FCS file:
               {0} """.format(message)
-
-    raise Exception(message)
+    raise NotImplementedError(message)
 
 class FCS_Parser(object):
     """
@@ -119,7 +118,14 @@ class FCS_Parser(object):
         else:
             self.channel_numbers = range(1, pars + 1) # Channel numbers start from 1
 
-        self.channel_names = tuple([text['$P{0}N'.format(i)] for i in self.channel_numbers])
+        ## Extract parameter names
+        # Explanation:
+        # N stands for the short name (guaranteed to be unique). Will look like 'FL1-H'
+        # S stands for the actual name (not guaranteed to be unique). Will look like 'FSC-H' (Forward scatter)
+        # That's correct. N stands for short and S stands for long. 
+        # (Seems like the names were swapped for some reason in the specification.
+        self.channel_names_n = tuple([text['$P{0}N'.format(i)] for i in self.channel_numbers])
+        self.channel_names = tuple([text['$P{0}S'.format(i)] for i in self.channel_numbers])
 
         # Convert some of the fields into integer values
         keys_encoding_bits  = ['$P{0}B'.format(i) for i in self.channel_numbers]
@@ -271,7 +277,7 @@ def parse_fcs(path, meta_data_only=False, output_format='DataFrame', compensate=
     elif output_format == 'DataFrame':
         """ Constructs pandas DF object """
         if pandas_found == False:
-            raise Exception('You do not have pandas installed.')
+            raise ImportError('You do not have pandas installed.')
         data = parsed_FCS.data
         data = pandas.DataFrame(data, columns=parsed_FCS.channel_names)
         return meta, data
@@ -279,7 +285,7 @@ def parse_fcs(path, meta_data_only=False, output_format='DataFrame', compensate=
         """ Constructs numpy matrix """
         return meta, parsed_FCS.data, channel_names
     else:
-        raise Exception("The output_format must be either 'ndarray' or 'DataFrame'")
+        raise ValueError("The output_format must be either 'ndarray' or 'DataFrame'")
 
 if __name__ == '__main__':
     import glob
