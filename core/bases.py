@@ -37,6 +37,10 @@ def _assign_IDS_to_datafiles(datafiles, parser, sample_class=None):
     d = dict( (fparse(dfile), dfile) for dfile in datafiles )
     return d
 
+def _parse_criteria(criteria):
+    if hasattr(criteria, '__call__'):
+        return criteria
+
 class BaseObject(object):
     '''
     Object providing common utility methods.
@@ -424,6 +428,58 @@ class BaseSampleCollection(collections.MutableMapping, BaseObject):
                    "Encounterd unsupported value %s." %repr(output_format))
             raise Exception(msg)
 
+    # ----------------------
+    # Filtering methods
+    # ----------------------
+    def filter(self, criteria, applyto='samples', ID=None):
+        '''
+        Filter samples according to given criteria
+        
+        TODO: add support for multiple criteria
+        '''
+        fil = _parse_criteria(criteria)
+        if isinstance(applyto, collections.Mapping):
+            samples = {k:v for k,v in self.iteritems() if fil(applyto[k])}
+        elif applyto=='samples':
+            samples = {k:v for k,v in self.iteritems() if fil(v)}
+        elif applyto=='keys':
+            samples = {k:v for k,v in self.iteritems() if fil(k)}
+        elif applyto=='data':
+            samples = {k:v for k,v in self.iteritems() if fil(v.get_data())}
+        else:
+            raise ValueError, 'Unsupported value "%s" for applyto parameter.' %applyto
+        if ID is None:
+            ID = self.ID + '.filtered'
+        return self._constructor(ID, samples)
+
+    def filter_by_key(self, keys, ID=None):
+        keys = to_list(keys)
+        fil = lambda x: x in keys
+        return self.filter(fil, applyto='keys', ID=ID) 
+
+    def filter_by_attr(self, attr, criteria, ID=None):
+        applyto = {k:getattr(v,attr) for k,v in self.iteritems()}
+        return self.filter(criteria, applyto=applyto, ID=ID)
+
+    def filter_by_IDs(self, ids, ID=None):
+        fil = lambda x: x in ids
+        return self.filter_by_attr('ID', fil, ID)
+
+    def filter_by_meta(self, criteria, ID=None):
+        raise NotImplementedError
+
+    def filter_by_rows(self, rows, ID=None):
+        rows = to_list(rows)
+        fil = lambda x: x in rows
+        applyto = {k:self._positions[k][0] for k in self.iterkeys()}
+        return self.filter(fil, applyto=applyto, ID=ID)
+
+    def filter_by_cols(self, cols, ID=None):
+        rows = to_list(cols)
+        fil = lambda x: x in rows
+        applyto = {k:self._positions[k][1] for k in self.iterkeys()}
+        return self.filter(fil, applyto=applyto, ID=ID)
+
 class BaseOrderedCollection(BaseSampleCollection):
     '''
     - add dropna to self?
@@ -449,7 +505,11 @@ class BaseOrderedCollection(BaseSampleCollection):
         
         self._positions = {}
         self.set_positions(positions, parser=position_parser)
-        
+        for k in self.iterkeys():
+            if k not in self._positions:
+                msg = ('All sample position must be set,' +
+                       ' but no position was set for sample %s' %k)
+                raise Exception, msg
 
     @classmethod
     def from_files(cls, ID, datafiles, file_parser='name', **kwargs):
