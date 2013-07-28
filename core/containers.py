@@ -6,7 +6,7 @@ Created on Jun 14, 2013
 TODO:
 '''
 from FlowCytometryTools import parse_fcs
-from bases import BaseSample, BaseSampleCollection, BasePlate
+from bases import BaseSample, BaseSampleCollection, BasePlate, BaseOrderedCollection
 from GoreUtilities.util import to_list
 import graph
 
@@ -136,6 +136,11 @@ class FCSampleCollection(BaseSampleCollection):
     A dict-like class for holding flow cytometry samples.
     '''
     _sample_class = FCSample
+
+class FCOrderedCollection(BaseOrderedCollection, FCSampleCollection):
+    '''
+    A dict-like class for holding flow cytometry samples that are arranged in a matrix.
+    '''
 
 class FCPlate(BasePlate):
     '''
