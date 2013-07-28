@@ -156,7 +156,7 @@ def hlog(x, b=100, r=_display_max, d=_l_mmax,
     from scipy.optimize import brentq
 
     hlog_obj = lambda y, x, b, r, d: hlog_inv(y, b, r, d) - x
-    find_inv = vectorize(lambda x: brentq(hlog_obj, -1.01*r, 1.01*r, 
+    find_inv = vectorize(lambda x: brentq(hlog_obj, -2*r, 2*r, 
                                         args=(x, b, r, d)))    
     if not hasattr(x, '__len__'): #if transforming a single number
         y = find_inv(x)
@@ -199,7 +199,7 @@ name_transforms = {
 
 def get_transform(name, direction='forward'):
     '''
-    Direction : 'forward' | 'inverse'
+    direction : 'forward' | 'inverse'
     '''
     cannonical_name = _get_canonical_name(name)
     if cannonical_name is None:
@@ -207,11 +207,15 @@ def get_transform(name, direction='forward'):
     else:
         return name_transforms[cannonical_name][direction]
 
-def transform_frame(frame, transform, direction='forward',
-                    channels=None, args=(), **kwargs):
+def transform_frame(frame, transform, channels=None, direction='forward',
+                     return_all=True, args=(), **kwargs):
     '''
     Apply transform to specified channels. 
-    Return only values of specified channels.
+    
+    direction: 'forward' | 'inverse'
+    return_all: bool
+        True -  return all channels, with specified ones transformed.
+        False - return only specified channels.
     
     TODO: add detailed doc
     '''
@@ -225,7 +229,12 @@ def transform_frame(frame, transform, direction='forward',
         channels = frame.columns
     if isinstance(channels, basestring):
         channels = (channels,)
-    transformed = frame.filter(channels).apply(tfun, *args, **kwargs)
+    if return_all:
+        transformed = frame.copy()
+        for c in channels:
+            transformed[c] = tfun(frame[c],  *args, **kwargs) 
+    else:
+        transformed = frame.filter(channels).apply(tfun, *args, **kwargs)
     return transformed
 
 if __name__ == '__main__':

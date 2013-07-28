@@ -37,6 +37,10 @@ def _assign_IDS_to_datafiles(datafiles, parser, sample_class=None):
     d = dict( (fparse(dfile), dfile) for dfile in datafiles )
     return d
 
+def _parse_criteria(criteria):
+    if hasattr(criteria, '__call__'):
+        return criteria
+
 class BaseObject(object):
     '''
     Object providing common utility methods.
@@ -95,6 +99,17 @@ class BaseSample(BaseObject):
             self.set_meta(metafile=metafile, **readmeta_kwargs)
         else:
             self.meta = None
+        self.position = {}
+
+    def _set_position(self, orderedcollection_id, pos):
+        self.position[orderedcollection_id] = pos
+
+    @property
+    def shape(self):
+        if self.data is None:
+            return None
+        else:
+            return self.data.shape
 
     # ----------------------
     # Methods of exposing underlying data
@@ -276,8 +291,8 @@ class BaseSampleCollection(collections.MutableMapping, BaseObject):
         '''
         d = _assign_IDS_to_datafiles(datafiles, parser, cls._sample_class)
         samples = []
-        for ID, dfile in d.iteritems():
-                samples.append(cls._sample_class(ID, datafile=dfile))
+        for sID, dfile in d.iteritems():
+                samples.append(cls._sample_class(sID, datafile=dfile))
         return cls(ID, samples)
 
     @classmethod
@@ -413,6 +428,244 @@ class BaseSampleCollection(collections.MutableMapping, BaseObject):
                    "Encounterd unsupported value %s." %repr(output_format))
             raise Exception(msg)
 
+    # ----------------------
+    # Filtering methods
+    # ----------------------
+    def filter(self, criteria, applyto='samples', ID=None):
+        '''
+        Filter samples according to given criteria
+        
+        TODO: add support for multiple criteria
+        '''
+        fil = _parse_criteria(criteria)
+        if isinstance(applyto, collections.Mapping):
+            samples = {k:v for k,v in self.iteritems() if fil(applyto[k])}
+        elif applyto=='samples':
+            samples = {k:v for k,v in self.iteritems() if fil(v)}
+        elif applyto=='keys':
+            samples = {k:v for k,v in self.iteritems() if fil(k)}
+        elif applyto=='data':
+            samples = {k:v for k,v in self.iteritems() if fil(v.get_data())}
+        else:
+            raise ValueError, 'Unsupported value "%s" for applyto parameter.' %applyto
+        if ID is None:
+            ID = self.ID + '.filtered'
+        return self._constructor(ID, samples)
+
+    def filter_by_key(self, keys, ID=None):
+        keys = to_list(keys)
+        fil = lambda x: x in keys
+        return self.filter(fil, applyto='keys', ID=ID) 
+
+    def filter_by_attr(self, attr, criteria, ID=None):
+        applyto = {k:getattr(v,attr) for k,v in self.iteritems()}
+        return self.filter(criteria, applyto=applyto, ID=ID)
+
+    def filter_by_IDs(self, ids, ID=None):
+        fil = lambda x: x in ids
+        return self.filter_by_attr('ID', fil, ID)
+
+    def filter_by_meta(self, criteria, ID=None):
+        raise NotImplementedError
+
+    def filter_by_rows(self, rows, ID=None):
+        rows = to_list(rows)
+        fil = lambda x: x in rows
+        applyto = {k:self._positions[k][0] for k in self.iterkeys()}
+        return self.filter(fil, applyto=applyto, ID=ID)
+
+    def filter_by_cols(self, cols, ID=None):
+        rows = to_list(cols)
+        fil = lambda x: x in rows
+        applyto = {k:self._positions[k][1] for k in self.iterkeys()}
+        return self.filter(fil, applyto=applyto, ID=ID)
+
+class BaseOrderedCollection(BaseSampleCollection):
+    '''
+    - add dropna to self?
+    - add reshape? 
+    - add factory methods (from_files, for_path)
+    - get entire rows/cols 
+    - output format (of some filter/apply): list, dict, 
+    OC of original size, OC of new size
+    + OC should check for position collisions.
+    ''' 
+    def __init__(self, ID, samples, shape=(8,12),
+                 positions=None, position_parser='name',
+                row_labels=None, col_labels=None):
+        super(BaseOrderedCollection, self).__init__(ID, samples)
+        #FCSampleCollection.__init__(self, ID, samples)
+        self.shape = shape
+        if row_labels is None:
+            row_labels = self._default_labels('rows')
+        if col_labels is None:
+            col_labels = self._default_labels('cols')
+        self.row_labels = row_labels
+        self.col_labels = col_labels
+        
+        self._positions = {}
+        self.set_positions(positions, parser=position_parser)
+        for k in self.iterkeys():
+            if k not in self._positions:
+                msg = ('All sample position must be set,' +
+                       ' but no position was set for sample %s' %k)
+                raise Exception, msg
+
+    @classmethod
+    def from_files(cls, ID, datafiles, file_parser='name', **kwargs):
+        '''
+        TODO: allow different sample IDs and collection keys
+        '''
+        d = _assign_IDS_to_datafiles(datafiles, file_parser, cls._sample_class)
+        samples = []
+        for sID, dfile in d.iteritems():
+                samples.append(cls._sample_class(sID, datafile=dfile))
+        return cls(ID, samples, **kwargs)
+
+    @classmethod
+    def from_path(cls, ID, path, pattern='*.fcs', recursive=False,
+                  file_parser='name', **kwargs):
+        datafiles = get_files(path, pattern, recursive)
+        return cls.from_files(ID, datafiles, file_parser='name', **kwargs)
+
+    def _default_labels(self, axis):
+        import string
+        if axis == 'rows':
+            return [string.uppercase[i] for i in range(self.shape[0])]
+        else:
+            return  range(1, 1+self.shape[1])
+
+    def _is_valid_position(self, position):
+        '''
+        check if given position is valid for this collection
+        '''
+        row, col = position
+        valid_r = row in self.row_labels
+        valid_c = col in self.col_labels
+        return valid_r and valid_c
+
+    def _get_ID2position_parser(self, parser):
+        '''
+        '''
+        if hasattr(parser, '__call__'):
+            pass
+        elif isinstance(parser, collections.Mapping):
+            parser = lambda x: parser[x]
+        elif parser == 'name':
+            parser = lambda x: (x[0], int(x[1:]))
+        elif parser == 'number':
+            def num_parser(x):
+                i,j = unravel_index(int(x), self.shape)
+                return (self.row_labels[i], self.col_labels[j])
+            parser = num_parser
+        else:
+            raise ValueError,  'Encountered unsupported value "%s" for parser paramter.' %parser 
+        return parser
+
+    def set_positions(self, positions=None, parser='name', ids=None):
+        '''
+        checks for position validity & collisions, 
+        but not that all samples are assigned.
+        
+        pos is dict-like of sample_key:(row,col)
+        parser :
+            callable - gets key and returns position
+            mapping  - key:pos
+            'name'   - parses things like 'A1', 'G12'
+            'number' - converts number to positions, going over rows first.
+        ids :
+            parser will be applied to specified ids only. 
+            If None is given, parser will be applied to all samples.
+        TODO: output a more informative message for position collisions
+        '''
+        if positions is None:
+            if ids is None:
+                ids = self.keys()
+            else:
+                ids = to_list(ids)
+            parser = self._get_ID2position_parser(parser)
+            positions = dict( (ID, parser(ID)) for ID in ids )
+        else:
+            pass
+        # check that resulting assignment is unique (one sample per position)
+        temp = self._positions.copy()
+        temp.update(positions)
+        if not len(temp.values())==len(set(temp.values())):
+            msg = 'A position can only be occupied by a single sample'
+            raise Exception, msg
+
+        for k, pos in positions.iteritems():
+            if not self._is_valid_position(pos):
+                msg = 'Position {} is not supported for this collection'.format(pos)
+                raise ValueError, msg
+            self._positions[k] = pos
+            self[k]._set_position(self.ID, pos)
+
+    def get_positions(self, copy=True):
+        '''
+        Get a dictionary of sample positions.
+        '''
+        if copy:
+            return self._positions.copy()
+        else:
+            return self._positions
+
+    def _dict2DF(self, d, noneval, dropna=False):
+        df = DF(noneval, index=self.row_labels, columns=self.col_labels, dtype=object)
+        for k, res in d.iteritems():
+            i,j = self._positions[k]
+            df[j][i] = res
+        if dropna:
+            return df.dropna(axis=0, how='all').dropna(axis=1, how='all')
+        else:
+            return df
+
+    @property
+    def layout(self):
+        return self._dict2DF(self, nan)
+
+    def print_layout(self):
+        layout=self.layout
+        print_layout = layout.fillna('')
+        print print_layout
+
+    def apply(self, func, ids=None, applyto='data', 
+              output_format='DataFrame', noneval=nan, 
+              setdata=False, dropna=False):
+        '''
+        Apply func to each of the specified samples.
+        
+        Parameters
+        ----------
+        func : dict 
+            Each func value is a callable that accepts a Sample 
+            object and returns a single number/string. 
+        ids : hashable| iterable of hashables | None
+            IDs of well to apply function to.
+            If None is given
+        output_format : 'DataFrame' | 'dict'
+        applyto : 'data' | 'sample'
+            'data'   : apply to samples associated data
+            'sample' : apply to sample objects themselves.
+        noneval : obj
+            Value returned if applyto is 'data' but no data is available.
+        setdata : bool
+            Used only if data is not already set.
+            If true parsed data will be assigned to self.data
+            Otherwise data will be discarded at end of apply.
+        dropna : bool
+            whether to remove rows/cols that contain no samples.
+        ''' 
+        result = super(BaseOrderedCollection, self).apply(func, ids, applyto, 
+                                                       noneval, setdata)
+        if output_format is 'dict':
+            return result
+        elif output_format is 'DataFrame':
+            return self._dict2DF(result, noneval)
+        else:
+            msg = ("The output_format must be either 'dict' or 'DataFrame'. " +
+                   "Encounterd unsupported value %s." %repr(output_format))
+            raise Exception(msg)
 
 class BasePlate(BaseObject):
     '''
