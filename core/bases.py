@@ -426,7 +426,7 @@ class BaseSampleCollection(collections.MutableMapping, BaseObject):
 
 class BaseOrderedCollection(BaseSampleCollection):
     '''
-    - add dropna to dict2df and potentially to self
+    - add dropna to self?
     - add reshape? 
     - add factory methods (from_files, for_path)
     - get entire rows/cols 
@@ -434,8 +434,9 @@ class BaseOrderedCollection(BaseSampleCollection):
     OC of original size, OC of new size
     + OC should check for position collisions.
     ''' 
-    def __init__(self, ID, samples, positions=None,
-                 shape=(8,12), row_labels=None, col_labels=None):
+    def __init__(self, ID, samples, shape=(8,12),
+                 positions=None, position_parser='name',
+                row_labels=None, col_labels=None):
         super(BaseOrderedCollection, self).__init__(ID, samples)
         #FCSampleCollection.__init__(self, ID, samples)
         self.shape = shape
@@ -445,10 +446,27 @@ class BaseOrderedCollection(BaseSampleCollection):
             col_labels = self._default_labels('cols')
         self.row_labels = row_labels
         self.col_labels = col_labels
+        
+        self._positions = {}
+        self.set_positions(positions, parser=position_parser)
+        
 
-        self.positions = {}
-        self.set_positions(positions)
+    @classmethod
+    def from_files(cls, ID, datafiles, file_parser='name', **kwargs):
+        '''
+        TODO: allow different sample IDs and collection keys
+        '''
+        d = _assign_IDS_to_datafiles(datafiles, file_parser, cls._sample_class)
+        samples = []
+        for sID, dfile in d.iteritems():
+                samples.append(cls._sample_class(sID, datafile=dfile))
+        return cls(ID, samples, **kwargs)
 
+    @classmethod
+    def from_path(cls, ID, path, pattern='*.fcs', recursive=False,
+                  file_parser='name', **kwargs):
+        datafiles = get_files(path, pattern, recursive)
+        return cls.from_files(ID, datafiles, file_parser='name', **kwargs)
 
     def _default_labels(self, axis):
         import string
@@ -466,31 +484,51 @@ class BaseOrderedCollection(BaseSampleCollection):
         valid_c = col in self.col_labels
         return valid_r and valid_c
 
-    def _ID2positions(self, IDs, parser):
-        if isinstance(parser, collections.Mapping):
-            fparse = lambda x: parser[x]
+    def _get_ID2position_parser(self, parser):
+        '''
+        '''
+        if hasattr(parser, '__call__'):
+            pass
+        elif isinstance(parser, collections.Mapping):
+            parser = lambda x: parser[x]
         elif parser == 'name':
-            fparse = lambda x: (x[0], int(x[1:]))
+            parser = lambda x: (x[0], int(x[1:]))
         elif parser == 'number':
             def num_parser(x):
                 i,j = unravel_index(int(x), self.shape)
                 return (self.row_labels[i], self.col_labels[j])
+            parser = num_parser
         else:
             raise ValueError,  'Encountered unsupported value "%s" for parser paramter.' %parser 
-        d = dict( (ID, fparse(ID)) for ID in IDs )
-        return d
+        return parser
 
-    def set_positions(self, positions):
+    def set_positions(self, positions=None, parser='name', ids=None):
         '''
         checks for position validity & collisions, 
         but not that all samples are assigned.
         
         pos is dict-like of sample_key:(row,col)
-        
+        parser :
+            callable - gets key and returns position
+            mapping  - key:pos
+            'name'   - parses things like 'A1', 'G12'
+            'number' - converts number to positions, going over rows first.
+        ids :
+            parser will be applied to specified ids only. 
+            If None is given, parser will be applied to all samples.
         TODO: output a more informative message for position collisions
         '''
+        if positions is None:
+            if ids is None:
+                ids = self.keys()
+            else:
+                ids = to_list(ids)
+            parser = self._get_ID2position_parser(parser)
+            positions = dict( (ID, parser(ID)) for ID in ids )
+        else:
+            pass
         # check that resulting assignment is unique (one sample per position)
-        temp = self.positions.copy()
+        temp = self._positions.copy()
         temp.update(positions)
         if not len(temp.values())==len(set(temp.values())):
             msg = 'A position can only be occupied by a single sample'
@@ -500,13 +538,22 @@ class BaseOrderedCollection(BaseSampleCollection):
             if not self._is_valid_position(pos):
                 msg = 'Position {} is not supported for this collection'.format(pos)
                 raise ValueError, msg
-            self.positions[k] = pos
+            self._positions[k] = pos
             self[k]._set_position(self.ID, pos)
+
+    def get_positions(self, copy=True):
+        '''
+        Get a dictionary of sample positions.
+        '''
+        if copy:
+            return self._positions.copy()
+        else:
+            return self._positions
 
     def _dict2DF(self, d, noneval, dropna=False):
         df = DF(noneval, index=self.row_labels, columns=self.col_labels, dtype=object)
         for k, res in d.iteritems():
-            i,j = self.positions[k]
+            i,j = self._positions[k]
             df[j][i] = res
         if dropna:
             return df.dropna(axis=0, how='all').dropna(axis=1, how='all')
