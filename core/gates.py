@@ -8,37 +8,41 @@ API:
     DataFrame -- pandas object
     gate1 -- a polygon gate.
 
-gate = PolygonGate(ID='Hello', coordinates=())
+Gates:
+    ThresholdGate
+    IntervalGate
+    QuadGate
+    PolyGate
 
-DataFrame = gate.filter(DataFrame)
-
-DataFrame = gate.filter(DataFrame, which='in') # Inside the gate
-DataFrame = gate.filter(DataFrame, which='out') # Outside the gate
-
-DataFrame = gate.filter(DataFrame, which='above') # Outside the gate
-DataFrame = gate.filter(DataFrame, which='below') # Outside the gate
-
-DataFrame = gate.filter(DataFrame, which='top left') # Outside the gate
+TODO: Update documentation.
 """
 import graph
 from matplotlib.path import Path
 from GoreUtilities.util import to_list
+import pylab as pl
+import numpy
 
 class Gate(object):
     """ Abstract gate. Defines common interface for specific implementations of the gate classes. """
-    def __init__(self, vert, channels, name=None):
+    unnamed_gate_num = 1
+
+    def __init__(self, vert, channels, region, name=None):
         self.vert = vert
         channels = to_list(channels)
         self.channels = channels
-        self.name = "Unnamed Gate" if name is None else name
 
-        """ Should we be checking inputs here? Perhaps split to different __init__ methods so that
-        each one can have it's own documentation. That will probably be clearer to the user anyway.
-        """
+        if name == None:
+            self.name = "Unnamed Gate {0}".format(Gate.unnamed_gate_num)
+            Gate.unnamed_gate_num += 1
+        else:
+            self.name = name
 
+        self.region = region
 
         self.validiate_input()
 
+    def validiate_input(self):
+        """ Need to check the cases below. """
         #if self.__class__ is isinstance(PolyGate):
             #if len(vert) < 2:
                 #raise Exception('vert must be a list of 2-tuples [(x1, y1), (x2, y2), (x3, y3)]')
@@ -53,9 +57,6 @@ class Gate(object):
                 #raise Exception('vert must be a single number (x_threshold)')
             #elif self.__class__ is isinstance(IntervalGate) and len(vert) != 2:
                 #raise Exception('vert must be a single number (x_threshold)')
-
-
-    def validiate_input(self):
         pass
 
     def __repr__(self):
@@ -68,39 +69,44 @@ class Gate(object):
     def __str__(self):
         return self.__repr__()
 
-    def filter(self):
-        raise Exception('Not implemented')
-
-    def plot(self, ax=None, *args, **kwargs):
+    def __call__(self, dataframe, region = None):
         """
-        Plots a gate object on the current axis.
-        Note: this function may or may not rescale the x,y axis
-
-        TODO: Does not work for Interval Gate
+        TODO: Update documentation.
+        Returns a list of indexes containing only the points that pass the filter.
 
         Parameters
         ----------
-        ax : axis reference to plot on
-
-        *args, **kwargs
-            + passed to the Polygon function for the polygon gate
-            + passed to axvline and axhline for quad gate
-
-        Returns
-        -------
-        reference to plot
+        dataframe: DataFrame
         """
-        if isinstance(self, PolyGate):
-            gate_type = 'polygon'
-        elif isinstance(self, QuadGate):
-            gate_type = 'quad'
-        else:
-            raise Exception('Plotting is not yet supported for this gate type.')
+        if region is not None:
+            self.region = region
 
-        graph.plot_gate(gate_type, self.vert, ax=ax, *args, **kwargs)
+        idx = self._identify(dataframe)
+
+        return dataframe[idx]
+
+    def plot(self, **kwargs):
+        raise NotImplementedError('Plotting is not yet supported for this gate type.')
+
+    def _identify(self, dataframe):
+        raise NotImplementedError
+
+    @property
+    def region(self):
+        """ Defines the region of the gate that is used for filtering. """
+        return self._region
+
+    @region.setter
+    def region(self, value):
+        if value.lower() in self._region_options:
+            self._region = value.lower()
+        else:
+            raise ValueError("region must be one of the following: {0}".format(self._region_options))
+
+
 
 class ThresholdGate(Gate):
-    def __init__(self, threshold, channel=None, name=None):
+    def __init__(self, threshold, channel, region, name=None):
         """
         Parameters
         ----------
@@ -112,31 +118,49 @@ class ThresholdGate(Gate):
         name : 'str'
             Specifies the name of the gate.
         """
-        super(ThresholdGate, self).__init__(threshold, channel, name)
+        self._region_options = ('above', 'below')
 
-    def filter(self, dataframe, which):
+        super(ThresholdGate, self).__init__(threshold, channel, region, name)
+
+    def _identify(self, dataframe):
+        """ Identifies which of the data points in the dataframe pass the gate. """
+        idx = dataframe[self.channels[0]] >= self.vert # Get indexes that are above threshold
+
+        if self.region == 'below':
+            idx = ~idx
+
+        return idx
+
+    def plot(self, flip = False, ax = None, *args, **kwargs):
         """
-        Returns a filtered data frame containing only the points that pass the filter.
+        Plots a threshold gate.
+        TODO: This function should not rescale the axis
+        Warning: The plot function does not check that your
+        axis correspond to the correct channels.
 
         Parameters
         ----------
-        dataframe: DataFrame
+        ax : axes to use for plotting the gate on
+        flip : boolean
+            If true assumes draws the interval
+            along the y-axis instead of along the x-axis
 
-        which : 'above' | 'below'
-            Determines whether to return the points
-            that are above or else below the threshold.
+        Returns
+        -------
+        Reference to created artists.
         """
-        idx = dataframe[self.channels[0]] >= self.vert
+        if ax == None:
+            ax = pl.gca()
 
-        if which == 'above':
-            return dataframe[idx]
-        elif which == 'below':
-            return dataframe[~idx]
-        else:
-            raise Exception("""Unrecognized option for which must be 'above' or 'below'.""")
+        kwargs.setdefault('color', 'black')
+
+        plot_func = pl.axhline if flip else pl.axvline
+
+        return plot_func(self.vert, *args, **kwargs)
+
 
 class IntervalGate(Gate):
-    def __init__(self, vert, channel, name=None):
+    def __init__(self, vert, channel, region, name=None):
         """
         Parameters
         ----------
@@ -148,40 +172,63 @@ class IntervalGate(Gate):
         name : 'str'
             Specifies the name of the gate.
         """
-        super(IntervalGate, self).__init__(vert, channel, name)
+        self._region_options = ('in', 'out')
+        super(IntervalGate, self).__init__(vert, channel, region, name)
 
     def validiate_input(self):
         if self.vert[1] <= self.vert[0]:
             raise Exception('vert[1] must be larger than vert[0]')
 
-    def filter(self, dataframe, which='in'):
-        """
-        Returns a filtered data frame containing only the points that pass the filter.
-
-        Parameters
-        ----------
-        dataframe: DataFrame
-
-        which : 'in' | 'out'
-            Determines whether to return the points
-            are inside or else outside the interval.
-
-        """
-        # This is not optimized. The second comparison should be on the filtered array.
+    def _identify(self, dataframe):
+        """ Identifies which data points in the dataframe pass the gate. """
+        ##
+        # Let's get the indecies that are within the interval
         idx1 = self.vert[0] <= dataframe[self.channels[0]]
+
+        # Should this comparison use a filtered array (using idx1) for optimization? Check
         idx2 = dataframe[self.channels[0]] <= self.vert[1]
 
         idx = idx1 & idx2
 
-        if which == 'in':
-            return dataframe[idx]
-        elif which == 'out':
-            return dataframe[~idx]
-        else:
-            raise Exception("""Unrecognized option for which must be 'in' or 'out'.""")
+        if self.region == 'out':
+            idx = ~idx
+
+        return idx
+
+
+    def plot(self, flip = False, ax = None, *args, **kwargs):
+        """
+        Plots an interval gate
+        TODO: This function should not rescale the axis
+        Warning: The plot function does not check that your
+        axis correspond to the correct channels.
+
+        Parameters
+        ----------
+        ax : axes to use for plotting the gate on
+        flip : boolean
+            If true assumes draws the interval
+            along the y-axis instead of along the x-axis
+
+        Returns
+        -------
+        Reference to created artists.
+        """
+        if ax == None:
+            ax = pl.gca()
+
+        kwargs.setdefault('color', 'black')
+
+        plot_func = pl.axhline if flip else pl.axvline
+
+        a1 = plot_func(self.vert[0], *args, **kwargs)
+        a2 = plot_func(self.vert[1], *args, **kwargs)
+
+        return (a1, a2)
+
 
 class QuadGate(Gate):
-    def __init__(self, vert, channels, name=None):
+    def __init__(self, vert, channels, region, name=None):
         """
         Parameters
         ----------
@@ -193,48 +240,72 @@ class QuadGate(Gate):
         name : 'str'
             Specifies the name of the gate.
         """
-        super(QuadGate, self).__init__(vert, channels, name)
+        self._region_options = ('top left', 'top right', 'bottom left', 'bottom right')
+        super(QuadGate, self).__init__(vert, channels, region, name)
 
-    def filter(self, dataframe, which):
+    def _identify(self, dataframe):
         """
-        Returns a filtered data frame containing only the points that pass the filter.
+        Returns a list of indexes containing only the points that pass the filter.
 
         Parameters
         ----------
         dataframe: DataFrame
 
-        which : 'top left' | 'top right' | 'bottom left' | 'bottom right'
+        region : 'top left' | 'top right' | 'bottom left' | 'bottom right'
             The first channel passed to the gate constructor is assumed to be the x-axis.
             The second channel is the y-axis.
             Add optional 'out' to have the cells that are outside of the specified region.
 
         # TODO Fix this implementation. (i.e., why not support just 'left')
+        # At the moment this implementation won't work at all.
         The logic here can be simplified.
         """
         id1 = dataframe[self.channels[0]] >= self.vert[0]
         id2 = dataframe[self.channels[1]] >= self.vert[1]
 
-        which = which.strip().lower()
-
-        if 'left' not in which and 'right' not in which:
-            raise Exception('Please select a valid option for which')
-
-        if 'top' not in which and 'bottom' not in which:
-            raise Exception('Please select a valid option for which')
-
-        if 'left' in which: id1 = ~id1
-
-        if 'bottom' in which: id2 = ~id2
+        if 'left' in self.region: id1 = ~id1
+        if 'bottom' in self.region: id2 = ~id2
 
         idx = id1 & id2
 
-        if 'out' in which:
+        if 'out' in self.region:
             idx = ~idx
 
-        return dataframe[idx]
+        return idx
+
+
+    def plot(self, flip=False, ax=None, *args, **kwargs):
+        """
+        Plots a quad gate.
+        TODO: This function should not rescale the axis
+        Warning: The plot function does not check that your x and y axis correspond to the
+        correct channels
+
+        Parameters
+        ----------
+        ax - axes to use for plotting the gate on
+
+        Returns
+        -------
+        Reference to created artists. (2-tuple)
+        """
+        if ax == None:
+            ax = pl.gca()
+
+        kwargs.setdefault('color', 'black')
+
+        if not flip:
+            a1 = pl.axvline(self.vert[0], *args, **kwargs)
+            a2 = pl.axhline(self.vert[1], *args, **kwargs)
+        else:
+            a1 = pl.axvline(self.vert[1], *args, **kwargs)
+            a2 = pl.axhline(self.vert[0], *args, **kwargs)
+
+        return (a1, a2)
+
 
 class PolyGate(Gate):
-    def __init__(self, vert, channels, name=None):
+    def __init__(self, vert, channels, region='in', name=None):
         """
         Parameters
         ----------
@@ -247,28 +318,67 @@ class PolyGate(Gate):
             Specifies the name of the gate.
         """
         self.path = Path(vert)
+        self._region_options = ('in', 'out')
+        super(PolyGate, self).__init__(vert, channels, region, name)
 
-        super(PolyGate, self).__init__(vert, channels, name)
-
-    def filter(self, dataframe, which='in'):
+    def _identify(self, dataframe):
         """
-        Returns a filtered data frame containing only the points that pass the filter.
+        Returns a list of indexes containing only the points that pass the filter.
 
         Parameters
         ----------
         dataframe: DataFrame
 
-        which : 'in' | 'out'
+        region : 'in' | 'out'
             Determines whether to return the points
             inside ('in') or outside ('out') of the polygon
         """
         idx = self.path.contains_points(dataframe[self.channels])
-        if which == 'in':
-            return dataframe[idx]
-        elif which == 'out':
-            return dataframe[~idx]
-        else:
-            raise Exception("""Unrecognized option for which must be 'in' or 'out'.""")
+
+        if self.region == 'out':
+            idx = ~idx
+
+        return idx
+
+    def plot(self, ax=None, *args, **kwargs):
+        """
+        Plots a polygon gate on the current axis.
+        (Just calls the polygon function)
+        TODO: This function should not rescale the axis
+
+        Parameters
+        ----------
+        ax - axes to use for plotting the gate on
+
+        Returns
+        -------
+        Reference to created artist
+        """
+        if ax == None:
+            ax = pl.gca()
+
+        kwargs.setdefault('fill', False)
+        kwargs.setdefault('color', 'black')
+        poly = pl.Polygon(self.vert, *args, **kwargs)
+        return ax.add_artist(poly)
+
+
+def filter(data, gate_list, how='all'):
+    """
+    """
+    idx = [gate._identify(data) for gate in gate_list]
+
+    if how == 'all':
+        function = numpy.all
+    elif how == 'any':
+        function = numpy.any
+    else:
+        raise ValueError("how must be 'all' or 'any'")
+
+    idx = function(idx, axis=0)
+
+    return data[idx]
+
 
 
 if __name__ == '__main__':
