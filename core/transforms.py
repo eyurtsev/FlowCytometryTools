@@ -162,6 +162,8 @@ def hlog(x, b=100, r=_display_max, d=_l_mmax,
         y = find_inv(x)
     else:
         n = len(x)
+        if not n:
+            return x
         if use_spln is None: 
             #decide whether to use spline or not
             if n>=spln_min:

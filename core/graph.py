@@ -102,7 +102,11 @@ def plotFCM(sample, channel_names, transform=(None, None), kind='histogram', ax=
         kwargs.setdefault('color', 'gray')
         kwargs.setdefault('histtype', 'stepfilled')
 
-        pHandle = data[channel_names[0]].hist(ax = ax, **kwargs)
+        x = data[channel_names[0]]
+        if len(x):
+            pHandle = x.hist(ax = ax, **kwargs)
+        else:
+            return None
 
     elif len(channel_names) == 2:
         x = data[channel_names[0]] # index of first channels name
