@@ -93,11 +93,8 @@ class FCSample(BaseSample):
 
         TODO: fix default value of transform... need cycling function?
         '''
-        data = self.get_data()[1] # The index is to keep only the data part (removing the meta data)
-        if data is None:
-            return None
-        else:
-            return graph.plotFCM(data, channel_names, transform=transform, kind=kind, **kwargs)
+#         data = self.get_data() # The index is to keep only the data part (removing the meta data)
+        return graph.plotFCM(self, channel_names, transform=transform, kind=kind, **kwargs)
 
     def view(self, channel_names=None):
         '''
@@ -141,6 +138,26 @@ class FCOrderedCollection(BaseOrderedCollection, FCSampleCollection):
     '''
     A dict-like class for holding flow cytometry samples that are arranged in a matrix.
     '''
+
+    def plot(self, channel_names, transform=(None, None), kind='histogram', grid_plot_kwargs={}, **kwargs):
+        """
+        For details see documentation for FCSample.plot
+        Use grid_plot_kwargs to pass keyword arguments to the grid_plot function.
+        (For options see grid_plot documentation)
+
+
+        Returns
+        -------
+        gHandleList: list
+            gHandleList[0] -> reference to main axis
+            gHandleList[1] -> a list of lists
+                example: gHandleList[1][0][2] returns the subplot in row 0 and column 2
+        """
+        def plotSampleDataFunction(sample, ax):
+            """ Function assumes that data is returned as a 2-tuple. The first element is the meta data, the second is the DataFrame """
+            return graph.plotFCM(sample, channel_names, transform=transform, ax=ax,
+                                 kind=kind, autolabel=False, **kwargs)
+        return self.grid_plot(plotSampleDataFunction, **grid_plot_kwargs)
 
 class FCPlate(BasePlate):
     '''

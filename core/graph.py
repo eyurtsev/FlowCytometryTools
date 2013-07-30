@@ -48,7 +48,7 @@ def plot_histogram2d(x, y, bins=200, ax=None, **kwargs):
     masked_hist = numpy.ma.masked_where(counts_hist == 0, counts_hist)
     return ax.pcolormesh(xedges, yedges, masked_hist, **kwargs)
 
-def plotFCM(data, channel_names, transform=(None, None), kind='histogram', ax=None,
+def plotFCM(sample, channel_names, transform=(None, None), kind='histogram', ax=None,
                 autolabel=True, xlabel_kwargs={}, ylabel_kwargs={},
                 **kwargs):
     '''
@@ -57,7 +57,7 @@ def plotFCM(data, channel_names, transform=(None, None), kind='histogram', ax=No
 
     Parameters
     ----------
-    FCMdata : fcm data object
+    sample : FCSample
     channel_names : str| iterable of str
         name (names) channels to plot.
         given a single channel plots a histogram
@@ -86,11 +86,17 @@ def plotFCM(data, channel_names, transform=(None, None), kind='histogram', ax=No
     ylabel_kwargs.setdefault('size', 16)
 
     channel_names = to_list(channel_names)
+    
+    # Transform sample
+    transformList = to_list(transform)
+    sample_t = sample
+    for c,t in zip(channel_names, transformList):
+        if t is not None:
+            sample_t = sample_t.transform(t, channels=c)
+        else:
+            pass
 
-    # Transform data
-    #transformList = to_list(transform)
-
-
+    data = sample_t.get_data()
     if len(channel_names) == 1:
         # 1d so histogram plot
         kwargs.setdefault('color', 'gray')

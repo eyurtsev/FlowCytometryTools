@@ -492,9 +492,10 @@ class BaseOrderedCollection(BaseSampleCollection):
     ''' 
     def __init__(self, ID, samples, shape=(8,12),
                  positions=None, position_parser='name',
-                row_labels=None, col_labels=None):
+                 row_labels=None, col_labels=None):
+        ## init the collection
         super(BaseOrderedCollection, self).__init__(ID, samples)
-        #FCSampleCollection.__init__(self, ID, samples)
+        ## set shape-related attributes
         self.shape = shape
         if row_labels is None:
             row_labels = self._default_labels('rows')
@@ -502,9 +503,10 @@ class BaseOrderedCollection(BaseSampleCollection):
             col_labels = self._default_labels('cols')
         self.row_labels = row_labels
         self.col_labels = col_labels
-        
+        ##set positions
         self._positions = {}
         self.set_positions(positions, parser=position_parser)
+        ## check that all positions have been set
         for k in self.iterkeys():
             if k not in self._positions:
                 msg = ('All sample position must be set,' +
@@ -666,6 +668,106 @@ class BaseOrderedCollection(BaseSampleCollection):
             msg = ("The output_format must be either 'dict' or 'DataFrame'. " +
                    "Encounterd unsupported value %s." %repr(output_format))
             raise Exception(msg)
+
+    def grid_plot(self, func, applyto='sample', ids=None, row_labels=None, col_labels=None,
+                xaxislim=None, yaxislim=None,
+                row_label_xoffset=-0.1, col_label_yoffset=-0.3,
+                hide_tick_labels=True, hide_tick_lines=True,
+                hspace=0, wspace=0, row_labels_kwargs={}, col_labels_kwargs={}):
+        '''
+        Creates subplots for each well in the plate. Uses func to plot on each axis.
+        Follow with a call to matplotlibs show() in order to see the plot.
+
+        TODO: Finish documentation, document plot function also in utilities.graph
+        fix col_label, row_label offsets to use figure coordinates
+
+        @author: Eugene Yurtsev
+
+        Parameters
+        ----------
+        func : dict
+            Each func is a callable that accepts a Sample
+            object (with an optional axis reference) and plots on the current axis.
+            return values from func are ignored
+            NOTE: if using applyto='sample', the function
+            when querying for data should make sure that the data
+            actually exists
+        applyto : 'sample' | 'data'
+        ids : None
+        col_labels : str
+            labels for the columns if None default labels are used
+        row_labels : str
+            labels for the rows if None default labels are used
+        xaxislim : 2-tuple
+            min and max x value for each subplot
+            if None, the limits are automatically determined for each subplot
+
+        Returns
+        -------
+        gHandleList: list
+            gHandleList[0] -> reference to main axis
+            gHandleList[1] -> a list of lists
+                example: gHandleList[1][0][2] returns the subplot in row 0 and column 2
+
+        Examples
+        ---------
+            def y(well, ax):
+                data = well.get_data()
+                if data is None:
+                    return None
+                graph.plotFCM(data, 'Y2-A')
+            def z(data, ax):
+                plot(data[0:100, 1], data[0:100, 2])
+            plate.plot(y, applyto='sample');
+            plate.plot(z, applyto='data');
+
+        '''
+        # Acquire call arguments to be passed to create plate layout
+        callArgs = locals().copy() # This statement must remain first. The copy is just defensive.
+        [callArgs.pop(varname) for varname in  ['self', 'func', 'applyto', 'ids']] # pop args
+        callArgs['rowNum'] = self.shape[0]
+        callArgs['colNum'] = self.shape[1]
+
+        if row_labels == None: callArgs['row_labels'] = self.row_labels
+        if col_labels == None: callArgs['col_labels'] = self.col_labels
+
+        # TODO: decide on naming convention
+        try:
+            from GoreUtilities import graph
+        except:
+            from GoreUtilities import graph
+
+        gHandleList = graph.create_grid_layout(**callArgs)
+        subplots_ax = DF(gHandleList[1], index=self.row_labels, columns=self.col_labels)
+
+        if ids is None:
+            ids = self.keys()
+        ids = to_list(ids)
+
+        for ID in ids:
+            sample = self[ID]
+            if not hasattr(sample, 'data'):
+                continue
+
+            row, col = self._positions[ID]
+            ax = subplots_ax[col][row]
+            sca(ax) # sets the current axis
+
+            if applyto == 'sample':
+                func(sample, ax) # reminder: pandas row/col order is reversed
+            elif applyto == 'data':
+                data = sample.get_data()
+                if data is not None:
+                    if func.func_code.co_argcount == 1:
+                        func(data)
+                    else:
+                        func(data, ax)
+            else:
+                raise ValueError, 'Encountered unsupported value {} for applyto paramter.'.format(applyto)
+
+        sca(gHandleList[0]) # sets to the main axis -- more intuitive
+        return gHandleList
+
 
 class BasePlate(BaseObject):
     '''
