@@ -1,9 +1,25 @@
 * For each sample / measurement, add reference to parent collection / plate
-* Should there be an extracted dictionary for each well? (the apply call for a sample is different than the apply for a plate)
+	- JF: Agreed. Not sure how to implement as a MutableMapping is not hashable. 
+	
+* Re-arrange metadata to contain channel info as dict/DataFrame
 
-* There may be issues with logicle transformation currently. plotting may cause the transformation to be applied twice!
+* FCSample channels property to extract from meta, rather than data.
 
-* add copy method to all containers.
+* Consider changing the type checking on Collections to allow them to 
+contain sub-collections of the same type, or any object that implements
+so necessary attributes (e.g.: ID, apply, plot, etc').
+
+* Change all 'Samples' to 'Measurements'. !!!! This is a major API change!!!!
+
+* Remove 'Base' from names of base classes
+
+* add 'to_orderd' method to SampleCollection
+
+* add 'gate' method to Sample
+
+* fix default limits for figures. change tick marks according to scale.
+
+* add colorbar to 2D histograms.
 
 What would be nice to have:
 
@@ -15,3 +31,12 @@ What would be nice to have:
 
 3. Print on FCPlate should show loaded data not the underlying DataFrame
 
+4. implement decorator that checks if attribute is set and is not None.
+If it is not, return some default (None). Otherwise call wrapped function.
+Tricky part is to still have the wrapped function signature and docstring
+exposed.
+
+5. Add dedicated exceptions with informative messages for cases where user 
+is trying to operate on an unassigned/None attribute.
+
+6. Support 1D (or n-D) OrderedCollection 
