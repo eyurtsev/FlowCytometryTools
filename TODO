@@ -17,9 +17,17 @@ so necessary attributes (e.g.: ID, apply, plot, etc').
 
 * add 'gate' method to Sample
 
+* remove batch_fcs
+
+* Have Plate objects just be short names for OrderedCollections
+
+* refactor plotting
+
 * fix default limits for figures. change tick marks according to scale.
 
 * add colorbar to 2D histograms.
+
+* add axis labels to one(?) subplot in grid_plot. 
 
 What would be nice to have:
 
