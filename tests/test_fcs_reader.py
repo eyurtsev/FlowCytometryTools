@@ -7,6 +7,7 @@ import unittest
 import numpy
 from numpy import array
 from FlowCytometryTools import parse_fcs
+
 #from numpy.testing import assert_almost_equal, assert_equal
 import warnings
 
@@ -20,7 +21,7 @@ file_formats = {
 
 def check_data_segment(fcs_format, array_values):
     fname = file_formats[fcs_format]
-    meta, matrix, channel_names = parse_fcs(fname, output_format='ndarray')
+    meta, matrix = parse_fcs(fname, output_format='ndarray')
     diff = numpy.abs(array_values - matrix[0:4, :])
     return numpy.all(diff < 10**-8) # Is this the proper way to do the test?
 
@@ -217,7 +218,39 @@ class TestFCSReader(unittest.TestCase):
     def test_mq_FCS_3_1_data_segment(self):
         """ Tests DATA segment parsed from FCS (3.1 format) file produced by a MACSQuant flow cytometer """
         fname = file_formats['mq fcs 3.1']
-        meta, matrix, channel_names = parse_fcs(fname, output_format='ndarray')
+        meta, matrix = parse_fcs(fname, output_format='ndarray')
+
+
+    def test_fcs_reader_API(self):
+        """
+        Makes sure that the API remains consistent.
+        """
+        print '\n'
+        for fname in file_formats.values():
+            print 'Running file {0}'.format(fname)
+            meta = parse_fcs(fname, meta_data_only=True)
+            meta, data_pandas = parse_fcs(fname, meta_data_only=False, output_format='DataFrame')
+            meta, data_pandas = parse_fcs(fname, meta_data_only=False, output_format='DataFrame', reformat_meta=True)
+            meta, data_numpy  = parse_fcs(fname, meta_data_only=False, output_format='ndarray', reformat_meta=False)
+            meta, data_numpy  = parse_fcs(fname, meta_data_only=False, output_format='ndarray', reformat_meta=True)
+            self.assertTrue(meta['_channel_names_'])
+            self.assertTrue(len(meta['_channel_names_']) != 0)
+
+    def test_speed_of_reading_fcs_files(self):
+        """ Testing the speed of loading a FCS files"""
+        import timeit
+
+        fname = file_formats['mq fcs 3.1']
+        number = 1000
+
+        time = timeit.timeit(lambda : parse_fcs(fname, meta_data_only=True, output_format='DataFrame', reformat_meta=False), number=number)
+        print "Loading fcs file {0} times with meta_data only without reformatting of meta takes {1} per loop".format(time/number, number)
+
+        time = timeit.timeit(lambda : parse_fcs(fname, meta_data_only=True, output_format='DataFrame', reformat_meta=True), number=number)
+        print "Loading fcs file {0} times with meta_data only with reformatting of meta takes {1} per loop".format(time/number, number)
+
+        time = timeit.timeit(lambda : parse_fcs(fname, meta_data_only=False, output_format='DataFrame', reformat_meta=False), number=number)
+        print "Loading fcs file {0} times both meta and data but without reformatting of meta takes {1} per loop".format(time/number, number)
 
 if __name__ == '__main__':
     import nose
