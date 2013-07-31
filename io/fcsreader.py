@@ -4,7 +4,7 @@
 # (I do not promise this works)
 # Distributed under the MIT License
 # TODO: Throw an error if there is logarithmic amplification (or else implement support for it)
-import sys, warnings, re
+import sys, warnings, re, string
 import numpy
 
 try:
@@ -282,8 +282,9 @@ class FCS_Parser(object):
         channel_properties = []
 
         for key, value in meta.items():
-            if key[:2] == '$P1':
-                channel_properties.append(key[2:].strip())
+            if key[:3] == '$P1':
+                if key[3] not in string.digits:
+                    channel_properties.append(key[3:])
 
         # Capture all the channel information in a list of lists -- used to create a data frame
         channel_matrix = [[meta.get('$P{0}{1}'.format(ch, p)) for p in channel_properties] for ch in self.channel_numbers]
@@ -381,7 +382,7 @@ if __name__ == '__main__':
     #fname = '../tests/data/EY_2013-05-03_EID_214_PID_1120_Piperacillin_Well_B7.001.fcs'
     meta = parse_fcs(fname, meta_data_only=True)
     meta, data_pandas = parse_fcs(fname, meta_data_only=False, output_format='DataFrame')
-    meta, data_numpy, channels  = parse_fcs(fname, meta_data_only=False, output_format='ndarray', reformat_meta=False)
+    meta, data_numpy = parse_fcs(fname, meta_data_only=False, output_format='ndarray', reformat_meta=True)
     print meta['_channel_names_']
     print meta
     print meta['_channels_']
