@@ -4,9 +4,8 @@
 # (I do not promise this works)
 # Distributed under the MIT License
 # TODO: Throw an error if there is logarithmic amplification (or else implement support for it)
-import sys
+import sys, warnings, re
 import numpy
-import warnings
 
 try:
     import pandas
@@ -39,10 +38,40 @@ class FCS_Parser(object):
 
     self.data holds the parsed DATA segment
     self.analysis holds the ANALYSIS segment as read from the file.
-    self.channel_names holds the names of the channels (for convenience)
+
+    self.channel_names holds the chosen names of the channels
+    self.channel_names_alternate holds the alternate names of the channels
     """
-    def __init__(self, path, read_data=True):
+    def __init__(self, path, read_data=True, channel_naming='$PnS'):
+        """
+        Parameters
+        ----------
+        path : str
+            Path of .fcs file
+        read_data : bool
+            If True, reads the data immediately.
+            Otherwise, use read_data method to read in the data from the fcs file.
+        channel_naming: '$PnS' | '$PnN'
+            Determines which meta data field is used for naming the channels.
+
+            The default should be $PnS (even though it is not guaranteed to be unique)
+
+            $PnN stands for the short name (guaranteed to be unique). Will look like 'FL1-H'
+            $PnS stands for the actual name (not guaranteed to be unique). Will look like 'FSC-H' (Forward scatter)
+
+            The chosen field will be used to population self.channels.
+
+            If the chosen field does not exist in the fcs file. The program attempts to use the alternative field by default.
+
+            Note: These names are not flipped in the implementation.
+            It looks like they were swapped for some reason in the official FCS specification.
+        """
         self._data = None
+        self._channel_naming = channel_naming
+
+        if channel_naming not in ('$PnN', '$PnS'):
+            raise ValueError("channel_naming must be either '$PnN' or '$PnS")
+
         self.annotation = {}
         self.path = path
 
@@ -76,7 +105,6 @@ class FCS_Parser(object):
             warnings.warn('There appears to be some information in the ANALYSIS segment of file {0}. However, might be unable to read it correctly.'.format(self.path))
 
         self.annotation['__header__'] = header
-
 
     def read_text(self, file_handle):
         """
@@ -119,13 +147,23 @@ class FCS_Parser(object):
             self.channel_numbers = range(1, pars + 1) # Channel numbers start from 1
 
         ## Extract parameter names
-        # Explanation:
-        # N stands for the short name (guaranteed to be unique). Will look like 'FL1-H'
-        # S stands for the actual name (not guaranteed to be unique). Will look like 'FSC-H' (Forward scatter)
-        # That's correct. N stands for short and S stands for long. 
-        # (Seems like the names were swapped for some reason in the specification.
-        self.channel_names_n = tuple([text['$P{0}N'.format(i)] for i in self.channel_numbers])
-        self.channel_names = tuple([text['$P{0}S'.format(i)] for i in self.channel_numbers])
+        try:
+            names_n = tuple([text['$P{0}N'.format(i)] for i in self.channel_numbers])
+        except KeyError:
+            names_n = []
+
+        try:
+            names_s = tuple([text['$P{0}S'.format(i)] for i in self.channel_numbers])
+        except KeyError:
+            names_s = []
+
+        if self._channel_naming == '$PnS':
+            self.channel_names, self.channel_names_alternate = names_s, names_n
+        else:
+            self.channel_names, self.channel_names_alternate = names_n, names_s
+
+        if len(self.channel_names) == 0:
+            self.channel_names = self.channel_names_alternate
 
         # Convert some of the fields into integer values
         keys_encoding_bits  = ['$P{0}B'.format(i) for i in self.channel_numbers]
@@ -137,6 +175,8 @@ class FCS_Parser(object):
         for key in keys_to_convert_to_int:
             value = text[key]
             text[key] = int(value)
+
+        text['_channel_names_'] = self.channel_names
 
         self.annotation.update(text)
 
@@ -159,7 +199,7 @@ class FCS_Parser(object):
         else:
             self._analysis = ''
 
-    def check_assumptions(self):
+    def _check_assumptions(self):
         """
         Checks the FCS file to make sure that some of the assumptions made by the parser are met.
         """
@@ -182,7 +222,7 @@ class FCS_Parser(object):
 
     def read_data(self, file_handle):
         """ Reads the DATA segment of the FCS file. """
-        self.check_assumptions()
+        self._check_assumptions()
         header, text = self.annotation['__header__'], self.annotation # For convenience
         num_events = text['$TOT'] # Number of events recorded
         num_pars   = text['$PAR'] # Number of parameters recorded
@@ -234,7 +274,36 @@ class FCS_Parser(object):
                 self.read_analysis()
         return self._analysis
 
-def parse_fcs(path, meta_data_only=False, output_format='DataFrame', compensate=False):
+    def reformat_meta(self):
+        """ Collects the meta data information in a more user friendly format.
+        Function looks throught the meta data, collecting the channel related information into a dataframe and moving it into the _channels_ key
+        """
+        meta = self.annotation
+        channel_properties = []
+
+        for key, value in meta.items():
+            if key[:2] == '$P1':
+                channel_properties.append(key[2:].strip())
+
+        # Capture all the channel information in a list of lists -- used to create a data frame
+        channel_matrix = [[meta.get('$P{0}{1}'.format(ch, p)) for p in channel_properties] for ch in self.channel_numbers]
+
+        # Remove this information from the dictionary
+        for ch in self.channel_numbers:
+            for p in channel_properties:
+                key = '$P{0}{1}'.format(ch, p)
+                if key in meta:
+                    meta.pop(key)
+
+        num_channels = meta['$PAR']
+        column_names = ['$Pn{0}'.format(p) for p in channel_properties]
+
+        df = pandas.DataFrame(channel_matrix, columns=column_names, index=(1+numpy.arange(num_channels)))
+        df.index.name = 'Channel Number'
+        meta['_channels_'] = df
+
+
+def parse_fcs(path, meta_data_only=False, output_format='DataFrame', compensate=False, channel_naming='$PnS', reformat_meta=False):
     """
     Parse an fcs file at the location specified by the path.
 
@@ -246,29 +315,48 @@ def parse_fcs(path, meta_data_only=False, output_format='DataFrame', compensate=
         If True, the parse_fcs only returns the meta_data (the TEXT segment of the FCS file)
     output_format : 'DataFrame' | 'ndarray'
         If set to 'DataFrame' the returned
+    channel_naming : '$PnS' | '$PnN'
+        Determines which meta data field is used for naming the channels.
+        The default should be $PnS (even though it is not guaranteed to be unique)
+
+        $PnN stands for the short name (guaranteed to be unique). Will look like 'FL1-H'
+        $PnS stands for the actual name (not guaranteed to be unique). Will look like 'FSC-H' (Forward scatter)
+
+        The chosen field will be used to population self.channels
+
+        Note: These names are not flipped in the implementation.
+        It looks like they were swapped for some reason in the official FCS specification.
+
+    reformat_meta : bool
+        If true, the meta data is reformatted with the channel information organized into a DataFrame an moved
+        into the '_channels_' key
 
     Returns
     -------
     if meta_data_only is True:
         meta_data : dict
             Contains a dictionary with the meta data information
-    if meta_data is False:
-        a 3-tuple with
+            meta_data also contains the channel_names under the '_channel_names_' key
+    Otherwise:
+        a 2-tuple with
             the first element the meta_data (dictionary)
             the second element the data (in either DataFrame or numpy format)
-            the third element a tuple containing the names of the channels (only for numpy output)
 
     Examples
     --------
     fname = '../tests/data/EY_2013-05-03_EID_214_PID_1120_Piperacillin_Well_B7.001.fcs'
     meta = parse_fcs(fname, meta_data_only=True)
     meta, data_pandas = parse_fcs(fname, meta_data_only=False, output_format='DataFrame')
-    meta, data_numpy, channels  = parse_fcs(fname, meta_data_only=False, output_format='ndarray')
+    meta, data_numpy  = parse_fcs(fname, meta_data_only=False, output_format='ndarray')
     """
     if compensate == True:
         raise_parser_feature_not_implemented('Compensation has not been implemented yet.')
 
-    parsed_FCS = FCS_Parser(path)
+    parsed_FCS = FCS_Parser(path, channel_naming=channel_naming)
+
+    if reformat_meta:
+        parsed_FCS.reformat_meta()
+
     meta = parsed_FCS.annotation
     channel_names = parsed_FCS.channel_names
 
@@ -283,7 +371,7 @@ def parse_fcs(path, meta_data_only=False, output_format='DataFrame', compensate=
         return meta, data
     elif output_format == 'ndarray':
         """ Constructs numpy matrix """
-        return meta, parsed_FCS.data, channel_names
+        return meta, parsed_FCS.data
     else:
         raise ValueError("The output_format must be either 'ndarray' or 'DataFrame'")
 
@@ -293,7 +381,11 @@ if __name__ == '__main__':
     #fname = '../tests/data/EY_2013-05-03_EID_214_PID_1120_Piperacillin_Well_B7.001.fcs'
     meta = parse_fcs(fname, meta_data_only=True)
     meta, data_pandas = parse_fcs(fname, meta_data_only=False, output_format='DataFrame')
-    meta, data_numpy, channels  = parse_fcs(fname, meta_data_only=False, output_format='ndarray')
+    meta, data_numpy, channels  = parse_fcs(fname, meta_data_only=False, output_format='ndarray', reformat_meta=False)
+    print meta['_channel_names_']
+    print meta
+    print meta['_channels_']
+
 
 
 
