@@ -19,10 +19,17 @@ class FCSample(BaseSample):
     @property
     def channels(self):
         '''
-        Returns the channel information organized as a DataFrame
+        Channel information organized as a DataFrame
         '''
         if self.meta is not None:
             return self.meta['_channels_']
+    @property
+    def channel_names(self):
+        '''
+        A tuple containing the channel names
+        '''
+        if self.meta is not None:
+            return self.meta['_channel_names_']
 
     def read_data(self, **kwargs):
         '''
@@ -193,12 +200,12 @@ class FCPlate(BasePlate):
         return self.wells.applymap(data_assigned)
 
 if __name__ == '__main__':
-    datadir = '../tests/data/Plate02/'
     import glob
+    datadir = '../tests/data/Plate02/'
     fname = glob.glob(datadir + '*.fcs')[0]
-#     print get_files(datadir)
     sample = FCSample(1, datafile=fname)
     print sample.channels
+    print sample.channel_names
 
 #     print plate
     #print plate.wells 
