@@ -19,17 +19,14 @@ class FCSample(BaseSample):
     @property
     def channels(self):
         '''
-        TODO: get the channels from the metadata toavoid having to 
-        load the data
+        Returns the channel information organized as a DataFrame
         '''
-        if self.data is not None:
-            return list(self.data.columns)
-        else:
-            return None
+        if self.meta is not None:
+            return self.meta['_channels_']
 
     def read_data(self, **kwargs):
         '''
-        Read the datafile specified in Sample.datafile and 
+        Read the datafile specified in Sample.datafile and
         return the resulting object.
         Does NOT assign the data to self.data
         '''
@@ -40,6 +37,7 @@ class FCSample(BaseSample):
         '''
         '''
         kwargs['meta_data_only'] = True
+        kwargs['reformat_meta'] = True
         meta = parse_fcs(self.datafile, **kwargs)
         return meta
 
@@ -195,18 +193,22 @@ class FCPlate(BasePlate):
         return self.wells.applymap(data_assigned)
 
 if __name__ == '__main__':
-    datadir = '../tests/data/'
+    datadir = '../tests/data/Plate02/'
+    import glob
+    fname = glob.glob(datadir + '*.fcs')[0]
 #     print get_files(datadir)
-    plate = FCPlate('test', datadir=datadir, shape=(4,5))
+    sample = FCSample(1, datafile=fname)
+    print sample.channels
+
 #     print plate
-    print plate.wells 
-    print plate.well_IDS
+    #print plate.wells 
+    #print plate.well_IDS
     
-    plate.apply(lambda x:x.ID, 'ID', applyto='sample', well_ids=['A1','B1'])
-    plate.apply(lambda x:x.datafile, 'file', applyto='sample')
-    plate.apply(lambda x:x.shape[0], 'counts', keepdata=True)
-    plate.get_well_metadata(['date', 'etim'])
-    print plate.extracted['file'].values
+    #plate.apply(lambda x:x.ID, 'ID', applyto='sample', well_ids=['A1','B1'])
+    #plate.apply(lambda x:x.datafile, 'file', applyto='sample')
+    #plate.apply(lambda x:x.shape[0], 'counts', keepdata=True)
+    #plate.get_well_metadata(['date', 'etim'])
+    #print plate.extracted['file'].values
     
 #     plate.wells['1']['A'].get_metadata()
 #     
