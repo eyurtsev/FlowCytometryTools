@@ -6,8 +6,7 @@ from matplotlib.nxutils import points_inside_poly
 from matplotlib.colors import colorConverter
 from GoreUtilities import util
 import numpy
-from fcm import loadFCS
-from FlowCytometryTools import plotFCM
+from FlowCytometryTools import plotFCM, FCSample
 
 ##
 # TODO: channel_list should be names rather than channel numbers
@@ -443,7 +442,7 @@ class GateKeeper():
         else: GateKeeper.gateList = []
         GateKeeper.current_channels = None
 
-        self.data = None
+        self.sample = None
         self.collection = None
         self.fig =  fig
         self.ax = ax
@@ -523,12 +522,13 @@ class GateKeeper():
             self.set_state(STATE_GK.WAITING)
 
     def change_axis(self, event):
-        ''' Function controls the x and y labels. Upon clicking on them the user can change what is plotted on the
-            x and y axis.
-        '''
+        """
+        Function controls the x and y labels. Upon clicking on them the user can change what is plotted on the
+        x and y axis.
+        """
         from GoreUtilities import dialogs
         if event.artist == self.xlabelArtist:
-            userchoice = dialogs.select_option_dialog('Select channel for x axis', self.data.channels)
+            userchoice = dialogs.select_option_dialog('Select channel for x axis', self.sample.channel_names)
 
             if userchoice is None:
                 return
@@ -537,9 +537,9 @@ class GateKeeper():
             GateKeeper.current_channels[0] = value
 
         elif event.artist == self.ylabelArtist:
-            #y_options = list(self.data.channels)
+            #y_options = list(self.sample.channel_names)
             #y_options.append('Counts')
-            userchoice = dialogs.select_option_dialog('Select channel for y axis', self.data.channels)
+            userchoice = dialogs.select_option_dialog('Select channel for y axis', self.sample.channel_names)
 
             if userchoice is None:
                 return
@@ -608,15 +608,7 @@ class GateKeeper():
         self.state = state
 
     def plot_data(self, numpoints=1000):
-        # TODO fix transform
-        #numData = numpy.shape((self.data))[0]
-        #facecolors = [STYLE.DATUM_OUT_COLOR for d in range(numData)]
-#
-        #index1, index2 = GateKeeper.current_channels
-#
-        data = self.data
-        #channel_names = [data.channels[index] for index in GateKeeper.current_channels]
-
+        sample = self.sample
 
         ax = self.ax
         ax.cla()
@@ -624,47 +616,26 @@ class GateKeeper():
         channels = GateKeeper.current_channels
 
         if channels[0] == channels[1]:
-            plotFCM(data, channels[0], transform=(None, ), ax=ax)
+            sample.plot(channels[0], transform=('hlog', 'hlog'), ax=ax)
             xlabel = GateKeeper.current_channels[0]
             ylabel = 'Counts'
 
             self.xlabelArtist = ax.set_xlabel(xlabel, picker=5)
             self.ylabelArtist = ax.set_ylabel(ylabel, picker=5)
         else:
-            plotFCM(data, GateKeeper.current_channels, transform=(None, None), ax=ax, plot2d_type='hist2d')
+            sample.plot(channels, transform=('hlog', 'hlog'), ax=ax)
             xlabel = GateKeeper.current_channels[0]
             ylabel = GateKeeper.current_channels[1]
 
             self.xlabelArtist = ax.set_xlabel(xlabel, picker=5)
             self.ylabelArtist = ax.set_ylabel(ylabel, picker=5)
 
-        #self.dataxy = self.data[:1000, [index1, index2]]
-        ##
-        #if self.collection is not None:
-            #self.collection.remove()
-        ##
-        #self.collection = RegularPolyCollection(ax.figure.dpi, 6, sizes=(10,), alpha=0.8, facecolors=facecolors, offsets = self.dataxy, transOffset = ax.transData)
-        #self.ax.add_collection(self.collection)
-        #
-        ##self.ax.relim()
-        ##self.ax.autoscale_view(True, True, True)
-        #xmin = min(self.data[:, index1])
-        #xmax = max(self.data[:, index1])
-        #ymin = min(self.data[:, index2])
-        #ymax = max(self.data[:, index2])
-        #
-        #ax.set_xlim(xmin, xmax)
-        #ax.set_ylim(ymin, ymax)
-        #
-        #xlabel = self.data.channels[index1]
-        #ylabel = self.data.channels[index2]
-
         pl.draw()
 
     def grayout_all_points(self):
         """ gray out all points """
         return
-        if self.data is None: return
+        if self.sample is None: return
 
         numDataPoints = len(self.dataxy)
 
@@ -676,7 +647,7 @@ class GateKeeper():
     def highlight_points_inside_gate(self, gate):
         """ Locates the points inside the given polygon vertices. """
         return # Does nothing atm
-        if self.data is None: return
+        if self.sample is None: return
 
         numDataPoints = len(self.dataxy)
 
@@ -701,9 +672,11 @@ class GateKeeper():
             from GoreUtilities import dialogs
             filepath = dialogs.open_file_dialog('Select an FCS file to load', 'FCS files (*.fcs)|*.fcs')
         if filepath is not None:
-            self.data = loadFCS(filepath)
+            self.sample = FCSample('temp', datafile=filepath)
+
             if GateKeeper.current_channels == None:
-                GateKeeper.current_channels = self.data.channels[0:2] # Assigns first two channels by default if none have been specified yet.
+                GateKeeper.current_channels = self.sample.channel_names[0:2] # Assigns first two channels by default if none have been specified yet.
+
             self.plot_data()
 
     def load_gates(self, filepath=None):
