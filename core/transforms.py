@@ -19,7 +19,7 @@ from numpy import (log, log10, exp, where, sign, vectorize,
 
 _machine_max = 2**18
 _l_mmax = log10(_machine_max)
-_display_max = 10**4.5
+_display_max = 10**4
 
 def tlog(x, th=1, r=_display_max, d=_l_mmax):
     '''
@@ -119,7 +119,7 @@ def _get_x_spln(x, spln_nx):
         x_spln      = r_[x_spln_neg, x_spln_pos]
     return x_spln
 
-def hlog(x, b=100, r=_display_max, d=_l_mmax, 
+def hlog(x, b=500, r=_display_max, d=_l_mmax, 
         use_spln=None, spln_min=1000, spln_nx=1000, spln_kwrgs={}):
     '''
     Base 10 hyperlog transform.
@@ -154,7 +154,7 @@ def hlog(x, b=100, r=_display_max, d=_l_mmax,
     Array of transformed values.
     '''
     from scipy.optimize import brentq
-
+    print 'b=',b
     hlog_obj = lambda y, x, b, r, d: hlog_inv(y, b, r, d) - x
     find_inv = vectorize(lambda x: brentq(hlog_obj, -2*r, 2*r, 
                                         args=(x, b, r, d)))    
