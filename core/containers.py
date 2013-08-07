@@ -127,12 +127,22 @@ class FCSample(BaseSample):
         '''
         from transforms import transform_frame
         data = self.get_data()
-        tdata = transform_frame(data, transform, channels, direction,
+        newdata = transform_frame(data, transform, channels, direction,
                                            return_all, args, **kwargs)
-        tsample = self.copy()
-        tsample.set_data(data=tdata)
-        return tsample
-        
+        newsample = self.copy()
+        newsample.set_data(data=newdata)
+        return newsample
+    
+    def gate(self, gate):
+        '''
+        Apply given gate and return new gated sample (with assigned data).
+        Note that no transformation is done by this funciton.
+        '''
+        data = self.get_data()
+        newdata = gate(data)
+        newsample = self.copy()
+        newsample.set_data(data=newdata)
+        return newsample        
 
 class FCSampleCollection(BaseSampleCollection):
     '''
