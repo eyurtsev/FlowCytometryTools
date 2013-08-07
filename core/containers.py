@@ -71,7 +71,8 @@ class FCSample(BaseSample):
         except:
             raise Exception("The keyword '{}' does not exist in the following FCS file: {}".format(ID_field, self.datafile))
 
-    def plot(self, channel_names, transform=(None, None), kind='histogram', **kwargs):
+    def plot(self, channel_names, kind='histogram', transform=(None, None), 
+             gates=None, transform_first=True, **kwargs):
         '''
         Plots the flow cytometry data associated with the sample on the current axis.
         Follow with a call to matplotlibs show() in order to see the plot.
@@ -82,13 +83,16 @@ class FCSample(BaseSample):
             name (names) channels to plot.
             given a single channel plots a histogram
             given two channels produces a 2d plot
-
+        kind : 'scatter', 'histogram'
         transform : tuple
             each element is set to None or 'logicle'
             if 'logicle' then channel data is transformed with logicle transformation
-
-
-        kind : 'scatter', 'histogram'
+        gates: Gate| iterable of Gate | None
+            Gates to be applied before plotting
+        transform_first : bool
+            Apply transforms before gating.
+        kwargs : dict
+            Additional keyword arguments to be passed to graph.plotFCM
 
         Returns
         -------
@@ -100,15 +104,35 @@ class FCSample(BaseSample):
         '''
 #         data = self.get_data() # The index is to keep only the data part (removing the meta data)
         # Transform sample
+
+        def apply_trans(sample, channel_names, transformList):
+            for c,t in zip(channel_names, transformList):
+                if t is not None:
+                    sample = sample.transform(t, channels=c)
+                else:
+                    pass
+            return sample
+        
+        def apply_gates(sample, gates):
+            if gates is None:
+                return sample
+            for gate in gates:
+                sample = sample.gate(gate)
+            return sample
+        
         channel_names = to_list(channel_names)
         transformList = to_list(transform)
-        sample_t = self.copy()
-        for c,t in zip(channel_names, transformList):
-            if t is not None:
-                sample_t = sample_t.transform(t, channels=c)
-            else:
-                pass
-        data = sample_t.get_data()
+        gates         = to_list(gates)
+        
+        sample_tmp = self.copy()
+        if transform_first:
+            sample_tmp = apply_trans(sample_tmp, channel_names, transformList)
+            sample_tmp = apply_gates(sample_tmp, gates)
+        else:
+            sample_tmp = apply_gates(sample_tmp, gates)
+            sample_tmp = apply_trans(sample_tmp, channel_names, transformList)
+            
+        data = sample_tmp.get_data()
         return graph.plotFCM(data, channel_names, kind=kind, **kwargs)
 
     def view(self, channel_names=None):
