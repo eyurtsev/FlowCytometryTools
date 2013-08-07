@@ -78,7 +78,6 @@ class FCSample(BaseSample):
 
         Parameters
         ----------
-        FCMdata : fcm data object
         channel_names : str| iterable of str | None
             name (names) channels to plot.
             given a single channel plots a histogram
@@ -100,7 +99,17 @@ class FCSample(BaseSample):
         TODO: fix default value of transform... need cycling function?
         '''
 #         data = self.get_data() # The index is to keep only the data part (removing the meta data)
-        return graph.plotFCM(self, channel_names, transform=transform, kind=kind, **kwargs)
+        # Transform sample
+        channel_names = to_list(channel_names)
+        transformList = to_list(transform)
+        sample_t = self.copy()
+        for c,t in zip(channel_names, transformList):
+            if t is not None:
+                sample_t = sample_t.transform(t, channels=c)
+            else:
+                pass
+        data = sample_t.get_data()
+        return graph.plotFCM(data, channel_names, kind=kind, **kwargs)
 
     def view(self, channel_names=None):
         '''
