@@ -695,7 +695,7 @@ class BaseOrderedCollection(BaseSampleCollection):
         if output_format is 'dict':
             return result
         elif output_format is 'DataFrame':
-            return self._dict2DF(result, noneval)
+            return self._dict2DF(result, noneval, dropna)
         else:
             msg = ("The output_format must be either 'dict' or 'DataFrame'. " +
                    "Encounterd unsupported value %s." %repr(output_format))
