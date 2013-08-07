@@ -496,11 +496,10 @@ class BaseOrderedCollection(BaseSampleCollection):
         ## init the collection
         super(BaseOrderedCollection, self).__init__(ID, samples)
         ## set shape-related attributes
-        self.shape = shape
         if row_labels is None:
-            row_labels = self._default_labels('rows')
+            row_labels = self._default_labels('rows', shape)
         if col_labels is None:
-            col_labels = self._default_labels('cols')
+            col_labels = self._default_labels('cols', shape)
         self.row_labels = row_labels
         self.col_labels = col_labels
         ##set positions
@@ -530,12 +529,30 @@ class BaseOrderedCollection(BaseSampleCollection):
         datafiles = get_files(path, pattern, recursive)
         return cls.from_files(ID, datafiles, file_parser='name', **kwargs)
 
-    def _default_labels(self, axis):
+#     def set_labels(self, labels, axis='rows'):
+#         '''
+#         Set the row/col labels.
+#         Note that this method doesn't check that enough labels were set for all the assigned positions.
+#         '''
+#         if axis.lower() in ('rows', 'row', 'r', 0):
+#             assigned_pos = set(v[0] for v in self._positions.itervalues())
+#             not_assigned = set(labels) - assigned_pos
+#             if len(not_assigned)>0:
+#                 msg = 'New labels must contain all assigned positions'
+#                 raise ValueError, msg
+#             self.row_labels = labels
+#         elif axis.lower() in ('cols', 'col', 'c', 1):
+#             self.col_labels = labels
+#         else:
+#             raise TypeError, 'Unsupported axis value %s' %axis
+
+
+    def _default_labels(self, axis, shape):
         import string
         if axis == 'rows':
-            return [string.uppercase[i] for i in range(self.shape[0])]
+            return [string.uppercase[i] for i in range(shape[0])]
         else:
-            return  range(1, 1+self.shape[1])
+            return  range(1, 1+shape[1])
 
     def _is_valid_position(self, position):
         '''
@@ -622,6 +639,17 @@ class BaseOrderedCollection(BaseSampleCollection):
         else:
             return df
 
+    def dropna(self):
+        '''
+        Remove rows and cols that have no assigned samples.
+        Return new instance.
+        '''
+        new = self.copy()
+        tmp = self._dict2DF(self, nan, True)
+        new.row_labels = list(tmp.index)
+        new.col_labels = list(tmp.columns)
+        return new
+        
     @property
     def layout(self):
         return self._dict2DF(self, nan)
@@ -630,6 +658,10 @@ class BaseOrderedCollection(BaseSampleCollection):
         layout=self.layout
         print_layout = layout.fillna('')
         print print_layout
+
+    @property
+    def shape(self):
+        return (len(self.row_labels), len(self.col_labels))
 
     def apply(self, func, ids=None, applyto='data', 
               output_format='DataFrame', noneval=nan, 
