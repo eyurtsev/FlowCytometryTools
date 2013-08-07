@@ -6,7 +6,6 @@ from matplotlib.nxutils import points_inside_poly
 from matplotlib.colors import colorConverter
 from GoreUtilities import util
 import numpy
-from fcm import loadFCS
 from FlowCytometryTools import plotFCM
 
 ##

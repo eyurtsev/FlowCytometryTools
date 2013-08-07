@@ -48,3 +48,9 @@ exposed.
 is trying to operate on an unassigned/None attribute.
 
 6. Support 1D (or n-D) OrderedCollection 
+
+7. Allow trimming of ordered collection to remove rows/cols of all nans.
+
+8. Allow labeling rows/cols in plots of ordered collection
+
+
