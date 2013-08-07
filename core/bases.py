@@ -305,7 +305,7 @@ class BaseSampleCollection(collections.MutableMapping, BaseObject):
     # MutableMapping methods
     # ----------------------
     def __repr__(self):
-        return repr(self.data)
+        return 'ID:\n%s\n\nData:\n%s' %(self.ID, repr(self.data))
 
     def __getitem__(self, key):
         return self.data[key]
@@ -524,6 +524,11 @@ class BaseOrderedCollection(BaseSampleCollection):
                        ' but no position was set for sample %s' %k)
                 raise Exception, msg
 
+    def __repr__(self):
+        layout=self.layout
+        print_layout = layout.fillna('')
+        return 'ID:\n%s\n\nData:\n%s' %(self.ID, repr(print_layout))
+
     @classmethod
     def from_files(cls, ID, datafiles, file_parser='name', **kwargs):
         '''
@@ -665,11 +670,6 @@ class BaseOrderedCollection(BaseSampleCollection):
     @property
     def layout(self):
         return self._dict2DF(self, nan)
-
-    def print_layout(self):
-        layout=self.layout
-        print_layout = layout.fillna('')
-        print print_layout
 
     @property
     def shape(self):
