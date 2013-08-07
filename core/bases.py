@@ -440,13 +440,13 @@ class BaseSampleCollection(collections.MutableMapping, BaseObject):
         fil = _parse_criteria(criteria)
         new = self.copy()
         if isinstance(applyto, collections.Mapping):
-            remove = (k for k,v in self.iteritems() if fil(applyto[k]))
+            remove = (k for k,v in self.iteritems() if not fil(applyto[k]))
         elif applyto=='samples':
-            remove = (k for k,v in self.iteritems() if fil(v))
+            remove = (k for k,v in self.iteritems() if not fil(v))
         elif applyto=='keys':
-            remove = (k for k,v in self.iteritems() if fil(k))
+            remove = (k for k,v in self.iteritems() if not fil(k))
         elif applyto=='data':
-            remove = (k for k,v in self.iteritems() if fil(v.get_data()))
+            remove = (k for k,v in self.iteritems() if not fil(v.get_data()))
         else:
             raise ValueError, 'Unsupported value "%s" for applyto parameter.' %applyto
         for r in remove:
