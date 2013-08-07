@@ -191,7 +191,10 @@ class FCOrderedCollection(BaseOrderedCollection, FCSampleCollection):
     A dict-like class for holding flow cytometry samples that are arranged in a matrix.
     '''
 
-    def plot(self, channel_names, transform=(None, None), kind='histogram', grid_plot_kwargs={}, **kwargs):
+    def plot(self, channel_names,  kind='histogram', transform=(None, None), 
+             gates=None, transform_first=True, grid_plot_kwargs={},
+             ids=None, row_labels=None, col_labels=None,
+             xaxislim=None, yaxislim=None, **kwargs):
         """
         For details see documentation for FCSample.plot
         Use grid_plot_kwargs to pass keyword arguments to the grid_plot function.
@@ -207,8 +210,15 @@ class FCOrderedCollection(BaseOrderedCollection, FCSampleCollection):
         """
         def plotSampleDataFunction(sample, ax):
             """ Function assumes that data is returned as a 2-tuple. The first element is the meta data, the second is the DataFrame """
-            return graph.plotFCM(sample, channel_names, transform=transform, ax=ax,
-                                 kind=kind, autolabel=False, **kwargs)
+            return sample.plot(channel_names, transform=transform, ax=ax,
+                               gates=gates, transform_first=transform_first,
+                               kind=kind, autolabel=False, **kwargs)
+        
+        grid_plot_kwargs['ids'] = ids
+        grid_plot_kwargs['row_labels'] = row_labels
+        grid_plot_kwargs['col_labels'] = col_labels
+        grid_plot_kwargs['xaxislim'] = xaxislim
+        grid_plot_kwargs['yaxislim'] = yaxislim
         return self.grid_plot(plotSampleDataFunction, **grid_plot_kwargs)
 
 class FCPlate(BasePlate):
