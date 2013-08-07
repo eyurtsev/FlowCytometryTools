@@ -84,9 +84,9 @@ class FCSample(BaseSample):
             given a single channel plots a histogram
             given two channels produces a 2d plot
         kind : 'scatter', 'histogram'
-        transform : tuple
-            each element is set to None or 'logicle'
-            if 'logicle' then channel data is transformed with logicle transformation
+        transform : valid transform | tuple of valid transforms | None
+            Transform to be applied to corresponding channels using the FCSample.transform function.
+            If a single transform is given, it will be applied to all plotted channels.
         gates: Gate| iterable of Gate | None
             Gates to be applied before plotting
         transform_first : bool
@@ -123,6 +123,9 @@ class FCSample(BaseSample):
         channel_names = to_list(channel_names)
         transformList = to_list(transform)
         gates         = to_list(gates)
+        
+        if len(transformList)==1:
+             transformList *= len(channel_names)
         
         sample_tmp = self.copy()
         if transform_first:
