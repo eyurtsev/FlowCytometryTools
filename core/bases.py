@@ -438,27 +438,35 @@ class BaseSampleCollection(collections.MutableMapping, BaseObject):
         TODO: add support for multiple criteria
         '''
         fil = _parse_criteria(criteria)
+        new = self.copy()
         if isinstance(applyto, collections.Mapping):
-            samples = {k:v for k,v in self.iteritems() if fil(applyto[k])}
+            remove = (k for k,v in self.iteritems() if fil(applyto[k]))
         elif applyto=='samples':
-            samples = {k:v for k,v in self.iteritems() if fil(v)}
+            remove = (k for k,v in self.iteritems() if fil(v))
         elif applyto=='keys':
-            samples = {k:v for k,v in self.iteritems() if fil(k)}
+            remove = (k for k,v in self.iteritems() if fil(k))
         elif applyto=='data':
-            samples = {k:v for k,v in self.iteritems() if fil(v.get_data())}
+            remove = (k for k,v in self.iteritems() if fil(v.get_data()))
         else:
             raise ValueError, 'Unsupported value "%s" for applyto parameter.' %applyto
+        for r in remove:
+            del new[r]
         if ID is None:
             ID = self.ID + '.filtered'
-        return self._constructor(ID, samples)
+        new.ID = ID
+        return new
 
     def filter_by_key(self, keys, ID=None):
         keys = to_list(keys)
         fil = lambda x: x in keys
+        if ID is None:
+            ID = self.ID + '.filtered_by_key'            
         return self.filter(fil, applyto='keys', ID=ID) 
 
     def filter_by_attr(self, attr, criteria, ID=None):
         applyto = {k:getattr(v,attr) for k,v in self.iteritems()}
+        if ID is None:
+            ID = self.ID + '.filtered_by_%s' %attr
         return self.filter(criteria, applyto=applyto, ID=ID)
 
     def filter_by_IDs(self, ids, ID=None):
@@ -472,12 +480,16 @@ class BaseSampleCollection(collections.MutableMapping, BaseObject):
         rows = to_list(rows)
         fil = lambda x: x in rows
         applyto = {k:self._positions[k][0] for k in self.iterkeys()}
+        if ID is None:
+            ID = self.ID + '.filtered_by_rows'        
         return self.filter(fil, applyto=applyto, ID=ID)
 
     def filter_by_cols(self, cols, ID=None):
         rows = to_list(cols)
         fil = lambda x: x in rows
         applyto = {k:self._positions[k][1] for k in self.iterkeys()}
+        if ID is None:
+            ID = self.ID + '.filtered_by_cols'        
         return self.filter(fil, applyto=applyto, ID=ID)
 
 class BaseOrderedCollection(BaseSampleCollection):
