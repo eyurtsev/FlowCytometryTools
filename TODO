@@ -1,13 +1,16 @@
 * For each sample / measurement, add reference to parent collection / plate
 	- JF: Agreed. Not sure how to implement as a MutableMapping is not hashable. 
 	
-* Re-arrange metadata to contain channel info as dict/DataFrame
+* DONE: Re-arrange metadata to contain channel info as dict/DataFrame
 
-* FCSample channels property to extract from meta, rather than data.
+* DONE: FCSample channels property to extract from meta, rather than data.
 
 * Consider changing the type checking on Collections to allow them to 
 contain sub-collections of the same type, or any object that implements
 so necessary attributes (e.g.: ID, apply, plot, etc').
+
+* Consider having samples remember which transforms&gates should be applied and apply 
+them when data is read form the datafile. 
 
 * Change all 'Samples' to 'Measurements'. !!!! This is a major API change!!!!
 
@@ -15,7 +18,7 @@ so necessary attributes (e.g.: ID, apply, plot, etc').
 
 * add 'to_orderd' method to SampleCollection
 
-* add 'gate' method to Sample
+* DONE: add 'gate' method to Sample
 
 * remove batch_fcs
 
@@ -25,19 +28,23 @@ so necessary attributes (e.g.: ID, apply, plot, etc').
 
 * fix default limits for figures. change tick marks according to scale.
 
+* grid_plot label offset should change with shape of plate. labels are now invisible for small collections.
+
 * add colorbar to 2D histograms.
 
 * add axis labels to one(?) subplot in grid_plot. 
 
+* DONE: add ability to plot gates in the sample plotting function
+
 What would be nice to have:
 
-1. FCM data be addressable by channel names instead of indexes
+1. DONE: FCM data be addressable by channel names instead of indexes
     this could help avoid really non-obvious problems when fcs files have been collected with different settings
     and user does not use name_to_index attribute
 
-2. function used with apply to return a dictionary instead of just the values... ??
+2. DONE: function used with apply to return a dictionary instead of just the values... ??
 
-3. Print on FCPlate should show loaded data not the underlying DataFrame
+3. OBSOLETE: Print on FCPlate should show loaded data not the underlying DataFrame
 
 4. implement decorator that checks if attribute is set and is not None.
 If it is not, return some default (None). Otherwise call wrapped function.
@@ -49,7 +56,7 @@ is trying to operate on an unassigned/None attribute.
 
 6. Support 1D (or n-D) OrderedCollection 
 
-7. Allow trimming of ordered collection to remove rows/cols of all nans.
+7. DONE: Allow trimming of ordered collection to remove rows/cols of all nans.
 
 8. Allow labeling rows/cols in plots of ordered collection
 
