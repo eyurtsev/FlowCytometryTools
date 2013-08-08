@@ -6,12 +6,12 @@ Created on Jun 14, 2013
 TODO:
 '''
 from FlowCytometryTools import parse_fcs
-from bases import BaseSample, BaseSampleCollection, BasePlate, BaseOrderedCollection
+from bases import Measurement, MeasurementCollection, OrderedCollection
 from GoreUtilities.util import to_list
 import graph
 from theano.compile.io import Out
 
-class FCSample(BaseSample):
+class FCMeasurement(Measurement):
     '''
     A class for holding flow cytometry data from
     a single well or a single tube.
@@ -87,7 +87,7 @@ class FCSample(BaseSample):
             given two channels produces a 2d plot
         kind : 'scatter', 'histogram'
         transform : valid transform | tuple of valid transforms | None
-            Transform to be applied to corresponding channels using the FCSample.transform function.
+            Transform to be applied to corresponding channels using the FCMeasurement.transform function.
             If a single transform is given, it will be applied to all plotted channels.
         gates: Gate| iterable of Gate | None
             Gates to be applied before plotting
@@ -193,13 +193,13 @@ class FCSample(BaseSample):
         newsample.set_data(data=newdata)
         return newsample        
 
-class FCSampleCollection(BaseSampleCollection):
+class FCCollection(MeasurementCollection):
     '''
     A dict-like class for holding flow cytometry samples.
     '''
-    _sample_class = FCSample
+    _sample_class = FCMeasurement
 
-class FCOrderedCollection(BaseOrderedCollection, FCSampleCollection):
+class FCOrderedCollection(OrderedCollection, FCCollection):
     '''
     A dict-like class for holding flow cytometry samples that are arranged in a matrix.
     '''
@@ -209,7 +209,7 @@ class FCOrderedCollection(BaseOrderedCollection, FCSampleCollection):
              ids=None, row_labels=None, col_labels=None,
              xaxislim=None, yaxislim=None, **kwargs):
         """
-        For details see documentation for FCSample.plot
+        For details see documentation for FCMeasurement.plot
         Use grid_plot_kwargs to pass keyword arguments to the grid_plot function.
         (For options see grid_plot documentation)
 
@@ -234,46 +234,13 @@ class FCOrderedCollection(BaseOrderedCollection, FCSampleCollection):
         grid_plot_kwargs['yaxislim'] = yaxislim
         return self.grid_plot(plotSampleDataFunction, **grid_plot_kwargs)
 
-class FCPlate(BasePlate):
-    '''
-    A class for holding flow cytometry plate data.
-    '''
-    _sample_class = FCSample
-
-    def plot(self, channel_names, transform=(None, None), kind='histogram', grid_plot_kwargs={}, **kwargs):
-        """
-        For details see documentation for FCSample.plot
-        Use grid_plot_kwargs to pass keyword arguments to the grid_plot function.
-        (For options see grid_plot documentation)
-
-
-        Returns
-        -------
-        gHandleList: list
-            gHandleList[0] -> reference to main axis
-            gHandleList[1] -> a list of lists
-                example: gHandleList[1][0][2] returns the subplot in row 0 and column 2
-        """
-        def plotSampleDataFunction(data):
-            """ Function assumes that data is returned as a 2-tuple. The first element is the meta data, the second is the DataFrame """
-            return graph.plotFCM(data[1], channel_names, transform=transform, kind=kind, autolabel=False, **kwargs)
-        return self.grid_plot(plotSampleDataFunction, **grid_plot_kwargs)
-
-    @property
-    def layout(self):
-        def data_assigned(well):
-            if well.datafile != None:
-                return 'Y'
-            else:
-                return 'N'
-
-        return self.wells.applymap(data_assigned)
+FCPlate = FCOrderedCollection
 
 if __name__ == '__main__':
     import glob
     datadir = '../tests/data/Plate02/'
     fname = glob.glob(datadir + '*.fcs')[0]
-    sample = FCSample(1, datafile=fname)
+    sample = FCMeasurement(1, datafile=fname)
     print sample.channels
     print sample.channel_names
 

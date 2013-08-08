@@ -6,7 +6,7 @@ from matplotlib.nxutils import points_inside_poly
 from matplotlib.colors import colorConverter
 from GoreUtilities import util
 import numpy
-from FlowCytometryTools import plotFCM, FCSample
+from FlowCytometryTools import plotFCM, FCMeasurement
 
 ##
 # TODO: channel_list should be names rather than channel numbers
@@ -672,7 +672,7 @@ class GateKeeper():
             from GoreUtilities import dialogs
             filepath = dialogs.open_file_dialog('Select an FCS file to load', 'FCS files (*.fcs)|*.fcs')
         if filepath is not None:
-            self.sample = FCSample('temp', datafile=filepath)
+            self.sample = FCMeasurement('temp', datafile=filepath)
 
             if GateKeeper.current_channels == None:
                 GateKeeper.current_channels = self.sample.channel_names[0:2] # Assigns first two channels by default if none have been specified yet.
