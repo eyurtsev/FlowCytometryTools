@@ -22,6 +22,8 @@ from GoreUtilities.util import to_list
 import pylab as pl
 import numpy
 
+    
+
 class Gate(object):
     """ Abstract gate. Defines common interface for specific implementations of the gate classes. """
     unnamed_gate_num = 1
@@ -85,6 +87,24 @@ class Gate(object):
 
         return dataframe[idx]
 
+    def _find_orientation(self, ax_channels):        
+        ax_channels = to_list(ax_channels)
+        c = self.channels[0]
+        if ax_channels is not None:
+            try:
+                i = ax_channels.index(c)
+                if i==0: 
+                    flip=False
+                else:
+                    flip=True
+            except ValueError:
+                raise Exception, 'Trying to plot gate that is defined on channel %s, but figure axis correspond to channels %s' %(c, ax_channels)
+        if len(self.channels)==2:
+            c = self.channels[1]
+            if c not in ax_channels:
+                raise Exception, 'Trying to plot gate that is defined on channel %s, but figure axis correspond to channels %s' %(c, ax_channels)
+        return flip
+
     def plot(self, **kwargs):
         raise NotImplementedError('Plotting is not yet supported for this gate type.')
 
@@ -131,7 +151,7 @@ class ThresholdGate(Gate):
 
         return idx
 
-    def plot(self, flip = False, ax = None, *args, **kwargs):
+    def plot(self, flip=False, ax_channels=None, ax=None, *args, **kwargs):
         """
         Plots a threshold gate.
         TODO: This function should not rescale the axis
@@ -152,10 +172,12 @@ class ThresholdGate(Gate):
         if ax == None:
             ax = pl.gca()
 
-        kwargs.setdefault('color', 'black')
-
+        if ax_channels is not None:
+            flip = self._find_orientation(ax_channels)
+            
         plot_func = pl.axhline if flip else pl.axvline
-
+        
+        kwargs.setdefault('color', 'black')
         return plot_func(self.vert, *args, **kwargs)
 
 
@@ -196,7 +218,7 @@ class IntervalGate(Gate):
         return idx
 
 
-    def plot(self, flip = False, ax = None, *args, **kwargs):
+    def plot(self, flip=False, ax_channels=None, ax=None, *args, **kwargs):
         """
         Plots an interval gate
         TODO: This function should not rescale the axis
@@ -217,10 +239,12 @@ class IntervalGate(Gate):
         if ax == None:
             ax = pl.gca()
 
-        kwargs.setdefault('color', 'black')
-
+        if ax_channels is not None:
+            flip = self._find_orientation(ax_channels)
+            
         plot_func = pl.axhline if flip else pl.axvline
 
+        kwargs.setdefault('color', 'black')
         a1 = plot_func(self.vert[0], *args, **kwargs)
         a2 = plot_func(self.vert[1], *args, **kwargs)
 
@@ -274,7 +298,7 @@ class QuadGate(Gate):
         return idx
 
 
-    def plot(self, flip=False, ax=None, *args, **kwargs):
+    def plot(self, flip=False, ax_channels=None, ax=None, *args, **kwargs):
         """
         Plots a quad gate.
         TODO: This function should not rescale the axis
@@ -293,6 +317,9 @@ class QuadGate(Gate):
             ax = pl.gca()
 
         kwargs.setdefault('color', 'black')
+
+        if ax_channels is not None:
+            flip = self._find_orientation(ax_channels)
 
         if not flip:
             a1 = pl.axvline(self.vert[0], *args, **kwargs)
@@ -340,7 +367,7 @@ class PolyGate(Gate):
 
         return idx
 
-    def plot(self, ax=None, *args, **kwargs):
+    def plot(self, flip=False, ax_channels=None, ax=None, *args, **kwargs):
         """
         Plots a polygon gate on the current axis.
         (Just calls the polygon function)
@@ -357,9 +384,18 @@ class PolyGate(Gate):
         if ax == None:
             ax = pl.gca()
 
+        if ax_channels is not None:
+            flip = self._find_orientation(ax_channels)
+        
+        print flip
+        if flip:
+            vert = [v[::-1] for v in self.vert]
+        else:
+            vert = self.vert
+        
         kwargs.setdefault('fill', False)
         kwargs.setdefault('color', 'black')
-        poly = pl.Polygon(self.vert, *args, **kwargs)
+        poly = pl.Polygon(vert, *args, **kwargs)
         return ax.add_artist(poly)
 
 

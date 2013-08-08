@@ -9,6 +9,7 @@ from FlowCytometryTools import parse_fcs
 from bases import BaseSample, BaseSampleCollection, BasePlate, BaseOrderedCollection
 from GoreUtilities.util import to_list
 import graph
+from theano.compile.io import Out
 
 class FCSample(BaseSample):
     '''
@@ -72,7 +73,8 @@ class FCSample(BaseSample):
             raise Exception("The keyword '{}' does not exist in the following FCS file: {}".format(ID_field, self.datafile))
 
     def plot(self, channel_names, kind='histogram', transform=(None, None), 
-             gates=None, transform_first=True, **kwargs):
+             gates=None, transform_first=True, apply_gates=True, plot_gates=False,
+             **kwargs):
         '''
         Plots the flow cytometry data associated with the sample on the current axis.
         Follow with a call to matplotlibs show() in order to see the plot.
@@ -105,7 +107,7 @@ class FCSample(BaseSample):
 #         data = self.get_data() # The index is to keep only the data part (removing the meta data)
         # Transform sample
 
-        def apply_trans(sample, channel_names, transformList):
+        def _trans(sample, channel_names, transformList):
             for c,t in zip(channel_names, transformList):
                 if t is not None:
                     sample = sample.transform(t, channels=c)
@@ -113,7 +115,7 @@ class FCSample(BaseSample):
                     pass
             return sample
         
-        def apply_gates(sample, gates):
+        def _gates(sample, gates):
             if gates is None:
                 return sample
             for gate in gates:
@@ -128,15 +130,26 @@ class FCSample(BaseSample):
              transformList *= len(channel_names)
         
         sample_tmp = self.copy()
-        if transform_first:
-            sample_tmp = apply_trans(sample_tmp, channel_names, transformList)
-            sample_tmp = apply_gates(sample_tmp, gates)
+        if apply_gates:
+            if transform_first:
+                sample_tmp = _trans(sample_tmp, channel_names, transformList)
+                sample_tmp = _gates(sample_tmp, gates)
+            else:
+                sample_tmp = _gates(sample_tmp, gates)
+                sample_tmp = _trans(sample_tmp, channel_names, transformList)
         else:
-            sample_tmp = apply_gates(sample_tmp, gates)
-            sample_tmp = apply_trans(sample_tmp, channel_names, transformList)
+            sample_tmp = _trans(sample_tmp, channel_names, transformList)
             
         data = sample_tmp.get_data()
-        return graph.plotFCM(data, channel_names, kind=kind, **kwargs)
+        out  = graph.plotFCM(data, channel_names, kind=kind, **kwargs)
+        
+        #TODO: add gate color cycling
+        if plot_gates:
+            for g in gates:
+                g.plot(ax_channels=channel_names)
+        
+        return out
+        
 
     def view(self, channel_names=None):
         '''
