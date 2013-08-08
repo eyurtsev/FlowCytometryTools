@@ -360,7 +360,10 @@ class PolyGate(Gate):
             Determines whether to return the points
             inside ('in') or outside ('out') of the polygon
         """
-        idx = self.path.contains_points(dataframe[self.channels])
+        for c in self.channels:
+            if c not in dataframe:
+                raise ValueError, 'Trying to filter based on channel %s which is not present in the data.' %c
+        idx = self.path.contains_points(dataframe.filter(self.channels))
 
         if self.region == 'out':
             idx = ~idx
