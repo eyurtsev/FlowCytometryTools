@@ -8,8 +8,9 @@ TODO:
 from FlowCytometryTools import parse_fcs
 from bases import Measurement, MeasurementCollection, OrderedCollection
 from GoreUtilities.util import to_list
+from itertools import cycle
 import graph
-from theano.compile.io import Out
+
 
 class FCMeasurement(Measurement):
     '''
@@ -74,7 +75,7 @@ class FCMeasurement(Measurement):
 
     def plot(self, channel_names, kind='histogram', transform=(None, None), 
              gates=None, transform_first=True, apply_gates=True, plot_gates=True,
-             **kwargs):
+             gate_colors=None, **kwargs):
         '''
         Plots the flow cytometry data associated with the sample on the current axis.
         Follow with a call to matplotlibs show() in order to see the plot.
@@ -122,6 +123,8 @@ class FCMeasurement(Measurement):
                 sample = sample.gate(gate)
             return sample
         
+        ax = kwargs.get('ax')
+        
         channel_names = to_list(channel_names)
         transformList = to_list(transform)
         gates         = to_list(gates)
@@ -145,8 +148,10 @@ class FCMeasurement(Measurement):
         
         #TODO: add gate color cycling
         if plot_gates and gates is not None:
-            for g in gates:
-                g.plot(ax_channels=channel_names)
+            if gate_colors is None:
+                gate_colors = cycle(('k', 'b', 'g', 'r', 'm', 'c', 'y'))
+            for (g,c) in zip(gates, gate_colors):
+                g.plot(ax=ax, ax_channels=channel_names, color=c)
         
         return out
         
