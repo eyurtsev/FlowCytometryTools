@@ -73,7 +73,7 @@ class FCMeasurement(Measurement):
             raise Exception("The keyword '{}' does not exist in the following FCS file: {}".format(ID_field, self.datafile))
 
     def plot(self, channel_names, kind='histogram', transform=(None, None), 
-             gates=None, transform_first=True, apply_gates=True, plot_gates=False,
+             gates=None, transform_first=True, apply_gates=True, plot_gates=True,
              **kwargs):
         '''
         Plots the flow cytometry data associated with the sample on the current axis.
@@ -144,7 +144,7 @@ class FCMeasurement(Measurement):
         out  = graph.plotFCM(data, channel_names, kind=kind, **kwargs)
         
         #TODO: add gate color cycling
-        if plot_gates:
+        if plot_gates and gates is not None:
             for g in gates:
                 g.plot(ax_channels=channel_names)
         
