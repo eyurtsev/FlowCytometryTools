@@ -86,7 +86,13 @@ class Filter(object):
         debugging_print('Just created a new gate: ' + str(self))
 
     def __repr__(self):
-        return "{0} ({1}, {2}, {3})".format(self.__class__, self.vert, self.channels, self.name)
+        #return "{0} ({1}, {2}, {3})".format(self.__class__, self.vert, self.channels, self.name)
+        if isinstance(self, PolygonGate):
+            region = 'in'
+        else:
+            region = 'YOU MUST SPECIFY A REGION (top left, top right, bottom left, bottom right)'
+        return "gate = {0}({1}, {2}, region='{region}', '{3}')".format(self.__class__.__name__, self.vert, self.channels, self.name, region=region)
+
 
     def __str__(self):
         return self.__repr__()
@@ -451,6 +457,7 @@ class GateKeeper():
 
         # For Quad Gate
         self.cursorWidget = None
+        self.new_gate_num = 1
 
     def connect(self):
         #self.cidrelease = self.fig.canvas.mpl_connect('button_release_event', self.on_release)
@@ -509,14 +516,18 @@ class GateKeeper():
         elif self.state == STATE_GK.START_DRAWING:
             debugging_print('Creating a polygon gate')
             self.inactivate_all_gates()
-            gate = PolygonGate(vert=None, channels=GateKeeper.current_channels, name='Polygon Gate', gateKeeper=self)
+            name = 'Gate #{0}'.format(self.new_gate_num)
+            self.new_gate_num += 1
+            gate = PolygonGate(vert=None, channels=GateKeeper.current_channels, name=name, gateKeeper=self)
             self.add_gate(gate)
             gate.on_press(event)
             self.set_state(STATE_GK.KEEP_DRAWING)
 
         elif self.state == STATE_GK.START_DRAWING_QUAD_GATE:
             self.inactivate_all_gates()
-            quadGate = QuadGate(vert=(event.xdata, event.ydata), channels=GateKeeper.current_channels, name='Quad Gate', gateKeeper=self)
+            name = 'Gate #{0}'.format(self.new_gate_num)
+            self.new_gate_num += 1
+            quadGate = QuadGate(vert=(event.xdata, event.ydata), channels=GateKeeper.current_channels, name=name, gateKeeper=self)
             self.add_gate(quadGate)
             self.cursorWidget = None
             self.set_state(STATE_GK.WAITING)
@@ -675,7 +686,7 @@ class GateKeeper():
             self.sample = FCSample('temp', datafile=filepath)
 
             if GateKeeper.current_channels == None:
-                GateKeeper.current_channels = self.sample.channel_names[0:2] # Assigns first two channels by default if none have been specified yet.
+                GateKeeper.current_channels = list(self.sample.channel_names[0:2]) # Assigns first two channels by default if none have been specified yet.
 
             self.plot_data()
 
