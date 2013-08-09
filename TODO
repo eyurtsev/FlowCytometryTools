@@ -1,63 +1,58 @@
+TODO BEFORE RELEASE:
+
+Refactor plotting [limits behave correctly] [Eugene] 
+    1 fix default limits for figures. change tick marks according to scale. [Partially fixed. EY 2013-08-sic09]
+    2 add axis labels to one(?) subplot in grid_plot. 
+    3 add colorbar to 2D histograms.
+    4 Allow labeling rows/cols in plots of ordered collection
+
+Documentation
+    * Write doc strings, specifically for the functionality introduced in the ipython notebook examples [EY, JF]
+    * Wiki page with instructions to install / uninstall packages. [Eugene]
+        * ipython notebook with examples.
+            -> basic plotting [EY]
+            -> IO / parsers transformations [JF]
+            -> Gates [JF -> EY]
+            -> Filtering [JF]
+            -> Basics: channel, channel_names, meta data [EY] ** Secondary priority
+            -> Utility examples: Counting cells in a region / statistics [JF->EY] 
+            -> Subgating [JF] 
+            -> utility functions: loading plates recursively [EY]
+        * Find a location that's in the path (for example import numpy and query numpy.__path__)
+        * Indepedent of git (rewrite instructions from plate reader tools)
+        * Link to ipython notebooks put on notebook viewer online
+        
+
+Tests
+    * Importing ipython notebook if easy
+
+* Discuss how the transformations are applied to data and to gating.
+    * Specifically, if not implemented in code, document clearly with examples.
+    * Consider having samples remember which transforms&gates should be applied and apply 
+    them when data is read form the datafile. 
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 * For each sample / measurement, add reference to parent collection / plate
 	- JF: Agreed. Not sure how to implement as a MutableMapping is not hashable. 
 	
-* DONE: Re-arrange metadata to contain channel info as dict/DataFrame
-
-* DONE: FCSample channels property to extract from meta, rather than data.
-
 * Consider changing the type checking on Collections to allow them to 
 contain sub-collections of the same type, or any object that implements
 so necessary attributes (e.g.: ID, apply, plot, etc').
 
-* Consider having samples remember which transforms&gates should be applied and apply 
-them when data is read form the datafile. 
-
-* Change all 'Samples' to 'Measurements'. !!!! This is a major API change!!!!
-
-* Remove 'Base' from names of base classes
-
-* add 'to_orderd' method to SampleCollection
-
-* DONE: add 'gate' method to Sample
-
-* remove batch_fcs (DONE EY 2103-08-08)
-
-* Have Plate objects just be short names for OrderedCollections
-
-* refactor plotting
-
-* fix default limits for figures. change tick marks according to scale. [Partially fixed. EY 2013-08-09]
-
+* add 'to_ordered' method to SampleCollection
 * grid_plot label offset should change with shape of plate. labels are now invisible for small collections.
 
-* add colorbar to 2D histograms.
 
-* add axis labels to one(?) subplot in grid_plot. 
-
-* DONE: add ability to plot gates in the sample plotting function
-
-What would be nice to have:
-
-1. DONE: FCM data be addressable by channel names instead of indexes
-    this could help avoid really non-obvious problems when fcs files have been collected with different settings
-    and user does not use name_to_index attribute
-
-2. DONE: function used with apply to return a dictionary instead of just the values... ??
-
-3. OBSOLETE: Print on FCPlate should show loaded data not the underlying DataFrame
-
-4. implement decorator that checks if attribute is set and is not None.
+* implement decorator that checks if attribute is set and is not None.
 If it is not, return some default (None). Otherwise call wrapped function.
 Tricky part is to still have the wrapped function signature and docstring
 exposed.
 
-5. Add dedicated exceptions with informative messages for cases where user 
+* Support 1D (or n-D) OrderedCollection 
+
+* Add dedicated exceptions with informative messages for cases where user 
 is trying to operate on an unassigned/None attribute.
-
-6. Support 1D (or n-D) OrderedCollection 
-
-7. DONE: Allow trimming of ordered collection to remove rows/cols of all nans.
-
-8. Allow labeling rows/cols in plots of ordered collection
 
 
