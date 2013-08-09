@@ -20,13 +20,13 @@ them when data is read form the datafile.
 
 * DONE: add 'gate' method to Sample
 
-* remove batch_fcs
+* remove batch_fcs (DONE EY 2103-08-08)
 
 * Have Plate objects just be short names for OrderedCollections
 
 * refactor plotting
 
-* fix default limits for figures. change tick marks according to scale.
+* fix default limits for figures. change tick marks according to scale. [Partially fixed. EY 2013-08-09]
 
 * grid_plot label offset should change with shape of plate. labels are now invisible for small collections.
 

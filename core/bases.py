@@ -14,8 +14,9 @@ using shelve|PyTables|pandas HDFStore
 '''
 from pandas import DataFrame as DF
 from numpy import nan, unravel_index
-from pylab import sca
+import pylab as pl
 from GoreUtilities.util import get_files, save, load, to_list
+from GoreUtilities import graph
 
 def _assign_IDS_to_datafiles(datafiles, parser, sample_class=None):
     '''
@@ -776,10 +777,6 @@ class OrderedCollection(MeasurementCollection):
         if col_labels == None: callArgs['col_labels'] = self.col_labels
 
         # TODO: decide on naming convention
-        try:
-            from GoreUtilities import graph
-        except:
-            from GoreUtilities import graph
 
         gHandleList = graph.create_grid_layout(**callArgs)
         subplots_ax = DF(gHandleList[1], index=self.row_labels, columns=self.col_labels)
@@ -795,7 +792,7 @@ class OrderedCollection(MeasurementCollection):
 
             row, col = self._positions[ID]
             ax = subplots_ax[col][row]
-            sca(ax) # sets the current axis
+            pl.sca(ax) # sets the current axis
 
             if applyto == 'sample':
                 func(sample, ax) # reminder: pandas row/col order is reversed
@@ -809,7 +806,9 @@ class OrderedCollection(MeasurementCollection):
             else:
                 raise ValueError, 'Encountered unsupported value {} for applyto paramter.'.format(applyto)
 
-        sca(gHandleList[0]) # sets to the main axis -- more intuitive
+        pl.autoscale()
+
+        pl.sca(gHandleList[0]) # sets to the main axis -- more intuitive
         return gHandleList
 
 if __name__ == '__main__':
