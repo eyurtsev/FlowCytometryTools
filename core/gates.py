@@ -174,8 +174,8 @@ class ThresholdGate(Gate):
 
         if ax_channels is not None:
             flip = self._find_orientation(ax_channels)
-            
-        plot_func = pl.axhline if flip else pl.axvline
+        
+        plot_func = ax.axes.axhline if flip else ax.axes.axvline
         
         kwargs.setdefault('color', 'black')
         return plot_func(self.vert, *args, **kwargs)
@@ -242,7 +242,7 @@ class IntervalGate(Gate):
         if ax_channels is not None:
             flip = self._find_orientation(ax_channels)
             
-        plot_func = pl.axhline if flip else pl.axvline
+        plot_func = ax.axes.axhline if flip else ax.axes.axvline
 
         kwargs.setdefault('color', 'black')
         a1 = plot_func(self.vert[0], *args, **kwargs)
@@ -322,11 +322,11 @@ class QuadGate(Gate):
             flip = self._find_orientation(ax_channels)
 
         if not flip:
-            a1 = pl.axvline(self.vert[0], *args, **kwargs)
-            a2 = pl.axhline(self.vert[1], *args, **kwargs)
+            a1 = ax.axes.axvline(self.vert[0], *args, **kwargs)
+            a2 = ax.axes.axhline(self.vert[1], *args, **kwargs)
         else:
-            a1 = pl.axvline(self.vert[1], *args, **kwargs)
-            a2 = pl.axhline(self.vert[0], *args, **kwargs)
+            a1 = ax.axes.axvline(self.vert[1], *args, **kwargs)
+            a2 = ax.axes.axhline(self.vert[0], *args, **kwargs)
 
         return (a1, a2)
 
@@ -390,7 +390,6 @@ class PolyGate(Gate):
         if ax_channels is not None:
             flip = self._find_orientation(ax_channels)
         
-        print flip
         if flip:
             vert = [v[::-1] for v in self.vert]
         else:
