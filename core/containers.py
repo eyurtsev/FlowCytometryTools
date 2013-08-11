@@ -210,8 +210,8 @@ class FCOrderedCollection(OrderedCollection, FCCollection):
     '''
 
     def plot(self, channel_names,  kind='histogram', transform=(None, None), 
-             gates=None, transform_first=True, grid_plot_kwargs={},
-             ids=None, row_labels=None, col_labels=None,
+             gates=None, transform_first=True, apply_gates=True, plot_gates=True, gate_colors=None,
+             grid_plot_kwargs={}, ids=None, row_labels=None, col_labels=None,
              xaxislim=None, yaxislim=None, **kwargs):
         """
         For details see documentation for FCMeasurement.plot
@@ -229,7 +229,8 @@ class FCOrderedCollection(OrderedCollection, FCCollection):
         def plotSampleDataFunction(sample, ax):
             """ Function assumes that data is returned as a 2-tuple. The first element is the meta data, the second is the DataFrame """
             return sample.plot(channel_names, transform=transform, ax=ax,
-                               gates=gates, transform_first=transform_first,
+                               gates=gates, transform_first=transform_first, apply_gates=apply_gates, 
+                               plot_gates=plot_gates, gate_colors=gate_colors,
                                kind=kind, autolabel=False, **kwargs)
         
         grid_plot_kwargs['ids'] = ids
