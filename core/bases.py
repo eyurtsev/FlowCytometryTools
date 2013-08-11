@@ -225,7 +225,7 @@ class Measurement(BaseObject):
         '''
         pass
 
-    def apply(self, func, applyto='data', noneval=nan, setdata=False):
+    def apply(self, func, applyto='sample', noneval=nan, setdata=False):
         '''
         Apply func either to self or to associated data.
         If data is not already parsed, try and read it.
