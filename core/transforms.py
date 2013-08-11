@@ -154,7 +154,7 @@ def hlog(x, b=500, r=_display_max, d=_l_mmax,
     Array of transformed values.
     '''
     from scipy.optimize import brentq
-    print 'b=',b
+#     print 'b=',b
     hlog_obj = lambda y, x, b, r, d: hlog_inv(y, b, r, d) - x
     find_inv = vectorize(lambda x: brentq(hlog_obj, -2*r, 2*r, 
                                         args=(x, b, r, d)))    
