@@ -297,7 +297,7 @@ class MeasurementCollection(collections.MutableMapping, BaseObject):
         return cls(ID, samples)
 
     @classmethod
-    def from_path(cls, ID, path, pattern='*.fcs', recursive=False,
+    def from_dir(cls, ID, path, pattern='*.fcs', recursive=False,
                   parser='name'):
         datafiles = get_files(path, pattern, recursive)
         return cls.from_files(ID, datafiles, parser)
@@ -370,7 +370,7 @@ class MeasurementCollection(collections.MutableMapping, BaseObject):
     # ----------------------
     # User methods
     # ----------------------
-    def apply(self, func, ids=None, applyto='data', 
+    def apply(self, func, ids=None, applyto='sample', 
               noneval=nan, setdata=False):
         '''
         Apply func to each of the specified samples.
@@ -542,7 +542,7 @@ class OrderedCollection(MeasurementCollection):
         return cls(ID, samples, **kwargs)
 
     @classmethod
-    def from_path(cls, ID, path, pattern='*.fcs', recursive=False,
+    def from_dir(cls, ID, path, pattern='*.fcs', recursive=False,
                   file_parser='name', **kwargs):
         datafiles = get_files(path, pattern, recursive)
         return cls.from_files(ID, datafiles, file_parser='name', **kwargs)
@@ -676,7 +676,7 @@ class OrderedCollection(MeasurementCollection):
     def shape(self):
         return (len(self.row_labels), len(self.col_labels))
 
-    def apply(self, func, ids=None, applyto='data', 
+    def apply(self, func, ids=None, applyto='sample', 
               output_format='DataFrame', noneval=nan, 
               setdata=False, dropna=False):
         '''
