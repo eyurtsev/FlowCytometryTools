@@ -716,7 +716,8 @@ class OrderedCollection(MeasurementCollection):
 
     def grid_plot(self, func, applyto='sample', ids=None, row_labels=None, col_labels=None,
                 xlim=None, ylim=None,
-                row_label_xoffset=-0.1, col_label_yoffset=-0.3,
+                xlabel=None, ylabel=None,
+                row_label_xoffset=None, col_label_yoffset=None,
                 hide_tick_labels=True, hide_tick_lines=True,
                 hspace=0, wspace=0, row_labels_kwargs={}, col_labels_kwargs={}):
         '''
@@ -756,16 +757,15 @@ class OrderedCollection(MeasurementCollection):
 
         Examples
         ---------
-            def y(well, ax):
-                data = well.get_data()
-                if data is None:
-                    return None
-                graph.plotFCM(data, 'Y2-A')
-            def z(data, ax):
-                plot(data[0:100, 1], data[0:100, 2])
-            plate.plot(y, applyto='sample');
-            plate.plot(z, applyto='data');
-
+        def y(well, ax):
+            data = well.get_data()
+            if data is None:
+                return None
+            graph.plotFCM(data, 'Y2-A')
+        def z(data, ax):
+            plot(data[0:100, 1], data[0:100, 2])
+        plate.plot(y, applyto='sample');
+        plate.plot(z, applyto='data');
         '''
         # Acquire call arguments to be passed to create plate layout
         callArgs = locals().copy() # This statement must remain first. The copy is just defensive.
@@ -779,6 +779,7 @@ class OrderedCollection(MeasurementCollection):
         # TODO: decide on naming convention
 
         gHandleList = graph.create_grid_layout(**callArgs)
+
         subplots_ax = DF(gHandleList[1], index=self.row_labels, columns=self.col_labels)
 
         if ids is None:
@@ -815,6 +816,17 @@ class OrderedCollection(MeasurementCollection):
             axis = 'y'
 
         pl.autoscale(True, axis)
+
+        if xlabel or ylabel:
+            ax = gHandleList[1][0, -1]
+            pl.sca(ax)
+            xlim = ax.get_xlim()
+            ylim = ax.get_ylim()
+            #pl.xticks([xlim[0], 0, xlim[1]])
+            #pl.yticks([ylim[0], 0, ylim[1]], rotation=270, padlabel=10)
+            pl.xticks([])
+            pl.yticks([])
+            #pl.locator_params(axis='y', nbins=3)
 
         pl.sca(gHandleList[0]) # sets to the main axis -- more intuitive
         return gHandleList

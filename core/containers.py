@@ -213,6 +213,7 @@ class FCOrderedCollection(OrderedCollection, FCCollection):
              gates=None, transform_first=True, apply_gates=True, plot_gates=True, gate_colors=None,
              ids=None, row_labels=None, col_labels=None,
              xlim=None, ylim=None,
+             autolabel=True,
              grid_plot_kwargs={},
              **kwargs):
         """
@@ -234,10 +235,22 @@ class FCOrderedCollection(OrderedCollection, FCCollection):
                                plot_gates=plot_gates, gate_colors=gate_colors,
                                kind=kind, autolabel=False, **kwargs)
 
+        if autolabel:
+            cnames = to_list(channel_names)
+            xlabel=cnames[0]
+
+            if len(cnames) == 2:
+                ylabel=cnames[1]
+        else:
+            xlabel, ylabel = None, None
+
         grid_plot_kwargs['ids'] = ids
         grid_plot_kwargs['row_labels'] = row_labels
         grid_plot_kwargs['col_labels'] = col_labels
-        return self.grid_plot(plotSampleDataFunction, xlim=xlim, ylim=ylim, **grid_plot_kwargs)
+
+        return self.grid_plot(plotSampleDataFunction, xlim=xlim, ylim=ylim,
+                    xlabel=xlabel, ylabel=ylabel,
+                    **grid_plot_kwargs)
 
 FCPlate = FCOrderedCollection
 
