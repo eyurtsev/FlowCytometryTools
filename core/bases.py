@@ -715,7 +715,7 @@ class OrderedCollection(MeasurementCollection):
             raise Exception(msg)
 
     def grid_plot(self, func, applyto='sample', ids=None, row_labels=None, col_labels=None,
-                xaxislim=None, yaxislim=None,
+                xlim=None, ylim=None,
                 row_label_xoffset=-0.1, col_label_yoffset=-0.3,
                 hide_tick_labels=True, hide_tick_lines=True,
                 hspace=0, wspace=0, row_labels_kwargs={}, col_labels_kwargs={}):
@@ -743,7 +743,7 @@ class OrderedCollection(MeasurementCollection):
             labels for the columns if None default labels are used
         row_labels : str
             labels for the rows if None default labels are used
-        xaxislim : 2-tuple
+        xlim : 2-tuple
             min and max x value for each subplot
             if None, the limits are automatically determined for each subplot
 
@@ -806,7 +806,15 @@ class OrderedCollection(MeasurementCollection):
             else:
                 raise ValueError, 'Encountered unsupported value {} for applyto paramter.'.format(applyto)
 
-        pl.autoscale()
+        # Takes care of scaling the view properly
+        if not xlim and not ylim:
+            axis = 'both'
+        elif not xlim:
+            axis = 'x'
+        elif not ylim:
+            axis = 'y'
+
+        pl.autoscale(True, axis)
 
         pl.sca(gHandleList[0]) # sets to the main axis -- more intuitive
         return gHandleList

@@ -211,13 +211,14 @@ class FCOrderedCollection(OrderedCollection, FCCollection):
 
     def plot(self, channel_names,  kind='histogram', transform=(None, None), 
              gates=None, transform_first=True, apply_gates=True, plot_gates=True, gate_colors=None,
-             grid_plot_kwargs={}, ids=None, row_labels=None, col_labels=None,
-             xaxislim=None, yaxislim=None, **kwargs):
+             ids=None, row_labels=None, col_labels=None,
+             xlim=None, ylim=None,
+             grid_plot_kwargs={},
+             **kwargs):
         """
         For details see documentation for FCMeasurement.plot
         Use grid_plot_kwargs to pass keyword arguments to the grid_plot function.
         (For options see grid_plot documentation)
-
 
         Returns
         -------
@@ -232,13 +233,11 @@ class FCOrderedCollection(OrderedCollection, FCCollection):
                                gates=gates, transform_first=transform_first, apply_gates=apply_gates, 
                                plot_gates=plot_gates, gate_colors=gate_colors,
                                kind=kind, autolabel=False, **kwargs)
-        
+
         grid_plot_kwargs['ids'] = ids
         grid_plot_kwargs['row_labels'] = row_labels
         grid_plot_kwargs['col_labels'] = col_labels
-        grid_plot_kwargs['xaxislim'] = xaxislim
-        grid_plot_kwargs['yaxislim'] = yaxislim
-        return self.grid_plot(plotSampleDataFunction, **grid_plot_kwargs)
+        return self.grid_plot(plotSampleDataFunction, xlim=xlim, ylim=ylim, **grid_plot_kwargs)
 
 FCPlate = FCOrderedCollection
 
