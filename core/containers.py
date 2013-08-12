@@ -202,7 +202,7 @@ class FCCollection(MeasurementCollection):
     '''
     A dict-like class for holding flow cytometry samples.
     '''
-    _sample_class = FCMeasurement
+    _measurement_class = FCMeasurement
 
 class FCOrderedCollection(OrderedCollection, FCCollection):
     '''
