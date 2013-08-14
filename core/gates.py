@@ -102,11 +102,13 @@ class Gate(object):
                 else:
                     flip=True
             except ValueError:
-                raise Exception, 'Trying to plot gate that is defined on channel %s, but figure axis correspond to channels %s' %(c, ax_channels)
+                raise Exception("""Trying to plot gate that is defined on channel {0},
+                                but figure axis correspond to channels {1}""".format(c, ax_channels))
         if len(self.channels) == 2:
             c = self.channels[1]
             if c not in ax_channels:
-                raise Exception, 'Trying to plot gate that is defined on channel %s, but figure axis correspond to channels %s' %(c, ax_channels)
+                raise Exception("""Trying to plot gate that is defined on channel {0},
+                                but figure axis correspond to channels {1}""".format(c, ax_channels))
         return flip
 
     def plot(self, **kwargs):
@@ -126,8 +128,6 @@ class Gate(object):
             self._region = value.lower()
         else:
             raise ValueError("region must be one of the following: {0}".format(self._region_options))
-
-
 
 class ThresholdGate(Gate):
     def __init__(self, threshold, channel, region, name=None):
@@ -178,9 +178,9 @@ class ThresholdGate(Gate):
 
         if ax_channels is not None:
             flip = self._find_orientation(ax_channels)
-        
+
         plot_func = ax.axes.axhline if flip else ax.axes.axvline
-        
+
         kwargs.setdefault('color', 'black')
         return plot_func(self.vert, *args, **kwargs)
 
@@ -245,7 +245,7 @@ class IntervalGate(Gate):
 
         if ax_channels is not None:
             flip = self._find_orientation(ax_channels)
-            
+
         plot_func = ax.axes.axhline if flip else ax.axes.axvline
 
         kwargs.setdefault('color', 'black')
