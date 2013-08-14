@@ -154,7 +154,6 @@ class FCMeasurement(Measurement):
                 g.plot(ax=ax, ax_channels=channel_names, color=c)
         
         return out
-        
 
     def view(self, channel_names=None):
         '''
@@ -208,17 +207,20 @@ class FCOrderedCollection(OrderedCollection, FCCollection):
     '''
     A dict-like class for holding flow cytometry samples that are arranged in a matrix.
     '''
-    def plot(self, channel_names,  kind='histogram', transform=(None, None), 
+    def plot(self, channel_names,  kind='histogram', transform=(None, None),
              gates=None, transform_first=True, apply_gates=True, plot_gates=True, gate_colors=None,
              ids=None, row_labels=None, col_labels=None,
              xlim=None, ylim=None,
              autolabel=True,
              **kwargs):
-             #grid_plot_kwargs={},
         """
         For details see documentation for FCMeasurement.plot
-        Use grid_plot_kwargs to pass keyword arguments to the grid_plot function.
-        (For options see grid_plot documentation)
+        **kwargs passes arguments to both grid_plot and to FCMeasurement.plot.
+
+        Note
+        -------
+        The function assumes that grid_plot and FCMeasurement.plot use unique key words.
+        Any key word arguments that appear in both functions are passed only to grid_plot in the end.
 
         Returns
         -------
@@ -274,8 +276,9 @@ if __name__ == '__main__':
     datadir = '../tests/data/Plate02/'
     fname = glob.glob(datadir + '*.fcs')[0]
     sample = FCMeasurement(1, datafile=fname)
-    print sample.channels
-    print sample.channel_names
+    #print sample.channels
+    #print sample.channel_names
+    print FCPlate.plot.__doc__
 
 #     print plate
     #print plate.wells 
