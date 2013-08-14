@@ -10,7 +10,7 @@ from bases import Measurement, MeasurementCollection, OrderedCollection
 from GoreUtilities.util import to_list
 from itertools import cycle
 import graph
-
+import inspect
 
 class FCMeasurement(Measurement):
     '''
@@ -129,7 +129,7 @@ class FCMeasurement(Measurement):
         transformList = to_list(transform)
         gates         = to_list(gates)
         
-        if len(transformList)==1:
+        if len(transformList) == 1:
              transformList *= len(channel_names)
         
         sample_tmp = self.copy()
@@ -208,14 +208,13 @@ class FCOrderedCollection(OrderedCollection, FCCollection):
     '''
     A dict-like class for holding flow cytometry samples that are arranged in a matrix.
     '''
-
     def plot(self, channel_names,  kind='histogram', transform=(None, None), 
              gates=None, transform_first=True, apply_gates=True, plot_gates=True, gate_colors=None,
              ids=None, row_labels=None, col_labels=None,
              xlim=None, ylim=None,
              autolabel=True,
-             grid_plot_kwargs={},
              **kwargs):
+             #grid_plot_kwargs={},
         """
         For details see documentation for FCMeasurement.plot
         Use grid_plot_kwargs to pass keyword arguments to the grid_plot function.
@@ -228,8 +227,28 @@ class FCOrderedCollection(OrderedCollection, FCCollection):
             gHandleList[1] -> a list of lists
                 example: gHandleList[1][0][2] returns the subplot in row 0 and column 2
         """
-        def plotSampleDataFunction(sample, ax):
-            """ Function assumes that data is returned as a 2-tuple. The first element is the meta data, the second is the DataFrame """
+        ###
+        # Automatically figure out which of the kwargs should
+        # be sent to grid_plot instead of two sample.plot
+        # (May not be a robust solution, we'll see as the code evolves
+        grid_arg_list = inspect.getargspec(OrderedCollection.grid_plot).args
+
+        grid_plot_kwargs = { 'ids' :  ids,
+                             'row_labels' :  row_labels,
+                             'col_labels' :  col_labels}
+
+        for key, value in kwargs.items():
+            if key in grid_arg_list:
+                kwargs.pop(key)
+                grid_plot_kwargs[key] = value
+
+        ##########
+        # Defining the plotting function that will be used.
+        # At the moment grid_plot handles the labeling 
+        # (rather than sample.plot or the base function
+        # in GoreUtilities.graph
+
+        def plot_sample(sample, ax):
             return sample.plot(channel_names, transform=transform, ax=ax,
                                gates=gates, transform_first=transform_first, apply_gates=apply_gates, 
                                plot_gates=plot_gates, gate_colors=gate_colors,
@@ -244,11 +263,7 @@ class FCOrderedCollection(OrderedCollection, FCCollection):
         else:
             xlabel, ylabel = None, None
 
-        grid_plot_kwargs['ids'] = ids
-        grid_plot_kwargs['row_labels'] = row_labels
-        grid_plot_kwargs['col_labels'] = col_labels
-
-        return self.grid_plot(plotSampleDataFunction, xlim=xlim, ylim=ylim,
+        return self.grid_plot(plot_sample, xlim=xlim, ylim=ylim,
                     xlabel=xlabel, ylabel=ylabel,
                     **grid_plot_kwargs)
 
