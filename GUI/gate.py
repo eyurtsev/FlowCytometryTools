@@ -2,7 +2,7 @@
 import pylab as pl
 from matplotlib.widgets import Button, Cursor
 from matplotlib.collections import RegularPolyCollection
-from matplotlib.nxutils import points_inside_poly
+from matplotlib.path import Path
 from matplotlib.colors import colorConverter
 from GoreUtilities import util
 import numpy
@@ -667,7 +667,8 @@ class GateKeeper():
 
         if isinstance(gate, PolygonGate):
             facecolors = self.collection.get_facecolors()
-            inPointsIndexes = numpy.nonzero(points_inside_poly(self.dataxy, gate.get_vertices()))[0]
+            path = Path(gate.get_vertices())
+            inPointsIndexes = numpy.nonzero(path.contains_points(pself.dataxy))[0]
             for i in inPointsIndexes:
                 facecolors[i] = STYLE.DATUM_IN_COLOR
 
