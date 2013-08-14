@@ -14,15 +14,30 @@ Gates:
     QuadGate
     PolyGate
 
-TODO: Update documentation.
+TODO
+----------
+* Update documentation.
+* Add checks for correct user input:
+        if self.__class__ is isinstance(PolyGate):
+            if len(vert) < 2:
+                raise Exception('vert must be a list of 2-tuples [(x1, y1), (x2, y2), (x3, y3)]')
+            if len(channels) != 2 or channel[0] == channel[1]:
+                raise Exception('You must define 2 unique channels to operate on.')
+            self.path = Path(vert)
+        else:
+            if len(channels) != 1:
+                raise Exception('You must define 1 unique channel to operate on.')
+
+            if self.__class__ is isinstance(ThresholdGate) and len(vert) != 2:
+                raise Exception('vert must be a single number (x_threshold)')
+            elif self.__class__ is isinstance(IntervalGate) and len(vert) != 2:
+                raise Exception('vert must be a single number (x_threshold)')
 """
 import graph
 from matplotlib.path import Path
 from GoreUtilities.util import to_list
 import pylab as pl
 import numpy
-
-    
 
 class Gate(object):
     """ Abstract gate. Defines common interface for specific implementations of the gate classes. """
@@ -44,21 +59,6 @@ class Gate(object):
         self.validiate_input()
 
     def validiate_input(self):
-        """ Need to check the cases below. """
-        #if self.__class__ is isinstance(PolyGate):
-            #if len(vert) < 2:
-                #raise Exception('vert must be a list of 2-tuples [(x1, y1), (x2, y2), (x3, y3)]')
-            #if len(channels) != 2 or channel[0] == channel[1]:
-                #raise Exception('You must define 2 unique channels to operate on.')
-            #self.path = Path(vert)
-        #else:
-            #if len(channels) != 1:
-                #raise Exception('You must define 1 unique channel to operate on.')
-#
-            #if self.__class__ is isinstance(ThresholdGate) and len(vert) != 2:
-                #raise Exception('vert must be a single number (x_threshold)')
-            #elif self.__class__ is isinstance(IntervalGate) and len(vert) != 2:
-                #raise Exception('vert must be a single number (x_threshold)')
         pass
 
     def __repr__(self):
@@ -83,6 +83,10 @@ class Gate(object):
         if region is not None:
             self.region = region
 
+        for c in self.channels:
+            if c not in dataframe:
+                raise ValueError('Trying to filter based on channel {channel}, which is not present in the data.'.format(channel=c))
+
         idx = self._identify(dataframe)
 
         return dataframe[idx]
@@ -93,13 +97,13 @@ class Gate(object):
         if ax_channels is not None:
             try:
                 i = ax_channels.index(c)
-                if i==0: 
+                if i == 0: 
                     flip=False
                 else:
                     flip=True
             except ValueError:
                 raise Exception, 'Trying to plot gate that is defined on channel %s, but figure axis correspond to channels %s' %(c, ax_channels)
-        if len(self.channels)==2:
+        if len(self.channels) == 2:
             c = self.channels[1]
             if c not in ax_channels:
                 raise Exception, 'Trying to plot gate that is defined on channel %s, but figure axis correspond to channels %s' %(c, ax_channels)
@@ -360,9 +364,6 @@ class PolyGate(Gate):
             Determines whether to return the points
             inside ('in') or outside ('out') of the polygon
         """
-        for c in self.channels:
-            if c not in dataframe:
-                raise ValueError, 'Trying to filter based on channel %s which is not present in the data.' %c
         idx = self.path.contains_points(dataframe.filter(self.channels))
 
         if self.region == 'out':
