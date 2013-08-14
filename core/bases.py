@@ -846,6 +846,7 @@ class OrderedCollection(MeasurementCollection):
     def grid_plot(self, func, applyto='measurement', ids=None, row_labels=None, col_labels=None,
                 xlim=None, ylim=None,
                 xlabel=None, ylabel=None,
+                colorbar=True,
                 row_label_xoffset=None, col_label_yoffset=None,
                 hide_tick_labels=True, hide_tick_lines=True,
                 hspace=0, wspace=0, row_labels_kwargs={}, col_labels_kwargs={}):
@@ -898,9 +899,14 @@ class OrderedCollection(MeasurementCollection):
         '''
         # Acquire call arguments to be passed to create plate layout
         callArgs = locals().copy() # This statement must remain first. The copy is just defensive.
-        [callArgs.pop(varname) for varname in  ['self', 'func', 'applyto', 'ids']] # pop args
+        [callArgs.pop(varname) for varname in  ['self', 'func', 'applyto', 'ids', 'colorbar']] # pop args
         callArgs['rowNum'] = self.shape[0]
         callArgs['colNum'] = self.shape[1]
+
+        subplots_adjust_args = {}
+        subplots_adjust_args.setdefault('right', 0.85)
+        subplots_adjust_args.setdefault('top', 0.85)
+        pl.subplots_adjust(**subplots_adjust_args)
 
         if row_labels == None: callArgs['row_labels'] = self.row_labels
         if col_labels == None: callArgs['col_labels'] = self.col_labels
@@ -943,16 +949,37 @@ class OrderedCollection(MeasurementCollection):
 
         pl.autoscale(True, axis)
 
-        #if xlabel or ylabel:
-            #ax = gHandleList[1][0, -1]
-            #pl.sca(ax)
-            #xlim = ax.get_xlim()
-            #ylim = ax.get_ylim()
-            ##pl.xticks([xlim[0], 0, xlim[1]])
-            ##pl.yticks([ylim[0], 0, ylim[1]], rotation=270, padlabel=10)
-            #pl.xticks([])
-            #pl.yticks([])
-            ##pl.locator_params(axis='y', nbins=3)
+        ###
+        # Test code for adding colorbars
+        # Add colorbar
+        # Quick hack
+        #if colorbar:
+            #pl.subplots_adjust(right=0.8)
+            #f = pl.gcf()
+            #ax_bar = f.add_axes([0.8, 0.2, 0.15, 0.6])
+            #ax_bar.axison = True
+            # Assuming only single element in images
+            #this_ax = subplots_ax[7]['A']
+            #print this_ax
+            ##images_instance = this_ax.artists
+            #import matplotlib
+            #print this_ax.findobj(match=matplotlib.image.AxesImage)
+            #if len(images_instance) == 1:
+                #images_instance = images_instance[0]
+            #else:
+                #raise Exception('Could not add colorbar')
+            #c = pl.colorbar(gHandleList[1][0, -1].images[0], ax=ax_bar)
+
+        ax_label = gHandleList[1][0, -1]
+        pl.sca(ax_label)
+
+        if xlabel:
+            xlim = ax_label.get_xlim()
+            pl.xticks([xlim[0], 0, xlim[1]], rotation=0)
+
+        if ylabel:
+            ylim = ax_label.get_ylim()
+            pl.yticks([ylim[0], 0, ylim[1]], rotation=0)
 
         pl.sca(gHandleList[0]) # sets to the main axis -- more intuitive
         return gHandleList
