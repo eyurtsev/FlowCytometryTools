@@ -7,7 +7,7 @@ import numpy
 import pylab as pl
 import matplotlib
 
-def plot_histogram2d(x, y, bins=200, ax=None, **kwargs):
+def plot_histogram2d(x, y, bins=200, ax=None, colorbar=True, **kwargs):
     '''
     Plots a 2D histogram given x, y and number of bins
 
@@ -46,7 +46,12 @@ def plot_histogram2d(x, y, bins=200, ax=None, **kwargs):
     counts_hist = numpy.flipud(counts_hist)
     # Mask zeros with a value of 0
     masked_hist = numpy.ma.masked_where(counts_hist == 0, counts_hist)
-    return ax.pcolormesh(xedges, yedges, masked_hist, **kwargs)
+
+
+    p = ax.pcolormesh(xedges, yedges, masked_hist, **kwargs)
+    if colorbar:
+        pl.colorbar(p)
+    return p
 
 def plotFCM(data, channel_names, kind='histogram', ax=None,
                 autolabel=True, xlabel_kwargs={}, ylabel_kwargs={},
