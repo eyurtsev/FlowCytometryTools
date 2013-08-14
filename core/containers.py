@@ -228,6 +228,16 @@ class FCOrderedCollection(OrderedCollection, FCCollection):
             gHandleList[0] -> reference to main axis
             gHandleList[1] -> a list of lists
                 example: gHandleList[1][0][2] returns the subplot in row 0 and column 2
+
+        Examples
+        ------------
+        Below, plate is an instance of the FCOrderedCollection
+
+        plate.plot(['SSC-A', 'FSC-A'], kind='histogram', transform='hlog', autolabel=True)
+
+        plate.plot(['SSC-A', 'FSC-A'], transform='hlog', xlim=(0, 10000))
+
+        plate.plot(['B1-A', 'Y2-A'], transform='hlog', kind='scatter', color='red', s=1, alpha=0.3)
         """
         ###
         # Automatically figure out which of the kwargs should
@@ -254,6 +264,7 @@ class FCOrderedCollection(OrderedCollection, FCCollection):
             return sample.plot(channel_names, transform=transform, ax=ax,
                                gates=gates, transform_first=transform_first, apply_gates=apply_gates, 
                                plot_gates=plot_gates, gate_colors=gate_colors,
+                               colorbar=False,
                                kind=kind, autolabel=False, **kwargs)
 
         if autolabel:
