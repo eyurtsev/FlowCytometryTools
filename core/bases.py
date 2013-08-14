@@ -886,16 +886,15 @@ class OrderedCollection(MeasurementCollection):
 
         Examples
         ---------
-            def y(well, ax):
-                data = well.get_data()
-                if data is None:
-                    return None
-                graph.plotFCM(data, 'Y2-A')
-            def z(data, ax):
-                plot(data[0:100, 1], data[0:100, 2])
-            plate.plot(y, applyto='measurement');
-            plate.plot(z, applyto='data');
-
+        def y(well, ax):
+            data = well.get_data()
+            if data is None:
+                return None
+            graph.plotFCM(data, 'Y2-A')
+        def z(data, ax):
+            plot(data[0:100, 1], data[0:100, 2])
+        plate.plot(y, applyto='measurement');
+        plate.plot(z, applyto='data');
         '''
         # Acquire call arguments to be passed to create plate layout
         callArgs = locals().copy() # This statement must remain first. The copy is just defensive.
@@ -905,8 +904,6 @@ class OrderedCollection(MeasurementCollection):
 
         if row_labels == None: callArgs['row_labels'] = self.row_labels
         if col_labels == None: callArgs['col_labels'] = self.col_labels
-
-        # TODO: decide on naming convention
 
         gHandleList = graph.create_grid_layout(**callArgs)
         subplots_ax = DF(gHandleList[1], index=self.row_labels, columns=self.col_labels)
@@ -935,8 +932,8 @@ class OrderedCollection(MeasurementCollection):
                         func(data, ax)
             else:
                 raise ValueError, 'Encountered unsupported value {} for applyto paramter.'.format(applyto)
-
-        # Takes care of scaling the view properly
+        ### 
+        # Autoscaling behavior
         if not xlim and not ylim:
             axis = 'both'
         elif not xlim:
@@ -946,16 +943,16 @@ class OrderedCollection(MeasurementCollection):
 
         pl.autoscale(True, axis)
 
-        if xlabel or ylabel:
-            ax = gHandleList[1][0, -1]
-            pl.sca(ax)
-            xlim = ax.get_xlim()
-            ylim = ax.get_ylim()
-            #pl.xticks([xlim[0], 0, xlim[1]])
-            #pl.yticks([ylim[0], 0, ylim[1]], rotation=270, padlabel=10)
-            pl.xticks([])
-            pl.yticks([])
-            #pl.locator_params(axis='y', nbins=3)
+        #if xlabel or ylabel:
+            #ax = gHandleList[1][0, -1]
+            #pl.sca(ax)
+            #xlim = ax.get_xlim()
+            #ylim = ax.get_ylim()
+            ##pl.xticks([xlim[0], 0, xlim[1]])
+            ##pl.yticks([ylim[0], 0, ylim[1]], rotation=270, padlabel=10)
+            #pl.xticks([])
+            #pl.yticks([])
+            ##pl.locator_params(axis='y', nbins=3)
 
         pl.sca(gHandleList[0]) # sets to the main axis -- more intuitive
         return gHandleList
