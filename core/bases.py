@@ -908,6 +908,7 @@ class OrderedCollection(MeasurementCollection):
         subplots_adjust_args.setdefault('top', 0.85)
         pl.subplots_adjust(**subplots_adjust_args)
 
+        # Uses plate default row/col labels if user does not override them by specifying row/col labels
         if row_labels == None: callArgs['row_labels'] = self.row_labels
         if col_labels == None: callArgs['col_labels'] = self.col_labels
 
@@ -938,7 +939,7 @@ class OrderedCollection(MeasurementCollection):
                         func(data, ax)
             else:
                 raise ValueError, 'Encountered unsupported value {} for applyto paramter.'.format(applyto)
-        ### 
+        ###
         # Autoscaling behavior
         if not xlim and not ylim:
             axis = 'both'
@@ -946,8 +947,10 @@ class OrderedCollection(MeasurementCollection):
             axis = 'x'
         elif not ylim:
             axis = 'y'
+        else:
+            axis = 'none'
 
-        pl.autoscale(True, axis)
+        graph.autoscale_subplots(gHandleList[1], axis)
 
         ###
         # Test code for adding colorbars
@@ -970,18 +973,29 @@ class OrderedCollection(MeasurementCollection):
                 #raise Exception('Could not add colorbar')
             #c = pl.colorbar(gHandleList[1][0, -1].images[0], ax=ax_bar)
 
+        #####
+        # Placing ticks on the top left subplot
         ax_label = gHandleList[1][0, -1]
         pl.sca(ax_label)
 
         if xlabel:
             xlim = ax_label.get_xlim()
-            pl.xticks([xlim[0], 0, xlim[1]], rotation=0)
+
+            if xlim[0] < 0 < xlim[1]:
+                pl.xticks([xlim[0], 0, xlim[1]], rotation=0)
+            else:
+                pl.xticks([xlim[0], xlim[1]], rotation=0)
 
         if ylabel:
             ylim = ax_label.get_ylim()
-            pl.yticks([ylim[0], 0, ylim[1]], rotation=0)
+
+            if ylim[0] < 0 < ylim[1]:
+                pl.yticks([ylim[0], 0, ylim[1]], rotation=0)
+            else:
+                pl.yticks([ylim[0], ylim[1]], rotation=0)
 
         pl.sca(gHandleList[0]) # sets to the main axis -- more intuitive
+
         return gHandleList
 
 if __name__ == '__main__':
