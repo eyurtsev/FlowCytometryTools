@@ -34,14 +34,39 @@ class FCMeasurement(Measurement):
         if self.meta is not None:
             return self.meta['_channel_names_']
 
-    def read_data(self, **kwargs):
+    def read_data(self, rescale=True, new_range=2**18, **kwargs):
         '''
         Read the datafile specified in Sample.datafile and
         return the resulting object.
         Does NOT assign the data to self.data
         '''
         meta, data = parse_fcs(self.datafile, **kwargs)
+        if rescale:
+            data = self._rescale_data(data, new_range=new_range)
         return data
+
+    def _rescale_data(self, data, new_range=2**18, old_range=None):
+        """
+        Rescale each channel to the new range as following:
+        new = data/old_range*new_range
+        
+        Parameters
+        ----------
+        data : DataFrame
+            data to be rescaled
+        new_range : float | array | Series
+            Maximal data value after rescaling
+        old_range : float | array | Series
+            Maximal data value before rescaling
+            If old range is not given use the one specified in self.meta['_channels_']['$PnR']. 
+        """
+        if old_range is None:
+            m = self.get_meta()['_channels_']
+            names = m['$PnS']
+            old_range = m['$PnR'].astype(float)
+            old_range.index = names
+        new = data/old_range*new_range
+        return new
 
     def read_meta(self, **kwargs):
         '''
@@ -50,7 +75,7 @@ class FCMeasurement(Measurement):
         kwargs['reformat_meta'] = True
         meta = parse_fcs(self.datafile, **kwargs)
         return meta
-
+    
     def get_meta_fields(self, fields, kwargs={}):
         '''
         Return a dictionary of metadata fields
