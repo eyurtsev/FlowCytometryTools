@@ -630,7 +630,7 @@ class OrderedCollection(MeasurementCollection):
             'name' : Use the measurement name given in the file name.
                      For example, 'JF_2013-08-09_fast_mode_Well_C9.001.fcs' will get key 'C9'.
             'number' : Use the number given in the file name.
-                       For example, 'JF_2013-08-07_%SampleID%_Well_%Description%.024' will get key 24.
+                       For example, 'JF_2013-08-07_%SampleID%_Well_%Description%.024.fcs' will get key 24.
             'read' : Use the measurement ID sspecified in the metadata. 
             mapping : mapping (dict-like) from datafiles to keys.
             callable : takes datafile name and returns key. 
@@ -641,6 +641,7 @@ class OrderedCollection(MeasurementCollection):
         measurements = []
         for sID, dfile in d.iteritems():
                 measurements.append(cls._measurement_class(sID, datafile=dfile))
+        kwargs.setdefault('position_parser', parser)    
         return cls(ID, measurements, **kwargs)
 
     @classmethod
@@ -672,7 +673,8 @@ class OrderedCollection(MeasurementCollection):
             Additional key word arguments to be passed to constructor.
         """
         datafiles = get_files(path, pattern, recursive)
-        return cls.from_files(ID, datafiles, parser='name', **kwargs)
+        kwargs.setdefault('position_parser', parser)
+        return cls.from_files(ID, datafiles, parser=parser, **kwargs)
 
 #     def set_labels(self, labels, axis='rows'):
 #         '''
@@ -719,7 +721,7 @@ class OrderedCollection(MeasurementCollection):
             parser = lambda x: (x[0], int(x[1:]))
         elif parser == 'number':
             def num_parser(x):
-                i,j = unravel_index(int(x), self.shape)
+                i,j = unravel_index(int(x-1), self.shape, order='F')
                 return (self.row_labels[i], self.col_labels[j])
             parser = num_parser
         else:
@@ -944,13 +946,14 @@ class OrderedCollection(MeasurementCollection):
                 raise ValueError, 'Encountered unsupported value {} for applyto paramter.'.format(applyto)
         ### 
         # Autoscaling behavior
+        #TODO: autoscale doesn't seem to work. Also, catch case where both lims are given
         if not xlim and not ylim:
             axis = 'both'
         elif not xlim:
             axis = 'x'
         elif not ylim:
             axis = 'y'
-
+            
         pl.autoscale(True, axis)
 
         ###
