@@ -375,7 +375,7 @@ class MeasurementCollection(collections.MutableMapping, BaseObject):
     # ----------------------
     # User methods
     # ----------------------
-    def apply(self, func, ids=None, applyto='measurements', noneval=nan, setdata=False, **kwargs):
+    def apply(self, func, ids=None, applyto='measurement', noneval=nan, setdata=False, **kwargs):
         '''
         Apply func to each of the specified measurements.
         
@@ -386,7 +386,7 @@ class MeasurementCollection(collections.MutableMapping, BaseObject):
         ids : hashable| iterable of hashables | None
             Keys of measurements to which func will be applied.
             If None is given apply to all measurements. 
-        applyto :  'measurements' | 'data'
+        applyto :  'measurement' | 'data'
             'measurement' : apply to measurements objects themselves.
             'data'        : apply to measurement associated data
         noneval : obj
@@ -406,9 +406,16 @@ class MeasurementCollection(collections.MutableMapping, BaseObject):
         result = dict( (i, self[i].apply(func, applyto, noneval, setdata)) for i in ids )
         return result
 
+    def set_data(self, ids=None):
+        """
+        Set the data for all specified measurements (all if None given).
+        """
+        fun = lambda x: x.set_data()
+        self.apply(fun, ids=ids, applyto='measurement')
+         
     def _clear_measurement_attr(self, attr, ids=None):
         fun = lambda x: setattr(x, attr, None)
-        self.apply(fun, ids=ids, applyto='measurements')
+        self.apply(fun, ids=ids, applyto='measurement')
 
     def clear_measurement_data(self, ids=None):
         """
@@ -462,7 +469,7 @@ class MeasurementCollection(collections.MutableMapping, BaseObject):
     # ----------------------
     # Filtering methods
     # ----------------------
-    def filter(self, criteria, applyto='measurements', ID=None):
+    def filter(self, criteria, applyto='measurement', ID=None):
         """
         Filter measurements according to given criteria. 
         Retain only Measurements for which criteria returns True.
@@ -473,8 +480,8 @@ class MeasurementCollection(collections.MutableMapping, BaseObject):
         ----------
         criteria : callable
             Returns bool.
-        applyto : 'measurements' | 'keys' | 'data' | mapping
-             'measurements' : criteria is applied to Measurement objects
+        applyto : 'measurement' | 'keys' | 'data' | mapping
+             'measurement' : criteria is applied to Measurement objects
              'keys'         : criteria is applied to the keys.
              'data'         : criteria is applied to the Measurement objects' data.
              mapping        : for each key criteria is applied to mapping value with same key. 
@@ -490,7 +497,7 @@ class MeasurementCollection(collections.MutableMapping, BaseObject):
         new = self.copy()
         if isinstance(applyto, collections.Mapping):
             remove = (k for k,v in self.iteritems() if not fil(applyto[k]))
-        elif applyto=='measurements':
+        elif applyto=='measurement':
             remove = (k for k,v in self.iteritems() if not fil(v))
         elif applyto=='keys':
             remove = (k for k,v in self.iteritems() if not fil(k))
@@ -822,7 +829,7 @@ class OrderedCollection(MeasurementCollection):
         ids : hashable| iterable of hashables | None
             Keys of measurements to which func will be applied.
             If None is given apply to all measurements. 
-        applyto :  'measurements' | 'data'
+        applyto :  'measurement' | 'data'
             'measurement' : apply to measurements objects themselves.
             'data'        : apply to measurement associated data
         output_format: 'DataFrame' | 'dict'
