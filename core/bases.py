@@ -375,7 +375,7 @@ class MeasurementCollection(collections.MutableMapping, BaseObject):
     # ----------------------
     # User methods
     # ----------------------
-    def apply(self, func, ids=None, applyto='measurements', noneval=nan, setdata=False):
+    def apply(self, func, ids=None, applyto='measurements', noneval=nan, setdata=False, **kwargs):
         '''
         Apply func to each of the specified measurements.
         
@@ -447,7 +447,7 @@ class MeasurementCollection(collections.MutableMapping, BaseObject):
         fields = to_list(fields)
         func = lambda x: x.get_meta_fields(fields)
         meta_d = self.apply(func, ids=ids, applyto='measurement', 
-                          noneval=noneval)
+                            noneval=noneval, output_format='dict')
         if output_format is 'dict':
             return meta_d
         elif output_format is 'DataFrame':
@@ -779,6 +779,10 @@ class OrderedCollection(MeasurementCollection):
         for k, res in d.iteritems():
             i,j = self._positions[k]
             df[j][i] = res
+        try:
+            df = df.astype(float)
+        except:
+            pass
         if dropna:
             return df.dropna(axis=0, how='all').dropna(axis=1, how='all')
         else:

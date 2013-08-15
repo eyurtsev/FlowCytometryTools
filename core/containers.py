@@ -53,14 +53,11 @@ class FCMeasurement(Measurement):
 
     def get_meta_fields(self, fields, kwargs={}):
         '''
-        TODO: change to extract data from other metadata fields (not just 'text')
+        Return a dictionary of metadata fields
         '''
-#         if self.data is None:
-#             raise Exception, 'Data must be read before extracting metadata.'
         fields = to_list(fields)
-        func = lambda x: [x.get_meta()[field] for field in fields]
-        kwargs.setdefault('applyto', 'sample')
-        return self.apply(func, **kwargs)
+        meta = self.get_meta()
+        return dict( ((field, meta.get(field)) for field in fields ) )
 
     def ID_from_data(self, ID_field='$SRC'):
         '''
