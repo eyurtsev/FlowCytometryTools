@@ -31,7 +31,7 @@ def tlog(x, th=1, r=_display_max, d=_l_mmax):
         values to be transformed.
     th : num
         values below th are transormed to 0.
-    r : num (default = 10**4.5)
+    r : num (default = 10**4)
         maximal transformed value.
     d : num (default = log10(2**18))
         log10 of maximal possible measured value.
@@ -53,7 +53,7 @@ def tlog_inv(y, th=1, r=_display_max, d=_l_mmax):
         values to be transformed.
     th : num
         values below th are transormed to 0.
-    r : num (default = 10**4.5)
+    r : num (default = 10**4)
         maximal transformed value.
     d : num (default = log10(2**18))
         log10 of maximal possible measured value.
@@ -131,7 +131,7 @@ def hlog(x, b=500, r=_display_max, d=_l_mmax,
     b : num
         Parameter controling the location of the shift 
         from linear to log transformation.
-    r : num (default = 10**4.5)
+    r : num (default = 10**4)
         maximal transformed value.
     d : num (default = log10(2**18))
         log10 of maximal possible measured value.
@@ -199,15 +199,21 @@ name_transforms = {
 'tlog': {'forward':tlog, 'inverse':tlog_inv},
 }
 
-def get_transform(name, direction='forward'):
+def get_transform(transform, direction='forward'):
     '''
     direction : 'forward' | 'inverse'
     '''
-    cannonical_name = _get_canonical_name(name)
-    if cannonical_name is None:
-        raise ValueError, 'Unknown transform: %s' %name
+    if hasattr(transform, '__call__'):
+        tfun = transform
+    elif hasattr(transform, 'lower'):
+        tname = _get_canonical_name(transform)
+        if tname is None:
+            raise ValueError, 'Unknown transform: %s' %transform
+        else:
+            tfun = name_transforms[tname][direction]        
     else:
-        return name_transforms[cannonical_name][direction]
+        raise TypeError, 'Unsupported transform type: %s' %type(transform)
+    return tfun
 
 def transform_frame(frame, transform, channels=None, direction='forward',
                      return_all=True, args=(), **kwargs):
@@ -221,12 +227,7 @@ def transform_frame(frame, transform, channels=None, direction='forward',
     
     TODO: add detailed doc
     '''
-    if hasattr(transform, '__call__'):
-        tfun = transform
-    elif hasattr(transform, 'lower'):
-        tfun = get_transform(transform, direction)
-    else:
-        raise TypeError, 'Unsupported transform type: %s' %type(transform)
+    tfun = get_transform(transform, direction)
     if channels is None:
         channels = frame.columns
     if isinstance(channels, basestring):
