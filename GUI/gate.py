@@ -8,10 +8,6 @@ from GoreUtilities import util
 import numpy
 from FlowCytometryTools import plotFCM, FCMeasurement
 
-##
-# TODO: channel_list should be names rather than channel numbers
-## 
-
 def euclid_distance((x1, y1), (x2, y2)):
     return numpy.sqrt((x1-x2)**2 + (y1 - y2)**2)
 
@@ -34,7 +30,7 @@ class STYLE:
 
     #SuggestToActivateGate = {'color' : 'red', 'fill' : 'gray', 'alpha' : 0.4}
     TemporaryPolygonGateBorderLine = {'color' : 'black'}
-    PolygonGateBorderLine = {'color' : 'None',  'linestyle' : 'None', 'marker':'s', 'mfc':'r', 'alpha':0.6}
+    PolygonGateBorderLine = {'color' : 'black',  'linestyle' : 'None', 'marker':'s', 'mfc':'r', 'alpha':0.6}
 
     InactiveQuadGate = {'color' : 'black', 'linewidth' : 1}
     ActiveQuadGate   = {'color' : 'red', 'linewidth' : 2}
@@ -627,14 +623,14 @@ class GateKeeper():
         channels = GateKeeper.current_channels
 
         if channels[0] == channels[1]:
-            sample.plot(channels[0], transform=('hlog', 'hlog'), ax=ax)
+            sample.plot(channels[0], transform=('hlog', 'hlog'), ax=ax, colorbar=False)
             xlabel = GateKeeper.current_channels[0]
             ylabel = 'Counts'
 
             self.xlabelArtist = ax.set_xlabel(xlabel, picker=5)
             self.ylabelArtist = ax.set_ylabel(ylabel, picker=5)
         else:
-            sample.plot(channels, transform=('hlog', 'hlog'), ax=ax)
+            sample.plot(channels, transform=('hlog', 'hlog'), ax=ax, colorbar=False)
             xlabel = GateKeeper.current_channels[0]
             ylabel = GateKeeper.current_channels[1]
 
