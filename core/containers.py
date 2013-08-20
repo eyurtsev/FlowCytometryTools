@@ -95,7 +95,7 @@ class FCMeasurement(Measurement):
         except:
             raise Exception("The keyword '{}' does not exist in the following FCS file: {}".format(ID_field, self.datafile))
 
-    def plot(self, channel_names, kind='histogram', transform=(None, None), 
+    def plot(self, channel_names, transform=(None, None), kind='histogram', 
              gates=None, transform_first=True, apply_gates=True, plot_gates=True,
              gate_colors=None, **kwargs):
         '''
@@ -108,10 +108,10 @@ class FCMeasurement(Measurement):
             name (names) channels to plot.
             given a single channel plots a histogram
             given two channels produces a 2d plot
-        kind : 'scatter', 'histogram'
         transform : valid transform | tuple of valid transforms | None
             Transform to be applied to corresponding channels using the FCMeasurement.transform function.
             If a single transform is given, it will be applied to all plotted channels.
+        kind : 'scatter', 'histogram'
         gates: Gate| iterable of Gate | None
             Gates to be applied before plotting
         transform_first : bool
@@ -168,7 +168,6 @@ class FCMeasurement(Measurement):
         data = sample_tmp.get_data()
         out  = graph.plotFCM(data, channel_names, kind=kind, **kwargs)
         
-        #TODO: add gate color cycling
         if plot_gates and gates is not None:
             if gate_colors is None:
                 gate_colors = cycle(('k', 'b', 'g', 'r', 'm', 'c', 'y'))
@@ -224,6 +223,36 @@ class FCCollection(MeasurementCollection):
     A dict-like class for holding flow cytometry samples.
     '''
     _measurement_class = FCMeasurement
+    
+    def transform(self, transform, channels=None, direction='forward',  
+                  return_all=True, args=(), **kwargs):
+        '''
+        Apply transform to each Measurement in the Collection. 
+        Return a new Collection with transformed data.
+        Note that the new Collection will hold the data for ALL Measurements in memory!
+        
+        see FCMeasurement.transform for more details.
+        
+        TODO: change default to not transform HDR channels?
+        '''
+        new = self.copy()
+        for k,v in new.iteritems(): 
+            new[k] = v.transform(transform, channels, direction, return_all, args, **kwargs)
+        return new
+
+    def gate(self, gate):
+        '''
+        Apply gate to each Measurement in the Collection. 
+        Return a new Collection with gated data.
+        Note that the new Collection will hold the data for ALL Measurements in memory!
+        
+        see FCMeasurement.gate for more details.
+        '''
+        new = self.copy()
+        for k,v in new.iteritems(): 
+            new[k] = v.gate(gate)
+        return new   
+    
 
 class FCOrderedCollection(OrderedCollection, FCCollection):
     '''
