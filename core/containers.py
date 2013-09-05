@@ -177,7 +177,7 @@ class FCMeasurement(Measurement):
         
         return out
 
-    def view(self, channel_names=None):
+    def view(self, channel_names=None, launch_from_shell=False):
         '''
         Loads the current FCS sample viewer
 
@@ -191,8 +191,15 @@ class FCMeasurement(Measurement):
 
         Output from sample_viewer
         '''
-        from FlowCytometryTools import flowGUI
-        return flowGUI.sample_viewer(self.datafile, channel_names=channel_names)
+        if launch_from_shell: # This is not finished until I can list the gates somewhere
+            from FlowCytometryTools import __path__ as p
+            from subprocess import call
+            import os
+            script_path = os.path.join(p[0], 'GUI', 'flowGUI.py')
+            call(["python", script_path, self.datafile])
+        else:
+            from FlowCytometryTools import flowGUI
+            return flowGUI.sample_viewer(self.datafile, channel_names=channel_names)
 
     def transform(self, transform, channels=None, direction='forward',  
                   return_all=True, args=(), **kwargs):
