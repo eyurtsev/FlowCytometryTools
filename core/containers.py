@@ -123,9 +123,6 @@ class FCMeasurement(Measurement):
         -------
         None: if no data is loaded
         gHandle: reference to axis
-
-
-        TODO: fix default value of transform... need cycling function?
         '''
 #         data = self.get_data() # The index is to keep only the data part (removing the meta data)
         # Transform sample
@@ -177,7 +174,7 @@ class FCMeasurement(Measurement):
         
         return out
 
-    def view(self, channel_names=None, launch_from_shell=False):
+    def view(self, channel_names=None, launch_new_subprocess=True):
         '''
         Loads the current FCS sample viewer
 
@@ -191,7 +188,7 @@ class FCMeasurement(Measurement):
 
         Output from sample_viewer
         '''
-        if launch_from_shell: # This is not finished until I can list the gates somewhere
+        if launch_new_subprocess: # This is not finished until I can list the gates somewhere
             from FlowCytometryTools import __path__ as p
             from subprocess import call
             import os
