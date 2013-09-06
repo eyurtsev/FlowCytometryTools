@@ -11,6 +11,7 @@ from GoreUtilities.util import to_list
 from itertools import cycle
 import graph
 import inspect
+import numpy
 
 class FCMeasurement(Measurement):
     '''
@@ -229,6 +230,7 @@ class FCCollection(MeasurementCollection):
     '''
     _measurement_class = FCMeasurement
 
+
 class FCOrderedCollection(OrderedCollection, FCCollection):
     '''
     A dict-like class for holding flow cytometry samples that are arranged in a matrix.
@@ -305,6 +307,28 @@ class FCOrderedCollection(OrderedCollection, FCCollection):
         return self.grid_plot(plot_sample, xlim=xlim, ylim=ylim,
                     xlabel=xlabel, ylabel=ylabel,
                     **grid_plot_kwargs)
+
+    def transform(self, transform, channels=None, direction='forward',
+                  return_all=True, args=(), ID=None, **kwargs):
+        '''
+        Apply transform to specified channels.
+        Return a new sample with transformed data.
+        '''
+
+        # TODO: Use copy or constructor?
+        def transform_well(well):
+            return well.transform(transform, channels, direction, return_all, args, **kwargs)
+
+        measurements = self.apply(transform_well)
+        measurements = (v for k, v in numpy.ndenumerate(measurements.values) if v is not numpy.nan)
+
+        #return measurements
+
+        ID = self.ID if ID is None else ID
+
+        return self.__class__(self.ID, measurements, positions=self.get_positions(),
+                    shape=self.shape, row_labels=self.row_labels, col_labels=self.col_labels)
+
 
 FCPlate = FCOrderedCollection
 
