@@ -25,12 +25,12 @@ class MOUSE:
     rightClick = 3
 
 class STYLE:
-    InactivePolygonGate = {'color' : 'black', 'linestyle' : 'solid', 'fill' : False}
-    ActivePolygonGate = {'color' : 'red', 'fill' : False}
+    InactivePolyGate = {'color' : 'black', 'linestyle' : 'solid', 'fill' : False}
+    ActivePolyGate = {'color' : 'red', 'fill' : False}
 
     #SuggestToActivateGate = {'color' : 'red', 'fill' : 'gray', 'alpha' : 0.4}
-    TemporaryPolygonGateBorderLine = {'color' : 'black'}
-    PolygonGateBorderLine = {'color' : 'black',  'linestyle' : 'None', 'marker':'s', 'mfc':'r', 'alpha':0.6}
+    TemporaryPolyGateBorderLine = {'color' : 'black'}
+    PolyGateBorderLine = {'color' : 'black',  'linestyle' : 'None', 'marker':'s', 'mfc':'r', 'alpha':0.6}
 
     InactiveQuadGate = {'color' : 'black', 'linewidth' : 1}
     ActiveQuadGate   = {'color' : 'red', 'linewidth' : 2}
@@ -83,11 +83,11 @@ class Filter(object):
 
     def __repr__(self):
         #return "{0} ({1}, {2}, {3})".format(self.__class__, self.vert, self.channels, self.name)
-        if isinstance(self, PolygonGate):
+        if isinstance(self, PolyGate):
             region = 'in'
         else:
             region = 'YOU MUST SPECIFY A REGION (top left, top right, bottom left, bottom right)'
-        return "gate = {0}({1}, {2}, region='{region}', '{3}')".format(self.__class__.__name__, self.vert, self.channels, self.name, region=region)
+        return "gate = {0}({1}, {2}, region='{region}', name='{name}')".format(self.__class__.__name__, self.vert, self.channels, name=self.name, region=region)
 
 
     def __str__(self):
@@ -252,7 +252,7 @@ class QuadGate(Filter):
     def get_control_artist(self):
         return self.center
 
-class PolygonGate(Filter):
+class PolyGate(Filter):
     """ Defines a polygon gate. """
     def __init__(self, vert=None, channels=None, name=None, gateKeeper=None):
         Filter.__init__(self, vert, channels, name, gateKeeper)
@@ -296,7 +296,7 @@ class PolygonGate(Filter):
         self.vert.append(vertix)
         if len(self.vert) > 1:
             lastLine = zip(self.vert[-2], self.vert[-1])
-            self.temporaryBorderLineList.append(pl.Line2D(lastLine[0], lastLine[1], **STYLE.TemporaryPolygonGateBorderLine))
+            self.temporaryBorderLineList.append(pl.Line2D(lastLine[0], lastLine[1], **STYLE.TemporaryPolyGateBorderLine))
             self.ax.add_artist(self.temporaryBorderLineList[-1])
 
     def finish_drawing_polygon(self, vertix):
@@ -313,12 +313,12 @@ class PolygonGate(Filter):
 
     def create_artist(self):
         ## Create polygon
-        self.poly = pl.Polygon(self.vert, picker=15, **STYLE.ActivePolygonGate)
+        self.poly = pl.Polygon(self.vert, picker=15, **STYLE.ActivePolyGate)
         self.ax.add_artist(self.poly)
 
         ## Create PolygonBorder
         x, y = zip(*self.poly.xy)
-        self.polygonBorder = pl.Line2D(x[:-1], y[:-1], **STYLE.PolygonGateBorderLine)
+        self.polygonBorder = pl.Line2D(x[:-1], y[:-1], **STYLE.PolyGateBorderLine)
         self.ax.add_artist(self.polygonBorder)
 
         self.artistList = [self.poly, self.polygonBorder]
@@ -426,13 +426,13 @@ class PolygonGate(Filter):
 
     def inactivate(self):
         self.set_state('Inactive')
-        self.poly.update(STYLE.InactivePolygonGate)
+        self.poly.update(STYLE.InactivePolyGate)
         self.polygonBorder.set_visible(False)
         self.poly.figure.canvas.draw()
 
     def activate(self):
         self.set_state('Active')
-        self.poly.update(STYLE.ActivePolygonGate)
+        self.poly.update(STYLE.ActivePolyGate)
         self.polygonBorder.set_visible(True)
         self.poly.figure.canvas.draw()
 
@@ -514,7 +514,7 @@ class GateKeeper():
             self.inactivate_all_gates()
             name = 'Gate #{0}'.format(self.new_gate_num)
             self.new_gate_num += 1
-            gate = PolygonGate(vert=None, channels=GateKeeper.current_channels, name=name, gateKeeper=self)
+            gate = PolyGate(vert=None, channels=GateKeeper.current_channels, name=name, gateKeeper=self)
             self.add_gate(gate)
             gate.on_press(event)
             self.set_state(STATE_GK.KEEP_DRAWING)
@@ -661,7 +661,7 @@ class GateKeeper():
         debugging_print('Data points length')
         debugging_print(numDataPoints)
 
-        if isinstance(gate, PolygonGate):
+        if isinstance(gate, PolyGate):
             facecolors = self.collection.get_facecolors()
             path = Path(gate.get_vertices())
             inPointsIndexes = numpy.nonzero(path.contains_points(pself.dataxy))[0]
