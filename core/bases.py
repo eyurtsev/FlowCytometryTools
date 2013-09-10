@@ -647,7 +647,7 @@ class OrderedCollection(MeasurementCollection):
         d = _assign_IDS_to_datafiles(datafiles, parser, cls._measurement_class)
         measurements = []
         for sID, dfile in d.iteritems():
-                measurements.append(cls._measurement_class(sID, datafile=dfile))
+            measurements.append(cls._measurement_class(sID, datafile=dfile))
         kwargs.setdefault('position_parser', parser)    
         return cls(ID, measurements, **kwargs)
 
