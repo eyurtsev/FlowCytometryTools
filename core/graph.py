@@ -110,6 +110,10 @@ def plotFCM(data, channel_names, transform=(None, None), plot2d_type='dot2d', ax
 
     if len(channelIndexList) == 1:
         # 1d so histogram plot
+        kwargs.setdefault('color', 'gray')
+        kwargs.setdefault('histtype', 'stepfilled')
+        #kwargs.setdefault('facecolor', 'green')
+
         ch1i = channelIndexList[0]
         pHandle = ax.hist(data[:, ch1i], **kwargs)
 
