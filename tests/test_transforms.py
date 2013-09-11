@@ -10,7 +10,7 @@ from numpy.testing import assert_almost_equal, assert_equal
 
 n = 1000
 _xmax = 2**18 # max machine value
-_ymax = 10**4.5 # max display value
+_ymax = 10**4 # max display value
 _xpos = np.logspace(-3, np.log10(_xmax), n)
 _xneg = -_xpos[::-1]
 _xall = np.r_[_xneg, _xpos]
@@ -57,7 +57,7 @@ class TestTransforms(unittest.TestCase):
         def test_hlog(self):
             hlpos = trans.hlog(_xpos)
             hlneg = trans.hlog(_xneg)
-            assert_almost_equal((hlpos[-1]-_ymax)/_ymax,0, decimal=3)
+            assert_almost_equal((hlpos[-1]-_ymax)/_ymax,0, decimal=2)
             assert_almost_equal(hlpos, -hlneg[::-1]) #check symmetry
             # test that values get larger as b decreases
             hlpos10 = trans.hlog(_xpos, b=10)
@@ -68,22 +68,22 @@ class TestTransforms(unittest.TestCase):
             tlpos_large = tlpos[i]
             hlpos_large = hlpos10[i]
             d = (hlpos_large-tlpos_large)/hlpos_large
-            assert_almost_equal( d, np.zeros(len(d)), decimal=3)
+            assert_almost_equal( d, np.zeros(len(d)), decimal=2)
             # test spline option
             result1 = trans.hlog(_xall, use_spln=True)
             result2 = trans.hlog(_xall, use_spln=False)
             d = (result1-result2)/result1
-            assert_almost_equal( d, np.zeros(len(d)), decimal=3)
+            assert_almost_equal( d, np.zeros(len(d)), decimal=2)
 
         def test_hlog_inv(self):
             expected = _xall
             result   = trans.hlog_inv( trans.hlog(_xall) )
             d        = (result-expected)/expected
-            assert_almost_equal( d, np.zeros(len(d)), decimal=3)
+            assert_almost_equal( d, np.zeros(len(d)), decimal=2)
 
             result = trans.hlog_inv( trans.hlog(_xall, b=10), b=10 )
             d      = (result-expected)/expected
-            assert_almost_equal( d, np.zeros(len(d)), decimal=3)
+            assert_almost_equal( d, np.zeros(len(d)), decimal=2)
 
 
 if __name__ == '__main__':

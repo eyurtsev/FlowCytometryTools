@@ -75,7 +75,7 @@ def glog_inv(y,l):
     ey = exp(y)
     return (ey**2 - l)/(2*ey) 
 
-def hlog_inv(y, b=100, r=_display_max, d=_l_mmax):
+def hlog_inv(y, b=500, r=_display_max, d=_l_mmax):
     '''
     Inverse of base 10 hyperlog transform.
     '''
