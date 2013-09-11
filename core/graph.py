@@ -55,6 +55,7 @@ def plot_histogram2d(x, y, bins=200, ax=None, colorbar=True, **kwargs):
 
 def plotFCM(data, channel_names, kind='histogram', ax=None,
                 autolabel=True, xlabel_kwargs={}, ylabel_kwargs={},
+                colorbar=False,
                 **kwargs):
     '''
     Plots the sample on the current axis.
@@ -77,6 +78,9 @@ def plotFCM(data, channel_names, kind='histogram', ax=None,
 
     autolabel : False | True
         If True the x and y axes are labeled automatically.
+
+    colorbar : False | True
+        Adds a colorbar if working 2d histogram
 
     ax : reference | None
         specifies which axis to plot on
@@ -111,7 +115,7 @@ def plotFCM(data, channel_names, kind='histogram', ax=None,
             kwargs.setdefault('edgecolor', 'none')
             pHandle = ax.scatter(x, y, **kwargs)
         elif kind == 'histogram':
-            pHandle = plot_histogram2d(x, y, ax=ax, **kwargs)
+            pHandle = plot_histogram2d(x, y, ax=ax, colorbar=colorbar, **kwargs)
         else:
             raise Exception("Not a valid plot type. Must be 'scatter', 'histogram'")
 

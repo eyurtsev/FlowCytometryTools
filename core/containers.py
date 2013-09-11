@@ -327,14 +327,14 @@ class FCOrderedCollection(OrderedCollection, FCCollection):
                                colorbar=False,
                                kind=kind, autolabel=False, **kwargs)
 
+        xlabel, ylabel = None, None
+
         if autolabel:
             cnames = to_list(channel_names)
             xlabel=cnames[0]
 
             if len(cnames) == 2:
                 ylabel=cnames[1]
-        else:
-            xlabel, ylabel = None, None
 
         return self.grid_plot(plot_sample, xlim=xlim, ylim=ylim,
                     xlabel=xlabel, ylabel=ylabel,
