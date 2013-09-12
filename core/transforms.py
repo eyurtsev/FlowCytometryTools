@@ -19,7 +19,7 @@ from numpy import (log, log10, exp, where, sign, vectorize,
 
 _machine_max = 2**18
 _l_mmax = log10(_machine_max)
-_display_max = 10**4.5
+_display_max = 10**4
 
 def tlog(x, th=1, r=_display_max, d=_l_mmax):
     '''
@@ -31,7 +31,7 @@ def tlog(x, th=1, r=_display_max, d=_l_mmax):
         values to be transformed.
     th : num
         values below th are transormed to 0.
-    r : num (default = 10**4.5)
+    r : num (default = 10**4)
         maximal transformed value.
     d : num (default = log10(2**18))
         log10 of maximal possible measured value.
@@ -53,7 +53,7 @@ def tlog_inv(y, th=1, r=_display_max, d=_l_mmax):
         values to be transformed.
     th : num
         values below th are transormed to 0.
-    r : num (default = 10**4.5)
+    r : num (default = 10**4)
         maximal transformed value.
     d : num (default = log10(2**18))
         log10 of maximal possible measured value.
@@ -75,7 +75,7 @@ def glog_inv(y,l):
     ey = exp(y)
     return (ey**2 - l)/(2*ey) 
 
-def hlog_inv(y, b=100, r=_display_max, d=_l_mmax):
+def hlog_inv(y, b=500, r=_display_max, d=_l_mmax):
     '''
     Inverse of base 10 hyperlog transform.
     '''
@@ -119,7 +119,7 @@ def _get_x_spln(x, spln_nx):
         x_spln      = r_[x_spln_neg, x_spln_pos]
     return x_spln
 
-def hlog(x, b=100, r=_display_max, d=_l_mmax, 
+def hlog(x, b=500, r=_display_max, d=_l_mmax, 
         use_spln=None, spln_min=1000, spln_nx=1000, spln_kwrgs={}):
     '''
     Base 10 hyperlog transform.
@@ -131,7 +131,7 @@ def hlog(x, b=100, r=_display_max, d=_l_mmax,
     b : num
         Parameter controling the location of the shift 
         from linear to log transformation.
-    r : num (default = 10**4.5)
+    r : num (default = 10**4)
         maximal transformed value.
     d : num (default = log10(2**18))
         log10 of maximal possible measured value.
@@ -154,14 +154,16 @@ def hlog(x, b=100, r=_display_max, d=_l_mmax,
     Array of transformed values.
     '''
     from scipy.optimize import brentq
-
+#     print 'b=',b
     hlog_obj = lambda y, x, b, r, d: hlog_inv(y, b, r, d) - x
-    find_inv = vectorize(lambda x: brentq(hlog_obj, -1.01*r, 1.01*r, 
+    find_inv = vectorize(lambda x: brentq(hlog_obj, -2*r, 2*r, 
                                         args=(x, b, r, d)))    
     if not hasattr(x, '__len__'): #if transforming a single number
         y = find_inv(x)
     else:
         n = len(x)
+        if not n:
+            return x
         if use_spln is None: 
             #decide whether to use spline or not
             if n>=spln_min:
@@ -197,35 +199,45 @@ name_transforms = {
 'tlog': {'forward':tlog, 'inverse':tlog_inv},
 }
 
-def get_transform(name, direction='forward'):
+def get_transform(transform, direction='forward'):
     '''
-    Direction : 'forward' | 'inverse'
-    '''
-    cannonical_name = _get_canonical_name(name)
-    if cannonical_name is None:
-        raise ValueError, 'Unknown transform: %s' %name
-    else:
-        return name_transforms[cannonical_name][direction]
-
-def transform_frame(frame, transform, direction='forward',
-                    channels=None, args=(), **kwargs):
-    '''
-    Apply transform to specified channels. 
-    Return only values of specified channels.
-    
-    TODO: add detailed doc
+    direction : 'forward' | 'inverse'
     '''
     if hasattr(transform, '__call__'):
         tfun = transform
     elif hasattr(transform, 'lower'):
-        tfun = get_transform(transform, direction)
+        tname = _get_canonical_name(transform)
+        if tname is None:
+            raise ValueError, 'Unknown transform: %s' %transform
+        else:
+            tfun = name_transforms[tname][direction]        
     else:
         raise TypeError, 'Unsupported transform type: %s' %type(transform)
+    return tfun
+
+def transform_frame(frame, transform, channels=None, direction='forward',
+                     return_all=True, args=(), **kwargs):
+    '''
+    Apply transform to specified channels. 
+    
+    direction: 'forward' | 'inverse'
+    return_all: bool
+        True -  return all channels, with specified ones transformed.
+        False - return only specified channels.
+    
+    TODO: add detailed doc
+    '''
+    tfun = get_transform(transform, direction)
     if channels is None:
         channels = frame.columns
     if isinstance(channels, basestring):
         channels = (channels,)
-    transformed = frame.filter(channels).apply(tfun, *args, **kwargs)
+    if return_all:
+        transformed = frame.copy()
+        for c in channels:
+            transformed[c] = tfun(frame[c],  *args, **kwargs) 
+    else:
+        transformed = frame.filter(channels).apply(tfun, *args, **kwargs)
     return transformed
 
 if __name__ == '__main__':

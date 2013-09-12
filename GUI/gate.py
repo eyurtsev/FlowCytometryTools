@@ -2,16 +2,11 @@
 import pylab as pl
 from matplotlib.widgets import Button, Cursor
 from matplotlib.collections import RegularPolyCollection
-from matplotlib.nxutils import points_inside_poly
+from matplotlib.path import Path
 from matplotlib.colors import colorConverter
 from GoreUtilities import util
 import numpy
-from fcm import loadFCS
-from FlowCytometryTools import plotFCM
-
-##
-# TODO: channel_list should be names rather than channel numbers
-## 
+from FlowCytometryTools import plotFCM, FCMeasurement
 
 def euclid_distance((x1, y1), (x2, y2)):
     return numpy.sqrt((x1-x2)**2 + (y1 - y2)**2)
@@ -30,12 +25,12 @@ class MOUSE:
     rightClick = 3
 
 class STYLE:
-    InactivePolygonGate = {'color' : 'black', 'linestyle' : 'solid', 'fill' : False}
-    ActivePolygonGate = {'color' : 'red', 'fill' : False}
+    InactivePolyGate = {'color' : 'black', 'linestyle' : 'solid', 'fill' : False}
+    ActivePolyGate = {'color' : 'red', 'fill' : False}
 
     #SuggestToActivateGate = {'color' : 'red', 'fill' : 'gray', 'alpha' : 0.4}
-    TemporaryPolygonGateBorderLine = {'color' : 'black'}
-    PolygonGateBorderLine = {'color' : 'None',  'linestyle' : 'None', 'marker':'s', 'mfc':'r', 'alpha':0.6}
+    TemporaryPolyGateBorderLine = {'color' : 'black'}
+    PolyGateBorderLine = {'color' : 'black',  'linestyle' : 'None', 'marker':'s', 'mfc':'r', 'alpha':0.6}
 
     InactiveQuadGate = {'color' : 'black', 'linewidth' : 1}
     ActiveQuadGate   = {'color' : 'red', 'linewidth' : 2}
@@ -87,7 +82,13 @@ class Filter(object):
         debugging_print('Just created a new gate: ' + str(self))
 
     def __repr__(self):
-        return "{0} ({1}, {2}, {3})".format(self.__class__, self.vert, self.channels, self.name)
+        #return "{0} ({1}, {2}, {3})".format(self.__class__, self.vert, self.channels, self.name)
+        if isinstance(self, PolyGate):
+            region = 'in'
+        else:
+            region = 'YOU MUST SPECIFY A REGION (top left, top right, bottom left, bottom right)'
+        return "gate = {0}({1}, {2}, region='{region}', name='{name}')".format(self.__class__.__name__, self.vert, self.channels, name=self.name, region=region)
+
 
     def __str__(self):
         return self.__repr__()
@@ -251,7 +252,7 @@ class QuadGate(Filter):
     def get_control_artist(self):
         return self.center
 
-class PolygonGate(Filter):
+class PolyGate(Filter):
     """ Defines a polygon gate. """
     def __init__(self, vert=None, channels=None, name=None, gateKeeper=None):
         Filter.__init__(self, vert, channels, name, gateKeeper)
@@ -295,7 +296,7 @@ class PolygonGate(Filter):
         self.vert.append(vertix)
         if len(self.vert) > 1:
             lastLine = zip(self.vert[-2], self.vert[-1])
-            self.temporaryBorderLineList.append(pl.Line2D(lastLine[0], lastLine[1], **STYLE.TemporaryPolygonGateBorderLine))
+            self.temporaryBorderLineList.append(pl.Line2D(lastLine[0], lastLine[1], **STYLE.TemporaryPolyGateBorderLine))
             self.ax.add_artist(self.temporaryBorderLineList[-1])
 
     def finish_drawing_polygon(self, vertix):
@@ -312,12 +313,12 @@ class PolygonGate(Filter):
 
     def create_artist(self):
         ## Create polygon
-        self.poly = pl.Polygon(self.vert, picker=15, **STYLE.ActivePolygonGate)
+        self.poly = pl.Polygon(self.vert, picker=15, **STYLE.ActivePolyGate)
         self.ax.add_artist(self.poly)
 
         ## Create PolygonBorder
         x, y = zip(*self.poly.xy)
-        self.polygonBorder = pl.Line2D(x[:-1], y[:-1], **STYLE.PolygonGateBorderLine)
+        self.polygonBorder = pl.Line2D(x[:-1], y[:-1], **STYLE.PolyGateBorderLine)
         self.ax.add_artist(self.polygonBorder)
 
         self.artistList = [self.poly, self.polygonBorder]
@@ -425,13 +426,13 @@ class PolygonGate(Filter):
 
     def inactivate(self):
         self.set_state('Inactive')
-        self.poly.update(STYLE.InactivePolygonGate)
+        self.poly.update(STYLE.InactivePolyGate)
         self.polygonBorder.set_visible(False)
         self.poly.figure.canvas.draw()
 
     def activate(self):
         self.set_state('Active')
-        self.poly.update(STYLE.ActivePolygonGate)
+        self.poly.update(STYLE.ActivePolyGate)
         self.polygonBorder.set_visible(True)
         self.poly.figure.canvas.draw()
 
@@ -443,7 +444,7 @@ class GateKeeper():
         else: GateKeeper.gateList = []
         GateKeeper.current_channels = None
 
-        self.data = None
+        self.sample = None
         self.collection = None
         self.fig =  fig
         self.ax = ax
@@ -452,6 +453,7 @@ class GateKeeper():
 
         # For Quad Gate
         self.cursorWidget = None
+        self.new_gate_num = 1
 
     def connect(self):
         #self.cidrelease = self.fig.canvas.mpl_connect('button_release_event', self.on_release)
@@ -510,25 +512,30 @@ class GateKeeper():
         elif self.state == STATE_GK.START_DRAWING:
             debugging_print('Creating a polygon gate')
             self.inactivate_all_gates()
-            gate = PolygonGate(vert=None, channels=GateKeeper.current_channels, name='Polygon Gate', gateKeeper=self)
+            name = 'Gate #{0}'.format(self.new_gate_num)
+            self.new_gate_num += 1
+            gate = PolyGate(vert=None, channels=GateKeeper.current_channels, name=name, gateKeeper=self)
             self.add_gate(gate)
             gate.on_press(event)
             self.set_state(STATE_GK.KEEP_DRAWING)
 
         elif self.state == STATE_GK.START_DRAWING_QUAD_GATE:
             self.inactivate_all_gates()
-            quadGate = QuadGate(vert=(event.xdata, event.ydata), channels=GateKeeper.current_channels, name='Quad Gate', gateKeeper=self)
+            name = 'Gate #{0}'.format(self.new_gate_num)
+            self.new_gate_num += 1
+            quadGate = QuadGate(vert=(event.xdata, event.ydata), channels=GateKeeper.current_channels, name=name, gateKeeper=self)
             self.add_gate(quadGate)
             self.cursorWidget = None
             self.set_state(STATE_GK.WAITING)
 
     def change_axis(self, event):
-        ''' Function controls the x and y labels. Upon clicking on them the user can change what is plotted on the
-            x and y axis.
-        '''
+        """
+        Function controls the x and y labels. Upon clicking on them the user can change what is plotted on the
+        x and y axis.
+        """
         from GoreUtilities import dialogs
         if event.artist == self.xlabelArtist:
-            userchoice = dialogs.select_option_dialog('Select channel for x axis', self.data.channels)
+            userchoice = dialogs.select_option_dialog('Select channel for x axis', self.sample.channel_names)
 
             if userchoice is None:
                 return
@@ -537,9 +544,9 @@ class GateKeeper():
             GateKeeper.current_channels[0] = value
 
         elif event.artist == self.ylabelArtist:
-            #y_options = list(self.data.channels)
+            #y_options = list(self.sample.channel_names)
             #y_options.append('Counts')
-            userchoice = dialogs.select_option_dialog('Select channel for y axis', self.data.channels)
+            userchoice = dialogs.select_option_dialog('Select channel for y axis', self.sample.channel_names)
 
             if userchoice is None:
                 return
@@ -608,15 +615,7 @@ class GateKeeper():
         self.state = state
 
     def plot_data(self, numpoints=1000):
-        # TODO fix transform
-        #numData = numpy.shape((self.data))[0]
-        #facecolors = [STYLE.DATUM_OUT_COLOR for d in range(numData)]
-#
-        #index1, index2 = GateKeeper.current_channels
-#
-        data = self.data
-        #channel_names = [data.channels[index] for index in GateKeeper.current_channels]
-
+        sample = self.sample
 
         ax = self.ax
         ax.cla()
@@ -624,47 +623,26 @@ class GateKeeper():
         channels = GateKeeper.current_channels
 
         if channels[0] == channels[1]:
-            plotFCM(data, channels[0], transform=(None, ), ax=ax)
+            sample.plot(channels[0], transform=('hlog', 'hlog'), ax=ax, colorbar=False)
             xlabel = GateKeeper.current_channels[0]
             ylabel = 'Counts'
 
             self.xlabelArtist = ax.set_xlabel(xlabel, picker=5)
             self.ylabelArtist = ax.set_ylabel(ylabel, picker=5)
         else:
-            plotFCM(data, GateKeeper.current_channels, transform=(None, None), ax=ax, plot2d_type='hist2d')
+            sample.plot(channels, transform=('hlog', 'hlog'), ax=ax, colorbar=False)
             xlabel = GateKeeper.current_channels[0]
             ylabel = GateKeeper.current_channels[1]
 
             self.xlabelArtist = ax.set_xlabel(xlabel, picker=5)
             self.ylabelArtist = ax.set_ylabel(ylabel, picker=5)
 
-        #self.dataxy = self.data[:1000, [index1, index2]]
-        ##
-        #if self.collection is not None:
-            #self.collection.remove()
-        ##
-        #self.collection = RegularPolyCollection(ax.figure.dpi, 6, sizes=(10,), alpha=0.8, facecolors=facecolors, offsets = self.dataxy, transOffset = ax.transData)
-        #self.ax.add_collection(self.collection)
-        #
-        ##self.ax.relim()
-        ##self.ax.autoscale_view(True, True, True)
-        #xmin = min(self.data[:, index1])
-        #xmax = max(self.data[:, index1])
-        #ymin = min(self.data[:, index2])
-        #ymax = max(self.data[:, index2])
-        #
-        #ax.set_xlim(xmin, xmax)
-        #ax.set_ylim(ymin, ymax)
-        #
-        #xlabel = self.data.channels[index1]
-        #ylabel = self.data.channels[index2]
-
         pl.draw()
 
     def grayout_all_points(self):
         """ gray out all points """
         return
-        if self.data is None: return
+        if self.sample is None: return
 
         numDataPoints = len(self.dataxy)
 
@@ -676,16 +654,17 @@ class GateKeeper():
     def highlight_points_inside_gate(self, gate):
         """ Locates the points inside the given polygon vertices. """
         return # Does nothing atm
-        if self.data is None: return
+        if self.sample is None: return
 
         numDataPoints = len(self.dataxy)
 
         debugging_print('Data points length')
         debugging_print(numDataPoints)
 
-        if isinstance(gate, PolygonGate):
+        if isinstance(gate, PolyGate):
             facecolors = self.collection.get_facecolors()
-            inPointsIndexes = numpy.nonzero(points_inside_poly(self.dataxy, gate.get_vertices()))[0]
+            path = Path(gate.get_vertices())
+            inPointsIndexes = numpy.nonzero(path.contains_points(pself.dataxy))[0]
             for i in inPointsIndexes:
                 facecolors[i] = STYLE.DATUM_IN_COLOR
 
@@ -701,9 +680,11 @@ class GateKeeper():
             from GoreUtilities import dialogs
             filepath = dialogs.open_file_dialog('Select an FCS file to load', 'FCS files (*.fcs)|*.fcs')
         if filepath is not None:
-            self.data = loadFCS(filepath)
+            self.sample = FCMeasurement('temp', datafile=filepath)
+
             if GateKeeper.current_channels == None:
-                GateKeeper.current_channels = self.data.channels[0:2] # Assigns first two channels by default if none have been specified yet.
+                GateKeeper.current_channels = list(self.sample.channel_names[0:2]) # Assigns first two channels by default if none have been specified yet.
+
             self.plot_data()
 
     def load_gates(self, filepath=None):
