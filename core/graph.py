@@ -100,13 +100,6 @@ def plotFCM(data, channel_names, kind='histogram', ax=None,
         # 1d so histogram plot
         kwargs.setdefault('color', 'gray')
         kwargs.setdefault('histtype', 'stepfilled')
-<<<<<<< HEAD
-        #kwargs.setdefault('facecolor', 'green')
-
-        ch1i = channelIndexList[0]
-        pHandle = ax.hist(data[:, ch1i], **kwargs)
-=======
->>>>>>> datastructures_refactor
 
         x = data[channel_names[0]]
         if len(x):
