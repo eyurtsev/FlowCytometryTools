@@ -34,6 +34,8 @@ Tests
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+* GUI: Remove hlog transformations by default.
+
 * For each sample / measurement, add reference to parent collection / plate
 	- JF: Agreed. Not sure how to implement as a MutableMapping is not hashable. 
 	
