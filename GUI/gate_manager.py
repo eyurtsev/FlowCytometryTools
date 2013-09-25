@@ -6,7 +6,7 @@ user to choose which gates to interact with.
 from gate import PolygonGate, QuadGate, PolygonDrawer
 import util
 from util import call_wrapper
-from FlowCytometryTools import FCSample
+from FlowCytometryTools import FCMeasurement
 from manager_states import STATE_GK
 from matplotlib.widgets import Cursor
 
@@ -207,7 +207,7 @@ class GateManager():
 
         # This can still be None if the user cancels in the dialog.
         if filepath is not None:
-            self.sample = FCSample('temp', datafile=filepath)
+            self.sample = FCMeasurement('temp', datafile=filepath)
 
             if self.current_channels == None:
                 # Assigns first two channels by default if none have been specified yet.
