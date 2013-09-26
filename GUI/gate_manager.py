@@ -173,7 +173,12 @@ class GateManager():
         ax = self.ax
 
         if self._plt_data is not None:
-            self._plt_data.remove()
+            if isinstance(self._plt_data, tuple):
+                # This is the case for histograms which return a tuple
+                patches = self._plt_data[2]
+                map(lambda x : x.remove(), patches)
+            else:
+                self._plt_data.remove()
             del self._plt_data
             self._plt_data = None
 
@@ -188,12 +193,19 @@ class GateManager():
             xlabel = self.current_channels[0]
             ylabel = self.current_channels[1]
 
-        bbox = self._plt_data.get_datalim(self.ax.transData)
-        p0 = bbox.get_points()[0]
-        p1 = bbox.get_points()[1]
+        if hasattr(self._plt_data, 'get_datalim'):
+            bbox = self._plt_data.get_datalim(self.ax.transData)
+            p0 = bbox.get_points()[0]
+            p1 = bbox.get_points()[1]
 
-        self.ax.set_xlim(p0[0], p1[0])
-        self.ax.set_ylim(p0[1], p1[1])
+            self.ax.set_xlim(p0[0], p1[0])
+            self.ax.set_ylim(p0[1], p1[1])
+        else:
+            # Then it's a histogram?
+            xlims = self._plt_data[1]
+            xlims = (xlims[0], xlims[-1])
+            self.ax.set_xlim(xlims)
+            self.ax.set_ylim(0, max(self._plt_data[0]))
 
         self.fig.canvas.draw()
 
