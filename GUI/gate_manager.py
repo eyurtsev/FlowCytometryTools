@@ -211,7 +211,7 @@ class GateManager():
 
     def load_fcs(self, filepath=None, parent=None):
         """
-
+        Loads an FCS file from the given filepath
         """
         if filepath is None:
             from GoreUtilities import dialogs
