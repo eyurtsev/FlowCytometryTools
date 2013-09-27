@@ -119,6 +119,20 @@ class PlottableGate():
         self.fig.canvas.draw()
         self.gate_manager.remove_gate(self)
 
+    def get_generation_code(self):
+        """
+        Generates python code that can create the gate.
+        """
+        if isinstance(self, PolygonGate):
+            region = 'in'
+        else:
+            region = "?"
+
+        format_string = "gate = {0}({1}, {2}, region='{region}', name='{name}')"
+        return format_string.format(self.__class__.__name__, self.vert,
+                                self.channels, name=self.name, region=region)
+
+
 class QuadGate(PlottableGate, base_gates.QuadGate):
     """ Defines a polygon gate. """
     def __init__(self, vert, channels, region, name=None, gate_manager=None):

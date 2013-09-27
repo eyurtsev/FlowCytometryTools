@@ -228,4 +228,14 @@ class GateManager():
             self.set_axis(self.current_channels)
             self.plot_data()
 
+    def get_generation_code(self):
+        """
+        Returns python code that generates all drawn gates.
+        """
+        code_list = [gate.get_generation_code() for gate in GateManager.gateList]
+        code_list = '\n'.join(code_list)
+        return code_list
+
+
+
 

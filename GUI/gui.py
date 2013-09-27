@@ -44,8 +44,8 @@ class GUIEmbedded(GeneratedWireframe):
     def btn_create_quad_gate(self, event):
         self.fc_widget_ref.gate_manager.set_state(STATE_GK.START_DRAWING_QUAD_GATE)
 
-    def btn_create_quad_gate(self, event):
-        generated_code = self.fc_widget_ref.gate_manager.get_generated_code()
+    def btn_gen_code(self, event):
+        generated_code = self.fc_widget_ref.gate_manager.get_generation_code()
         self.tb_gen_code.SetValue(generated_code)
 
 class FC_GUI(wx.App):
