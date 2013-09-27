@@ -77,9 +77,14 @@ def parse_input():
 
 if __name__ == "__main__":
     import glob
-    files = glob.glob('./*.fcs')[0]
+    import os
+    import FlowCytometryTools
+    datadir = os.path.join(FlowCytometryTools.__path__[0], 'tests', 'data', 'Plate01', '*.fcs')
+    files = glob.glob(datadir)[0]
+
+    #files = glob.glob('./*.fcs')[0]
+    #files = glob.glob('datadir/')[0]
     print files
     app = FC_GUI()
     app.load_fcs(files)
     app.MainLoop()
-
