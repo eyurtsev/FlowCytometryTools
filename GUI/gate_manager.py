@@ -14,6 +14,7 @@ def debugging_print(msg):
     return util.debugging_print(msg, True)
 
 class GateManager():
+    gate_num = 1
     """ This will maintain a list of all the active gates. """
     def __init__(self, ax, fig, gateList=None, parent=None):
         if gateList is not None: GateManager.gateList = gateList
@@ -42,8 +43,6 @@ class GateManager():
         self.fig.canvas.mpl_disconnect(self.cid_mouse_press)
         self.fig.canvas.mpl_disconnect(self.cid_mouse_motion)
         self.fig.canvas.mpl_disconnect(self.cid_keyboard_press)
-        #self.fig.canvas.mpl_disconnect(self.cidrelease)
-        #self.fig.canvas.mpl_disconnect(self.cidpick)
 
     def on_mouse_motion(self, event):
         """ Motion events. """
@@ -84,19 +83,25 @@ class GateManager():
         elif self.state == STATE_GK.START_DRAWING_POLY_GATE:
             debugging_print('Creating a polygon gate')
             self.inactivate_all_gates()
-            gate = PolygonDrawer(channels=self.current_channels, gate_manager=self)
+            gate = PolygonDrawer(channels=self.current_channels, gate_manager=self, new_gate_name=self.get_new_gate_name())
             gate.on_press(event) # re raise last event
             self._temp = gate
             self.set_state(STATE_GK.KEEP_DRAWING)
 
         elif self.state == STATE_GK.START_DRAWING_QUAD_GATE:
             self.inactivate_all_gates()
+            name = self.get_new_gate_name()
             quadGate = QuadGate(vert=(event.xdata, event.ydata),
                     channels=self.current_channels,
-                    name='Quad Gate', gate_manager=self, region='top left')
+                    name=name, gate_manager=self, region='top left')
             self.add_gate(quadGate)
             self.cursorWidget = None
             self.set_state(STATE_GK.WAITING)
+
+    def get_new_gate_name(self):
+        name = 'gate_{}'.format(GateManager.gate_num)
+        GateManager.gate_num += 1
+        return name
 
     def on_keyboard_press(self, event):
         if event.key == 'c':
@@ -233,9 +238,6 @@ class GateManager():
         Returns python code that generates all drawn gates.
         """
         code_list = [gate.get_generation_code() for gate in GateManager.gateList]
+        code_list.sort()
         code_list = '\n'.join(code_list)
         return code_list
-
-
-
-

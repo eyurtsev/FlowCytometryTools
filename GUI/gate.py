@@ -125,11 +125,15 @@ class PlottableGate():
         """
         if isinstance(self, PolygonGate):
             region = 'in'
+            vert_list = ['(' + ', '.join(map(lambda x : '{:.2f}'.format(x), vert)) + ')' for vert in self.vert]
         else:
             region = "?"
+            vert_list = ['{:.2f}'.format(vert) for vert in self.vert]
 
-        format_string = "gate = {0}({1}, {2}, region='{region}', name='{name}')"
-        return format_string.format(self.__class__.__name__, self.vert,
+        vert_list = '[' + ','.join(vert_list) + ']'
+
+        format_string = "{name} = {0}({1}, {2}, region='{region}', name='{name}')"
+        return format_string.format(self.__class__.__name__, vert_list,
                                 self.channels, name=self.name, region=region)
 
 
@@ -216,7 +220,7 @@ class QuadGate(PlottableGate, base_gates.QuadGate):
 
 class PolygonDrawer(PlottableGate):
     """ Used to create a polygon gate by drawing it on the axis. """
-    def __init__(self, channels, gate_manager):
+    def __init__(self, channels, gate_manager, new_gate_name=None):
         PlottableGate.__init__(self, gate_manager)
 
         # Connect gate to GUI events
@@ -228,6 +232,7 @@ class PolygonDrawer(PlottableGate):
 
         self.vert = []
         self.channels = channels
+        self.new_gate_name = new_gate_name
 
     def add_vertix_to_growing_polygon(self, vertix):
         self.vert.append(vertix)
@@ -247,7 +252,7 @@ class PolygonDrawer(PlottableGate):
 
         # instantiate polygon gate and add to gate manager
         pg = PolygonGate(vert=self.vert, channels=self.channels,
-                region='in', name=None, gate_manager=self.gate_manager)
+                region='in', name=self.new_gate_name, gate_manager=self.gate_manager)
 
         self.gate_manager.add_gate(pg)
         self.gate_manager.set_state(STATE_GK.WAITING)
