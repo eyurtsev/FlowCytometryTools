@@ -27,7 +27,6 @@ Key Features
   - Gating
   - Plotting
   - Supports multiple FCS formats (2.0, 3.0, 3.1)
-
   	
 Contents:
 

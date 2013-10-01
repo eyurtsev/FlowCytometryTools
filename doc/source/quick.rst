@@ -15,17 +15,42 @@
 Quick Introduction
 ******************
 
-First, we will load all fcs files in a folder into a plate.
+Loading an FCS file
+--------------------
+
+First, we need to find our FCS files.
 
 .. ipython:: python
-
 	from FlowCytometryTools import FCPlate
 	
 	# You can insert your own directory instead of datadir here.
 	import os, FlowCytometryTools # This import is only needed to locate the FlowCytometryTools directory 
 	datadir = os.path.join(FlowCytometryTools.__path__[0], 'tests', 'data', 'Plate01')
-	print 'Loading files from directory path: {0}'.format(datadir)
 	
+
+.. ipython:: python
+	print 'Loading files from directory path: {0}'.format(datadir)
+    datafile = os.path.join(datadir, 'CFP_Well_A4.fcs')
+    print 'Loading file from path: {0}'.format(datafile)
+    sample = FCMeasurement(ID='Test Plate', datafile=datafile)
+
+Transformations
+--------------------------
+
+
+Plotting
+--------------------------
+
+Gating
+--------------------------
+
+Working with plates
+-------------------------
+
+First, we will load all fcs files in a folder into a plate.
+
+.. ipython:: python
+
 	# Load the files
 	plate = FCPlate.from_dir(ID='Test Plate', path=datadir)
 
@@ -55,5 +80,12 @@ The entire plate can be plotted:
 	@savefig quick_hlog_plate.png width=4.5in
 	out = hplate.plot(('FSC-A', 'Y2-A'))	
 
+
+Example 01: Counting the total number of events
+------------------------------------------------
+
+
+Example 02: Calculating the standard deviation of data that passes a given gate
+---------------------------------------------------------------------------------
 
 

@@ -14,9 +14,9 @@ Quick install
 
 To get the latest stable release and required dependencies, run the following as root:
 
-::
+:: 
+    Skip for now
 
-  pip install pysurvey
 
 
 Python version support
@@ -29,21 +29,14 @@ Currently, Python 3 is not supported.
 Dependencies
 ~~~~~~~~~~~~
 
+  * `GoreUtilities <https://bitbucket.org/gorelab/goreutilities/>`__: required for plotting and misc.
   * `pandas <http://pandas.sourceforge.net/index.html>`__: 0.8.0 or higher.
-
-
-Recommended Dependencies
-~~~~~~~~~~~~~~~~~~~~~~~~
-  * `matplotlib <http://matplotlib.sourceforge.net/>`__: required for plotting
-  * `SciPy <http://www.scipy.org>`__: miscellaneous statistical functions. Required for distances and hierarchical clustering
-
+  * `matplotlib <http://matplotlib.org/>`__: required for plotting
 
 Optional dependencies
 ~~~~~~~~~~~~~~~~~~~~~
 
-  * `scikits-learn <http://scikit-learn.org/0.10/index.html>`__: machine learning tool such as: Gaussian mixture models, etc'
-  * `pycognet <http://pycogent.sourceforge.net/>`__:  required for PCoA
-  * `rpy2 <http://rpy.sourceforge.net/rpy2/doc-2.1/html/index.html/>`__: required for using R functions 
+  * wx-python: ://scikit-learn.org/0.10/index.html>`__: machine learning tool such as: Gaussian mixture models, etc'
 
 .. note::
 
