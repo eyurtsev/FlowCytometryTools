@@ -4,6 +4,15 @@
 # (I do not promise this works)
 # Distributed under the MIT License
 # TODO: Throw an error if there is logarithmic amplification (or else implement support for it)
+
+# Useful documentation for dtypes in numpy
+
+# Bytes swap may be faster?
+# http://docs.scipy.org/doc/numpy/reference/generated/numpy.ndarray.byteswap.html?highlight=byteswap#numpy.ndarray.byteswap
+# http://docs.scipy.org/doc/numpy/user/basics.types.html
+# http://docs.scipy.org/doc/numpy/reference/arrays.dtypes.html
+
+
 import sys, warnings, re, string
 import numpy
 
@@ -232,16 +241,17 @@ class FCS_Parser(object):
         elif text['$BYTEORD'].strip() == '4,3,2,1' or text['$BYTEORD'].strip() == '2,1':
             endian = '>'
 
-        conversion_dict = {'F' : 'f4', 'D' : 'f8'} # matching FCS naming convention with numpy naming convention f4 - 4 byte (32 bit) single precision float
+        #conversion_dict = {'F' : 'f4', 'D' : 'f8', 'I' : 'u'} # matching FCS naming convention with numpy naming convention f4 - 4 byte (32 bit) single precision float
+        conversion_dict = {'F' : 'f', 'D' : 'f', 'I' : 'u'} # matching FCS naming convention with numpy naming convention f4 - 4 byte (32 bit) single precision float
 
         if text['$DATATYPE'] not in conversion_dict.keys():
             raise_parser_feature_not_implemented('$DATATYPE = {0} is not yet supported.'.format(text['$DATATYPE']))
 
-        dtype = '{endian}{numerical_type}'.format(endian=endian, numerical_type=conversion_dict[text['$DATATYPE']])
+        #dtype = '{endian}{numerical_type}'.format(endian=endian, numerical_type=conversion_dict[text['$DATATYPE']])
 
         # Calculations to figure out data types of each of parameters
         bytes_per_par_list   = [text['$P{0}B'.format(i)] / 8  for i in self.channel_numbers] # $PnB specifies the number of bits reserved for a measurement of parameter n
-        par_numeric_type_list   = ['{endian}f{size}'.format(endian=endian, size=bytes_per_par) for bytes_per_par in bytes_per_par_list]
+        par_numeric_type_list   = ['{endian}{type}{size}'.format(endian=endian, type=conversion_dict[text['$DATATYPE']], size=bytes_per_par) for bytes_per_par in bytes_per_par_list]
         bytes_per_event = sum(bytes_per_par_list)
         total_bytes = bytes_per_event * num_events
 
@@ -253,6 +263,7 @@ class FCS_Parser(object):
             data = numpy.fromfile(file_handle, dtype=','.join(par_numeric_type_list), count=num_events)
             raise_parser_feature_not_implemented('The different channels were saved using mixed numeric formats')
         else:
+            dtype = par_numeric_type_list[0]
             data = numpy.fromfile(file_handle, dtype=dtype, count=num_events * num_pars)
             data = data.reshape((num_events, num_pars))
 
