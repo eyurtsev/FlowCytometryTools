@@ -63,9 +63,8 @@ class FCMeasurement(Measurement):
         """
         if old_range is None:
             m = self.get_meta()['_channels_']
-            names = m['$PnS']
             old_range = m['$PnR'].astype(float)
-            old_range.index = names
+            old_range.index = self.channel_names
         new = data/old_range*new_range
         return new
 
