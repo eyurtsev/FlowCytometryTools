@@ -63,7 +63,7 @@ def tlog_inv(y, th=1, r=_display_max, d=_l_mmax):
     -------
     Array of transformed values.
     '''
-    return 10**(y * 1.*d/r)
+    return th * 10**(y * 1.*d/r)
 
 def glog(x, l):
     '''
