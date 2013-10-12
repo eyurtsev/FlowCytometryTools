@@ -69,13 +69,15 @@ Want to know which channels were measured? No problem.
 Meta data
 ++++++++++++++++++++++++++++
 
-There's loads of useful information FCS files. If you're curious 
-take a look at ``sample.meta``. The meaning of the fields in ``sample.meta`` is explained in the FCS format specification.
+There's loads of useful information in FCS files. If you're curious 
+take a look at ``sample.meta``. 
 
 .. ipython:: python
     
     print type(sample.meta)
     print sample.meta.keys()
+
+The meaning of the fields in ``sample.meta`` is explained in the FCS format specifications.
 
 Transformations
 --------------------------
@@ -91,7 +93,9 @@ and save the transformed sample in ``tsample``.
 
 .. note::
     You can read more about transformations here:
-        TODO
+        * Bagwell. Cytometry Part A, 2005.
+        * Parks, Roederer, and Moore. Cytometry Part A, 2006.
+        * Trotter, Joseph. In Current Protocols in Cytometry. John Wiley & Sons, Inc., 2001.
 
 Plotting
 --------------------------
@@ -350,8 +354,7 @@ Examples
 Counting total number of events
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-Let's write some code that will count the
-total number of events in each well of the plate.
+Let's write code to count the total number of events in each well of the plate.
 
 .. ipython:: python
     
@@ -361,7 +364,7 @@ total number of events in each well of the plate.
         count = data.shape[0]
         return count
 
-Before we use this function on a plate, it's nice to make sure it works
+Before we use this function on a plate, we have to check that it works
 on a single well.
 
 .. ipython:: python
@@ -374,7 +377,7 @@ Alternatively, we could have used the ``apply`` method:
 
     print plate['A3'].apply(count_events)
 
-The really nice thing about the ``apply`` method is that it works on a plate as well!
+The really nice thing about the ``apply`` method is that it works on plate:
 
 .. ipython:: python
 
