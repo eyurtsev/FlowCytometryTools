@@ -1,75 +1,124 @@
 .. _install:
 
-.. currentmodule:: pysurvey
-
 ************
 Installation
 ************
 
-The latest stable version is available on `PyPI <https://pypi.python.org/pypi/PySurvey>`__.
-Alternatively, you can build the `development version <https://bitbucket.org/yonatanf/pysurvey>`__. 
+.. contents:: Table of Contents
 
-Quick install
-~~~~~~~~~~~~~
-
-To get the latest stable release and required dependencies, run the following as root:
-
-:: 
-    Skip for now
-
-
-
-Python version support
+Supported python versions
 ~~~~~~~~~~~~~~~~~~~~~~
 
 Python 2.6 to 2.7. 
 Currently, Python 3 is not supported.
 
-
 Dependencies
-~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~
 
-  * `GoreUtilities <https://bitbucket.org/gorelab/goreutilities/>`__: required for plotting and misc.
-  * `pandas <http://pandas.sourceforge.net/index.html>`__: 0.8.0 or higher.
-  * `matplotlib <http://matplotlib.org/>`__: required for plotting
+Required
+=========================
 
-Optional dependencies
-~~~~~~~~~~~~~~~~~~~~~
+#. `pandas <http://pandas.sourceforge.net/index.html>`__: 0.8.0 or higher.
+#. `matplotlib <http://matplotlib.org/>`__: required for plotting
 
-  * wx-python: ://scikit-learn.org/0.10/index.html>`__: machine learning tool such as: Gaussian mixture models, etc'
+.. hint::
 
-.. note::
+    Mac and Windows users: A simple way of installing all of the dependencies is using a distribution like `canopy <https://www.enthought.com/products/canopy/>`_.
 
-   While it is possible to install :mod:`PySurvey` with only the required dependency, many useful features
-   require the recommended/optional dependencies. Hence, it is highly recommended that you install these. 
-   Since installing these packages (as well as `pandas dependecies <http://pandas.pydata.org/pandas-docs/stable/install.html/>`__) 
-   can become challenging, a distribution such as the `Enthought Python Distribution
-   <http://enthought.com/products/epd_free.php>`__ may be worth considering.
+    Ubuntu/Debian: Use pip or apt-get : instructions are available on the package websites.
 
 
-Installing from source
-~~~~~~~~~~~~~~~~~~~~~~
-The source code is hosted at <https://bitbucket.org/yonatanf/pysurvey.
-To retrieve the package and install it locally do (root permissions may be required): 
+Optional
+=========================
 
-::
+#. `wx-python <http://wiki.wxpython.org/How%20to%20install%20wxPython>`__ : Used for the FlowCytometryTools GUI.
 
-  hg clone https://bitbucket.org/yonatanf/pysurvey
-  cd pysurvey
-  python setup.py install
+Installing the FlowCytometryTools package
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Currently, only installation from source is possible. Full installation instructions are provided below. 
+
+For programmers, the source code is hosted at bitbucket at the following URLs:
+    * Required dependency: https://bitbucket.org/gorelab/goreutilities 
+    * Package: https://bitbucket.org/gorelab/flowcytometrytools
+
+
+Installing using git
+=========================
+
+#. Install `git <http://git-scm.com/downloads>`_ on your machine.
+
+    **STRONGLY RECOMMENDED** Give git access to the command line. 
+
+    If you don't, the git commands below won't work. Instead you'll have to use the GUI interface with git (we don't have instructions for that).
+
+#. Open your command terminal
+
+#. In your command terminal enter:
+
+    .. code-block:: bash
+
+        ipython
+
+#. Inside of ipython enter:
+
+    .. ipython:: python
+
+        import numpy, os
+        print os.path.split(numpy.__path__[0])[0]
+
+#. The printed path will be your site-packages path!
+
+#. Quit ipython (simply enter ``quit``)
+
+#. In the command terminal navigate to that path:
+
+    .. code-block:: bash
+
+        cd (enter here the path you got above)
+
+#. Enter the commands below:
+
+    .. code-block:: bash
+
+        git clone https://bitbucket.org/gorelab/goreutilities.git GoreUtilities
+        git clone https://bitbucket.org/gorelab/flowcytometrytools.git FlowCytometryTools
+        cd FlowCytometryTools
+        git checkout v0.2.0
+
+
+Updating using git
+====================
+
+If you've installed the package using git, you can also use git to update the package when new releases are available.
+
+Do the following:
+
+    .. code-block:: bash
+
+        cd (enter here the path you got above)
+
+        cd GoreUtilities
+        git fetch origin
+        git pull
+
+        cd ..
+
+        cd FlowCytometryTools
+        git fetch origin
+        git pull
 
 
 Running the test suite
-~~~~~~~~~~~~~~~~~~~~~~
+====================
 
-Though the test suite is not currently provide exhaustive coverage, most of the common 
-operations are coverage. 
-Running the test suite requires `nose <http://readthedocs.org/docs/nose/en/latest/>`__, and is done by running:
+Running the test suite requires `nose <http://readthedocs.org/docs/nose/en/latest/>`__, and is done by:
 
-::
+#. In the command terminal, go to the directory where the FlowCytometeryTools code is installed.
 
-    $ nosetests pysurvey
+#. Run the following command in the terminal:
 
+    .. code-block:: bash
 
-
+        nosetests pysurvey
 
