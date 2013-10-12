@@ -196,6 +196,7 @@ Creating Gates
 +++++++++++++++++++++++
 
 To create a gate you need to provide the following information:
+
 * set(s) of coordinates
 * name(s) of channel(s) 
 * region

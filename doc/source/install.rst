@@ -4,8 +4,6 @@
 Installation
 ************
 
-.. contents:: Table of Contents
-
 Supported Python versions
 ~~~~~~~~~~~~~~~~~~~~~~
 

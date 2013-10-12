@@ -143,10 +143,10 @@ html_theme_path = sphinx_bootstrap_theme.get_html_theme_path()
 # theme further.
 html_theme_options = {
     # Navigation bar title. (Default: ``project`` value)
-    'navbar_title': "Demo",
+    #'navbar_title': "Demo",
 
     # Tab name for entire site. (Default: "Site")
-    'navbar_site_name': "Site",
+    #'navbar_site_name': "Site",
 
     # A list of tuples containing pages or urls to link to.
     # Valid tuples should be in the following forms:
@@ -166,11 +166,11 @@ html_theme_options = {
     'navbar_sidebarrel': False,
 
     # Render the current pages TOC in the navbar. (Default: true)
-    'navbar_pagenav': True,
+    'navbar_pagenav': False,
 
     # Global TOC depth for "site" navbar tab. (Default: 1)
     # Switching to -1 shows all levels.
-    'globaltoc_depth': 2,
+    'globaltoc_depth': -1,
 
     # Include hidden TOCs in Site navbar?
     #
@@ -183,7 +183,8 @@ html_theme_options = {
 
     # HTML navbar class (Default: "navbar") to attach to <div> element.
     # For black navbar, do "navbar navbar-inverse"
-    'navbar_class': "navbar navbar-inverse",
+    #'navbar_class': "navbar navbar-inverse",
+    'navbar_class': "navbar",
 
     # Fix navigation bar to top of page?
     # Values: "true" (default) or "false"
@@ -199,7 +200,8 @@ html_theme_options = {
     # such as "amelia" or "cosmo".
     #
     # Note that this is served off CDN, so won't be available offline.
-    'bootswatch_theme': "flatly",
+    #'bootswatch_theme': "flatly",
+    'bootswatch_theme': "united",
 
     # Choose Bootstrap version.
     # Values: "3" (default) or "2" (in quotes)
@@ -245,6 +247,9 @@ html_static_path = ['_static']
 
 # Custom sidebar templates, maps document names to template names.
 #html_sidebars = {}
+
+EY_doc_names = ['localtoc.html']
+html_sidebars = {'quick': EY_doc_names, 'install': EY_doc_names}
 
 # Additional templates that should be rendered to pages, maps page names to
 # template names.
