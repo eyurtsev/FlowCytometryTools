@@ -6,13 +6,14 @@ Installation
 
 .. contents:: Table of Contents
 
-Supported python versions
+Supported Python versions
 ~~~~~~~~~~~~~~~~~~~~~~
 
 Python 2.6 to 2.7. 
+
 Currently, Python 3 is not supported.
 
-Dependencies
+Installing dependencies
 ~~~~~~~~~~~~~~~~~~~~~~~
 
 Required
@@ -37,6 +38,8 @@ Installing the FlowCytometryTools package
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Currently, only installation from source is possible. Full installation instructions are provided below. 
+
+**IMPORTANT** The required dependencies are **required** for this package to work. Install them.
 
 For programmers, the source code is hosted at bitbucket at the following URLs:
     * Required dependency: https://bitbucket.org/gorelab/goreutilities 
