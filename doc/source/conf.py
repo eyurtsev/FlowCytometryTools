@@ -159,7 +159,6 @@ html_theme_options = {
         ("Installation", 'install'),
         ("Quick Introduction", 'quick'),
         ("API", "api"),
-        ("About", "about"),
     ],
 
     # Render the next and previous page links in navbar. (Default: true)
