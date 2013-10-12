@@ -248,7 +248,7 @@ html_static_path = ['_static']
 #html_sidebars = {}
 
 EY_doc_names = ['localtoc.html']
-html_sidebars = {'quick': EY_doc_names, 'install': EY_doc_names}
+html_sidebars = {'quick': EY_doc_names, 'install': EY_doc_names, 'api' : EY_doc_names}
 
 # Additional templates that should be rendered to pages, maps page names to
 # template names.
