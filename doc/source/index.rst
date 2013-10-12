@@ -10,14 +10,14 @@ FlowCytometryTools: Quantitaive analysis of flow cytometry data
 
 :mod:`FlowCytometryTools` is a `Python <http://www.python.org>`__ package designed to perform quantitaive analysis of flow cytometry data. 
 
-:mod:`FlowCytometryTools` is based on the powerful `pandas <http://pandas.pydata.org/>`__ package which offers rich data structures which are 
-tailored and optimized for interactive analysis of large data tables.
+:mod:`FlowCytometryTools` is based on the powerful `pandas <http://pandas.pydata.org/>`__ package which is tailored and optimized for interactive analysis of large data tables.
 
 --------------------------------
 ``FlowCytometryTools`` Resources
 --------------------------------
 - **Documentation:** https://bitbucket.org/gorelab/flowcytometrytools/wiki/Home
 - **Source Repository:** https://bitbucket.org/gorelab/flowcytometrytools
+- **Comments or questions:** https://bitbucket.org/gorelab/flowcytometrytools/issues
 
 -------------
 Key Features
@@ -32,16 +32,8 @@ Contents:
 
 .. toctree::
    :maxdepth: 2
-   
-   quick
+
    install
-
-Please post comments or questions at https://bitbucket.org/gorelab/flowcytometrytools/issues.
-
-..   
-   basics
-   transforming
-   ploting
-   gating
-   analysis
+   quick
    api
+
