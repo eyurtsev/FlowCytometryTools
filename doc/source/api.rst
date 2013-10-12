@@ -12,6 +12,7 @@ FCMeasurement
 
 .. autoclass:: FCMeasurement
     :members: 
+    :inherited-members:
 
 
 FCPlate (FCOrderedCollection)
@@ -19,4 +20,5 @@ FCPlate (FCOrderedCollection)
 
 .. autoclass:: FCOrderedCollection
     :members: 
+    :inherited-members:
 
