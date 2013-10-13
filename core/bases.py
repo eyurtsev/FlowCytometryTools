@@ -962,7 +962,6 @@ class OrderedCollection(MeasurementCollection):
             axis = 'y'
         else:
             axis = 'none'
-            
         graph.autoscale_subplots(gHandleList[1], axis)
 
         ###
@@ -994,18 +993,12 @@ class OrderedCollection(MeasurementCollection):
         if xlabel:
             xlim = ax_label.get_xlim()
 
-            if xlim[0] < 0 < xlim[1]:
-                pl.xticks([xlim[0], 0, xlim[1]], rotation=0)
-            else:
-                pl.xticks([xlim[0], xlim[1]], rotation=0)
+            pl.xticks([xlim[0], xlim[1]], rotation=90)
 
         if ylabel:
             ylim = ax_label.get_ylim()
 
-            if ylim[0] < 0 < ylim[1]:
-                pl.yticks([ylim[0], 0, ylim[1]], rotation=0)
-            else:
-                pl.yticks([ylim[0], ylim[1]], rotation=0)
+            pl.yticks([ylim[0], ylim[1]], rotation=0)
 
         pl.sca(gHandleList[0]) # sets to the main axis -- more intuitive
 
