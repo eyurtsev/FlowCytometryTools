@@ -19,11 +19,6 @@
     datafile = os.path.join(datadir, 'RFP_Well_A3.fcs')
     print 'Loading file from path: {0}'.format(datafile)
 
-
-******************
-Quick Introduction
-******************
-
 Loading a single FCS file
 --------------------------
 
@@ -195,6 +190,9 @@ First, we need to load the gates from the library.
 Creating Gates
 +++++++++++++++++++++++
 
+Programatically
+```````````````````````
+
 To create a gate you need to provide the following information:
 
 * set(s) of coordinates
@@ -214,22 +212,18 @@ While we're at it, here's another gate for events with a B1-A value (CFP) above 
 
     b1_gate = ThresholdGate(2000.0, 'B1-A', region='above')
 
-GUI for creating gates 
-++++++++++++++++++++++++
+Using the GUI
+```````````````````````
 
-You can launch the GUI for creating the gates, by calling the view() method.
+You can launch the GUI for creating the gates, by calling the view() method of an ``FCMeasurement`` instance.
 
-.. note::
+``tsample.view()``
 
-    Try ``tsample.view()``
-
-    **ATTENTION**
+.. warning::
 
     You have to install wxpython in order to use the GUI.
 
-    Also, keep in mind that the GUI is still in early stages.
-
-    If it works for you great, if not keep checking for updates! ;)
+    Also, keep in mind that the GUI is still in early stages. Expect bugs.
 
 Plotting Gates
 +++++++++++++++++
