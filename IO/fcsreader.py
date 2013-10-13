@@ -311,8 +311,14 @@ class FCS_Parser(object):
         column_names = ['$Pn{0}'.format(p) for p in channel_properties]
 
         df = pandas.DataFrame(channel_matrix, columns=column_names, index=(1+numpy.arange(num_channels)))
+
+        if '$PnE' in column_names:
+            df['$PnE'] = df['$PnE'].apply(lambda x : x.split(','))
+
         df.index.name = 'Channel Number'
         meta['_channels_'] = df
+
+
 
 
 def parse_fcs(path, meta_data_only=False, output_format='DataFrame', compensate=False, channel_naming='$PnS', reformat_meta=False):
