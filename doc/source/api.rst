@@ -6,19 +6,24 @@
 API
 ************
 
+Containers
+----------------------------
 
-FCMeasurement
----------------------------------
+.. autosummary::
+    :toctree: API
+    :template: simple.rst
 
-.. autoclass:: FCMeasurement
-    :members: 
-    :inherited-members:
+    FCMeasurement
+    FCOrderedCollection
 
+Gating
+----------------------------
 
-FCPlate (FCOrderedCollection)
----------------------------------
+.. autosummary::
+    :toctree: API
+    :template: simple.rst
 
-.. autoclass:: FCOrderedCollection
-    :members: 
-    :inherited-members:
-
+    ThresholdGate
+    IntervalGate
+    QuadGate
+    PolyGate 
