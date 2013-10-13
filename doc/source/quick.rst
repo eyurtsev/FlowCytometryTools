@@ -190,7 +190,7 @@ First, we need to load the gates from the library.
 Creating Gates
 +++++++++++++++++++++++
 
-Programatically
+Programmatically
 ```````````````````````
 
 To create a gate you need to provide the following information:
