@@ -228,14 +228,17 @@ class FCCollection(MeasurementCollection):
     '''
     _measurement_class = FCMeasurement
     
-    def transform(self, transform, channels=None, direction='forward',  
+    def transform(self, transform, channels=None, direction='forward',
                   return_all=True, args=(), ID=None, **kwargs):
         '''
-        Apply transform to each Measurement in the Collection. 
+        Apply transform to each Measurement in the Collection.
         Return a new Collection with transformed data.
-        Note that the new Collection will hold the data for ALL Measurements in memory!
+
+        .. note::
+            The new Collection will hold the data for ALL Measurements in memory!
         
-        see FCMeasurement.transform for more details.
+        .. seealso:: FCMeasurement.transform for more details.
+
         
         TODO: change default to not transform HDR channels?
         '''
@@ -273,30 +276,32 @@ class FCOrderedCollection(OrderedCollection, FCCollection):
              autolabel=True,
              **kwargs):
         """
-        For details see documentation for FCMeasurement.plot
-        **kwargs passes arguments to both grid_plot and to FCMeasurement.plot.
+        For details see documentation for FCMeasurement.plot kwargs passes arguments to both grid_plot and to FCMeasurement.plot.
 
         Note
-        -------
-        The function assumes that grid_plot and FCMeasurement.plot use unique key words.
-        Any key word arguments that appear in both functions are passed only to grid_plot in the end.
+        --------------
+
+            The function assumes that grid_plot and FCMeasurement.plot use unique key words.
+            Any key word arguments that appear in both functions are passed only to grid_plot in the end.
 
         Returns
-        -------
-        gHandleList: list
-            gHandleList[0] -> reference to main axis
-            gHandleList[1] -> a list of lists
-                example: gHandleList[1][0][2] returns the subplot in row 0 and column 2
+        --------------
+
+            gHandleList: list
+            gHandleList[0] is reference to main axis
+            gHandleList[1] : 2d array, each array element correspodns to a subplot
+                For example: gHandleList[1][0, 2] returns the subplot in row 0 and column 2
 
         Examples
-        ------------
+        --------------
+
         Below, plate is an instance of the FCOrderedCollection
 
-        plate.plot(['SSC-A', 'FSC-A'], kind='histogram', transform='hlog', autolabel=True)
+        ``plate.plot(['SSC-A', 'FSC-A'], kind='histogram', transform='hlog', autolabel=True)``
 
-        plate.plot(['SSC-A', 'FSC-A'], transform='hlog', xlim=(0, 10000))
+        ``plate.plot(['SSC-A', 'FSC-A'], transform='hlog', xlim=(0, 10000))``
 
-        plate.plot(['B1-A', 'Y2-A'], transform='hlog', kind='scatter', color='red', s=1, alpha=0.3)
+        ``plate.plot(['B1-A', 'Y2-A'], transform='hlog', kind='scatter', color='red', s=1, alpha=0.3)``
         """
         ###
         # Automatically figure out which of the kwargs should
