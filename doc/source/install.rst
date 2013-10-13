@@ -66,7 +66,11 @@ Installing using git
 
 #. The printed path will be your site-packages path!
 
-#. Quit ipython (simply enter ``quit``)
+#. Quit ipython:
+
+    .. sourcecode:: ipython
+
+        In [3]: quit
 
 #. In the command terminal navigate to that path:
 
@@ -106,16 +110,19 @@ Do the following:
         git pull
 
 
-Running the test suite
-====================
+.. does not work yet. 
 
-Running the test suite requires `nose <http://readthedocs.org/docs/nose/en/latest/>`__, and is done by:
+    Running the test suite
+    ====================
 
-#. In the command terminal, go to the directory where the FlowCytometeryTools code is installed.
 
-#. Run the following command in the terminal:
+    Running the test suite requires `nose <http://readthedocs.org/docs/nose/en/latest/>`__, and is done by:
 
-    .. code-block:: bash
+    #. In the command terminal, go to the directory where the FlowCytometeryTools code is installed.
 
-        nosetests pysurvey
+    #. Run the following command in the terminal:
+
+        .. code-block:: bash
+
+            nosetests FlowCytometeryTools
 
