@@ -293,7 +293,7 @@ class MeasurementCollection(collections.MutableMapping, BaseObject):
                 self[m.ID] = m 
 
     @classmethod
-    def from_files(cls, ID, datafiles, parser='name'):
+    def from_files(cls, ID, datafiles, parser):
         """
         Create a Collection of measurements from a set of data files.
         
@@ -320,7 +320,7 @@ class MeasurementCollection(collections.MutableMapping, BaseObject):
         return cls(ID, measurements)
 
     @classmethod
-    def from_dir(cls, ID, datadir, pattern='*.fcs', recursive=False, parser='name'):
+    def from_dir(cls, ID, datadir, parser, pattern='*.fcs', recursive=False):
         """
         Create a Collection of measurements from data files contained in a directory.
         
@@ -567,9 +567,8 @@ class OrderedCollection(MeasurementCollection):
     TODO: 
         - add reshape?         
     """ 
-    def __init__(self, ID, measurements, shape=(8,12),
-                 positions=None, position_parser='name',
-                 row_labels=None, col_labels=None):
+    def __init__(self, ID, measurements, position_parser, shape=(8,12),
+                 positions=None, row_labels=None, col_labels=None):
         """
         A dictionary-like container for holding multiple Measurements in a 2D array.
         
@@ -582,16 +581,17 @@ class OrderedCollection(MeasurementCollection):
             Collection ID
         measurements : mappable | iterable
             values are measurements of appropriate type (type is explicitly check for).
+        position_parser :
+            Determines the positions under which Measurements will be located.
+            callable - gets key and returns position
+            mapping  - key:pos
+            'name'   - parses things like 'A1', 'G12'
+            'number' - converts number to positions, going over rows first.
         shape : 2-tuple
             Shape of the 2D array of measurements (rows, cols).
         positions : dict | None
                 Mapping of measurement_key:(row,col)
                 If None is given set positions as specified by the position_parser arg. 
-        position_parser :
-            callable - gets key and returns position
-            mapping  - key:pos
-            'name'   - parses things like 'A1', 'G12'
-            'number' - converts number to positions, going over rows first.
         row_labels : iterable of str
             If None is given, rows will be labeled 'A','B','C', ...
         col_labels : iterable of str
@@ -622,7 +622,7 @@ class OrderedCollection(MeasurementCollection):
         return 'ID:\n%s\n\nData:\n%s' %(self.ID, repr(print_layout))
 
     @classmethod
-    def from_files(cls, ID, datafiles, parser='name', **kwargs):
+    def from_files(cls, ID, datafiles, parser, position_parser=None, **kwargs):
         """
         Create an OrderedCollection of measurements from a set of data files.
         
@@ -641,19 +641,30 @@ class OrderedCollection(MeasurementCollection):
             'read' : Use the measurement ID sspecified in the metadata. 
             mapping : mapping (dict-like) from datafiles to keys.
             callable : takes datafile name and returns key. 
+        position_parser :
+            Determines the positions under which Measurements will be located.
+            None     - use the parser value, if it is a string.
+            callable - gets key and returns position
+            mapping  - key:pos
+            'name'   - parses things like 'A1', 'G12'
+            'number' - converts number to positions, going over rows first.
         kwargs : dict
             Additional key word arguments to be passed to constructor.
         """
+        if position_parser is None:
+            if isinstance(parser, basestring):
+                position_parser = parser
+            else:
+                msg = 'position_parser can only be None when parser argument is a string'
+                raise ValueError, msg
         d = _assign_IDS_to_datafiles(datafiles, parser, cls._measurement_class)
         measurements = []
         for sID, dfile in d.iteritems():
             measurements.append(cls._measurement_class(sID, datafile=dfile))
-        kwargs.setdefault('position_parser', parser)    
-        return cls(ID, measurements, **kwargs)
+        return cls(ID, measurements, position_parser, **kwargs)
 
     @classmethod
-    def from_dir(cls, ID, path, pattern='*.fcs', recursive=False,
-                 parser='name', **kwargs):
+    def from_dir(cls, ID, path, parser, position_parser=None, pattern='*.fcs', recursive=False, **kwargs):
         """
         Create a Collection of measurements from data files contained in a directory.
         
@@ -676,12 +687,18 @@ class OrderedCollection(MeasurementCollection):
             'read' : Use the measurement ID sspecified in the metadata. 
             mapping : mapping (dict-like) from datafiles to keys.
             callable : takes datafile name and returns key. 
+        position_parser :
+            Determines the positions under which Measurements will be located.
+            None     - use the parser value, if it is a string.
+            callable - gets key and returns position
+            mapping  - key:pos
+            'name'   - parses things like 'A1', 'G12'
+            'number' - converts number to positions, going over rows first.
         kwargs : dict
             Additional key word arguments to be passed to constructor.
         """
         datafiles = get_files(path, pattern, recursive)
-        kwargs.setdefault('position_parser', parser)
-        return cls.from_files(ID, datafiles, parser=parser, **kwargs)
+        return cls.from_files(ID, datafiles, parser=parser, position_parser=position_parser, **kwargs)
 
 #     def set_labels(self, labels, axis='rows'):
 #         '''
