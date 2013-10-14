@@ -220,7 +220,12 @@ class FCMeasurement(Measurement):
         newdata = gate(data)
         newsample = self.copy()
         newsample.set_data(data=newdata)
-        return newsample        
+        return newsample
+    
+    @property
+    def counts(self):
+        data = self.get_data()
+        return data.shape[0]       
 
 class FCCollection(MeasurementCollection):
     '''
@@ -228,17 +233,14 @@ class FCCollection(MeasurementCollection):
     '''
     _measurement_class = FCMeasurement
     
-    def transform(self, transform, channels=None, direction='forward',
+    def transform(self, transform, channels=None, direction='forward',  
                   return_all=True, args=(), ID=None, **kwargs):
         '''
-        Apply transform to each Measurement in the Collection.
+        Apply transform to each Measurement in the Collection. 
         Return a new Collection with transformed data.
-
-        .. note::
-            The new Collection will hold the data for ALL Measurements in memory!
+        Note that the new Collection will hold the data for ALL Measurements in memory!
         
-        .. seealso:: FCMeasurement.transform for more details.
-
+        see FCMeasurement.transform for more details.
         
         TODO: change default to not transform HDR channels?
         '''
@@ -262,7 +264,27 @@ class FCCollection(MeasurementCollection):
             new[k] = v.gate(gate)
         ID = self.ID + '.gated' if ID is None else ID
         self.ID = ID
-        return new   
+        return new
+    
+    def counts(self, ids=None, setdata=False, output_format='DataFrame'):
+        '''
+        Return the counts in each of the specified measurements.
+        
+        Parameters
+        ----------
+        ids : hashable| iterable of hashables | None
+            Keys of measurements to get counts of.
+            If None is given get counts of all measurements. 
+        setdata : bool
+            Whether to set the data in the Measurement object.
+            Used only if data is not already set.
+        output_format: 'DataFrame' | 'dict
+                
+        Returns
+        -------
+        DataFrame/Dictionary keyed by measurement keys containing the corresponding counts.
+        ''' 
+        return self.apply(lambda x:x.counts, ids=ids, setdata=setdata, output_format=output_format)   
 
 
 class FCOrderedCollection(OrderedCollection, FCCollection):
@@ -276,32 +298,30 @@ class FCOrderedCollection(OrderedCollection, FCCollection):
              autolabel=True,
              **kwargs):
         """
-        For details see documentation for FCMeasurement.plot kwargs passes arguments to both grid_plot and to FCMeasurement.plot.
+        For details see documentation for FCMeasurement.plot
+        **kwargs passes arguments to both grid_plot and to FCMeasurement.plot.
 
         Note
-        --------------
-
-            The function assumes that grid_plot and FCMeasurement.plot use unique key words.
-            Any key word arguments that appear in both functions are passed only to grid_plot in the end.
+        -------
+        The function assumes that grid_plot and FCMeasurement.plot use unique key words.
+        Any key word arguments that appear in both functions are passed only to grid_plot in the end.
 
         Returns
-        --------------
-
-            gHandleList: list
-            gHandleList[0] is reference to main axis
-            gHandleList[1] : 2d array, each array element correspodns to a subplot
-                For example: gHandleList[1][0, 2] returns the subplot in row 0 and column 2
+        -------
+        gHandleList: list
+            gHandleList[0] -> reference to main axis
+            gHandleList[1] -> a list of lists
+                example: gHandleList[1][0][2] returns the subplot in row 0 and column 2
 
         Examples
-        --------------
-
+        ------------
         Below, plate is an instance of the FCOrderedCollection
 
-        ``plate.plot(['SSC-A', 'FSC-A'], kind='histogram', transform='hlog', autolabel=True)``
+        plate.plot(['SSC-A', 'FSC-A'], kind='histogram', transform='hlog', autolabel=True)
 
-        ``plate.plot(['SSC-A', 'FSC-A'], transform='hlog', xlim=(0, 10000))``
+        plate.plot(['SSC-A', 'FSC-A'], transform='hlog', xlim=(0, 10000))
 
-        ``plate.plot(['B1-A', 'Y2-A'], transform='hlog', kind='scatter', color='red', s=1, alpha=0.3)``
+        plate.plot(['B1-A', 'Y2-A'], transform='hlog', kind='scatter', color='red', s=1, alpha=0.3)
         """
         ###
         # Automatically figure out which of the kwargs should
@@ -343,6 +363,7 @@ class FCOrderedCollection(OrderedCollection, FCCollection):
         return self.grid_plot(plot_sample, xlim=xlim, ylim=ylim,
                     xlabel=xlabel, ylabel=ylabel,
                     **grid_plot_kwargs)
+            
 
 FCPlate = FCOrderedCollection
 
