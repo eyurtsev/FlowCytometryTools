@@ -59,6 +59,31 @@ def _parse_criteria(criteria):
     if hasattr(criteria, '__call__'):
         return criteria
 
+def int2letters(x, alphabet):
+    """
+    Return the alphabet representation of a non-negative integer x.
+    For example, with alphabet=['a','b']
+    0 -> 'a'
+    1 -> 'b'
+    2 -> 'aa'
+    3 -> 'ab'
+    4 -> 'ba'
+    
+    Modified from: 
+    http://stackoverflow.com/questions/2267362/convert-integer-to-a-string-in-a-given-numeric-base-in-python
+    """
+    base = len(alphabet)
+    if x < 0: 
+        raise ValueError, 'Only non-negative numbers are supported. Encounterd %s' %x
+    letters = []
+    quotient = x
+    while quotient>=0:
+        quotient, remainder = divmod(quotient, base) 
+        quotient-=1 
+        letters.append(alphabet[remainder])
+    letters.reverse()
+    return ''.join(letters)
+
 class BaseObject(object):
     '''
     Object providing common utility methods.
@@ -752,7 +777,7 @@ class OrderedCollection(MeasurementCollection):
     def _default_labels(self, axis, shape):
         import string
         if axis == 'rows':
-            return [string.uppercase[i] for i in range(shape[0])]
+            return [int2letters(i, string.uppercase) for i in range(shape[0])]
         else:
             return  range(1, 1+shape[1])
 
