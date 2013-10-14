@@ -18,21 +18,38 @@ import pylab as pl
 from GoreUtilities.util import get_files, save, load, to_list
 from GoreUtilities import graph
 
-def _assign_IDS_to_datafiles(datafiles, parser, measurement_class=None):
-    '''
+def _assign_IDS_to_datafiles(datafiles, parser, measurement_class=None, **kwargs):
+    """
     Assign measurement IDS to datafiles using specified parser.
-    Return a dict of ID:datafile
-    '''
+    
+    Parameters
+    ----------
+    datafiles : iterable of str
+        Path to datafiles. An ID will be assigned to each.
+        Note that this function does not check for uniqueness of IDs!
+    parser : mapping | callable | 'name' | 'number' | 'read'
+    measurement_class: object
+        Used to create a temporary object when reading the ID from the datafile.
+        The measurement class needs to have an `ID_from_data` method.
+        Only used when parser='read'.
+    kwargs: dict
+        Additional parametes to be passed to parser is it is a callable, or 'read'.
+        If parser is 'read', kwargs are passed to the measurement class's `ID_from_data` method.
+    
+    Returns
+    -------
+    Dict of ID:datafile
+    """
     if isinstance(parser, collections.Mapping):
         fparse = lambda x: parser[x]
     elif hasattr(parser, '__call__'):
-        fparse = parser
+        fparse = lambda x: parser(x, **kwargs)
     elif parser == 'name':
         fparse = lambda x: x.split('_')[-1].split('.')[0]
     elif parser == 'number':
         fparse = lambda x: int(x.split('.')[-2])
     elif parser == 'read':
-        fparse = lambda x: measurement_class(ID='temporary', datafile=x).ID_from_data()
+        fparse = lambda x: measurement_class(ID='temporary', datafile=x).ID_from_data(**kwargs)
     else:
         raise ValueError,  'Encountered unsupported value "%s" for parser paramter.' %parser 
     d = dict( (fparse(dfile), dfile) for dfile in datafiles )
@@ -293,7 +310,7 @@ class MeasurementCollection(collections.MutableMapping, BaseObject):
                 self[m.ID] = m 
 
     @classmethod
-    def from_files(cls, ID, datafiles, parser):
+    def from_files(cls, ID, datafiles, parser, **ID_kwargs):
         """
         Create a Collection of measurements from a set of data files.
         
@@ -311,16 +328,19 @@ class MeasurementCollection(collections.MutableMapping, BaseObject):
                        For example, 'JF_2013-08-07_%SampleID%_Well_%Description%.024' will get key 24.
             'read' : Use the measurement ID sspecified in the metadata. 
             mapping : mapping (dict-like) from datafiles to keys.
-            callable : takes datafile name and returns key. 
+            callable : takes datafile name and returns key.
+        ID_kwargs: dict
+            Additional parameters to be used when assigning IDs.
+            Passed to '_assign_IDS_to_datafiles' method. 
         """
-        d = _assign_IDS_to_datafiles(datafiles, parser, cls._measurement_class)
+        d = _assign_IDS_to_datafiles(datafiles, parser, cls._measurement_class, **ID_kwargs)
         measurements = []
         for sID, dfile in d.iteritems():
                 measurements.append(cls._measurement_class(sID, datafile=dfile))
         return cls(ID, measurements)
 
     @classmethod
-    def from_dir(cls, ID, datadir, parser, pattern='*.fcs', recursive=False):
+    def from_dir(cls, ID, datadir, parser, pattern='*.fcs', recursive=False, **ID_kwargs):
         """
         Create a Collection of measurements from data files contained in a directory.
         
@@ -343,6 +363,9 @@ class MeasurementCollection(collections.MutableMapping, BaseObject):
             'read' : Use the measurement ID sspecified in the metadata. 
             mapping : mapping (dict-like) from datafiles to keys.
             callable : takes datafile name and returns key. 
+        ID_kwargs: dict
+            Additional parameters to be used when assigning IDs.
+            Passed to '_assign_IDS_to_datafiles' method. 
         """
         datafiles = get_files(datadir, pattern, recursive)
         return cls.from_files(ID, datafiles, parser)
@@ -622,7 +645,7 @@ class OrderedCollection(MeasurementCollection):
         return 'ID:\n%s\n\nData:\n%s' %(self.ID, repr(print_layout))
 
     @classmethod
-    def from_files(cls, ID, datafiles, parser, position_parser=None, **kwargs):
+    def from_files(cls, ID, datafiles, parser, position_parser=None, ID_kwargs={}, **kwargs):
         """
         Create an OrderedCollection of measurements from a set of data files.
         
@@ -648,6 +671,9 @@ class OrderedCollection(MeasurementCollection):
             mapping  - key:pos
             'name'   - parses things like 'A1', 'G12'
             'number' - converts number to positions, going over rows first.
+        ID_kwargs: dict
+            Additional parameters to be used when assigning IDs.
+            Passed to '_assign_IDS_to_datafiles' method. 
         kwargs : dict
             Additional key word arguments to be passed to constructor.
         """
@@ -657,14 +683,15 @@ class OrderedCollection(MeasurementCollection):
             else:
                 msg = 'position_parser can only be None when parser argument is a string'
                 raise ValueError, msg
-        d = _assign_IDS_to_datafiles(datafiles, parser, cls._measurement_class)
+        d = _assign_IDS_to_datafiles(datafiles, parser, cls._measurement_class, **ID_kwargs)
         measurements = []
         for sID, dfile in d.iteritems():
             measurements.append(cls._measurement_class(sID, datafile=dfile))
         return cls(ID, measurements, position_parser, **kwargs)
 
     @classmethod
-    def from_dir(cls, ID, path, parser, position_parser=None, pattern='*.fcs', recursive=False, **kwargs):
+    def from_dir(cls, ID, path, parser, position_parser=None, pattern='*.fcs', recursive=False, 
+                 ID_kwargs={}, **kwargs):
         """
         Create a Collection of measurements from data files contained in a directory.
         
@@ -694,11 +721,15 @@ class OrderedCollection(MeasurementCollection):
             mapping  - key:pos
             'name'   - parses things like 'A1', 'G12'
             'number' - converts number to positions, going over rows first.
+        ID_kwargs: dict
+            Additional parameters to be used when assigning IDs.
+            Passed to '_assign_IDS_to_datafiles' method. 
         kwargs : dict
             Additional key word arguments to be passed to constructor.
         """
         datafiles = get_files(path, pattern, recursive)
-        return cls.from_files(ID, datafiles, parser=parser, position_parser=position_parser, **kwargs)
+        return cls.from_files(ID, datafiles, parser=parser, position_parser=position_parser,
+                              ID_kwargs=ID_kwargs, **kwargs)
 
 #     def set_labels(self, labels, axis='rows'):
 #         '''
