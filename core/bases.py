@@ -55,9 +55,6 @@ def _assign_IDS_to_datafiles(datafiles, parser, measurement_class=None, **kwargs
     d = dict( (fparse(dfile), dfile) for dfile in datafiles )
     return d
 
-def _parse_criteria(criteria):
-    if hasattr(criteria, '__call__'):
-        return criteria
 
 def int2letters(x, alphabet):
     """
@@ -541,7 +538,7 @@ class MeasurementCollection(collections.MutableMapping, BaseObject):
         -------
         Filtered Collection.
         """
-        fil = _parse_criteria(criteria)
+        fil = criteria
         new = self.copy()
         if isinstance(applyto, collections.Mapping):
             remove = (k for k,v in self.iteritems() if not fil(applyto[k]))
