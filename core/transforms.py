@@ -31,6 +31,7 @@ def tlog(x, th=1, r=_display_max, d=_l_mmax):
         values to be transformed.
     th : num
         values below th are transormed to 0.
+        Must be >=1.
     r : num (default = 10**4)
         maximal transformed value.
     d : num (default = log10(2**18))
@@ -41,18 +42,22 @@ def tlog(x, th=1, r=_display_max, d=_l_mmax):
     -------
     Array of transformed values.
     '''
+    if th<1:
+        raise ValueError, 'Threshold value must be >=1. %s given.' %th
     return where(x<=th, 0, log10(x) * 1.*r/d)
 
 def tlog_inv(y, th=1, r=_display_max, d=_l_mmax):
     '''
     Inverse truncated log10 transform.
+    Values 
 
     Parameters
     ----------
     y : num | num iterable
         values to be transformed.
     th : num
-        values below th are transormed to 0.
+        Inverse values below th are transormed to th.
+        Must be >=1.
     r : num (default = 10**4)
         maximal transformed value.
     d : num (default = log10(2**18))
@@ -63,7 +68,11 @@ def tlog_inv(y, th=1, r=_display_max, d=_l_mmax):
     -------
     Array of transformed values.
     '''
-    return th * 10**(y * 1.*d/r)
+    if th<1:
+        raise ValueError, 'Threshold value must be >=1. %s given.' %th
+    x = 10**(y * 1.*d/r)
+    x[x<th] = th
+    return x 
 
 def glog(x, l):
     '''
