@@ -18,12 +18,12 @@ class MOUSE:
     rightClick = 3
 
 class STYLE:
-    InactivePolygonGate = {'color' : 'black', 'linestyle' : 'solid', 'fill' : False}
-    ActivePolygonGate = {'color' : 'red', 'fill' : False}
+    InactivePolyGate = {'color' : 'black', 'linestyle' : 'solid', 'fill' : False}
+    ActivePolyGate = {'color' : 'red', 'fill' : False}
 
     #SuggestToActivateGate = {'color' : 'red', 'fill' : 'gray', 'alpha' : 0.4}
-    TemporaryPolygonGateBorderLine = {'color' : 'black'}
-    PolygonGateBorderLine = {'color' : 'black',  'linestyle' : 'None', 'marker':'s', 'mfc':'r', 'alpha':0.6}
+    TemporaryPolyGateBorderLine = {'color' : 'black'}
+    PolyGateBorderLine = {'color' : 'black',  'linestyle' : 'None', 'marker':'s', 'mfc':'r', 'alpha':0.6}
 
     InactiveQuadGate = {'color' : 'black', 'linewidth' : 1}
     ActiveQuadGate   = {'color' : 'red', 'linewidth' : 2}
@@ -123,7 +123,7 @@ class PlottableGate():
         """
         Generates python code that can create the gate.
         """
-        if isinstance(self, PolygonGate):
+        if isinstance(self, PolyGate):
             region = 'in'
             vert_list = ['(' + ', '.join(map(lambda x : '{:.2f}'.format(x), vert)) + ')' for vert in self.vert]
         else:
@@ -218,7 +218,7 @@ class QuadGate(PlottableGate, base_gates.QuadGate):
         self.center.set_ydata([ydata])
         self.fig.canvas.draw()
 
-class PolygonDrawer(PlottableGate):
+class PolyDrawer(PlottableGate):
     """ Used to create a polygon gate by drawing it on the axis. """
     def __init__(self, channels, gate_manager, new_gate_name=None):
         PlottableGate.__init__(self, gate_manager)
@@ -238,7 +238,7 @@ class PolygonDrawer(PlottableGate):
         self.vert.append(vertix)
         if len(self.vert) > 1:
             lastLine = zip(self.vert[-2], self.vert[-1])
-            self.temporaryBorderLineList.append(pl.Line2D(lastLine[0], lastLine[1], **STYLE.TemporaryPolygonGateBorderLine))
+            self.temporaryBorderLineList.append(pl.Line2D(lastLine[0], lastLine[1], **STYLE.TemporaryPolyGateBorderLine))
             self.ax.add_artist(self.temporaryBorderLineList[-1])
 
     def finish_drawing_polygon(self, vertix):
@@ -251,7 +251,7 @@ class PolygonDrawer(PlottableGate):
             temporaryBorderLine.remove()
 
         # instantiate polygon gate and add to gate manager
-        pg = PolygonGate(vert=self.vert, channels=self.channels,
+        pg = PolyGate(vert=self.vert, channels=self.channels,
                 region='in', name=self.new_gate_name, gate_manager=self.gate_manager)
 
         self.gate_manager.add_gate(pg)
@@ -286,7 +286,7 @@ class PolygonDrawer(PlottableGate):
             self.lineToProposedVertix.set_ydata(line_xydata[1])
         self.fig.canvas.draw()
 
-class PolygonGate(PlottableGate, base_gates.PolyGate):
+class PolyGate(PlottableGate, base_gates.PolyGate):
     """ Defines a polygon gate. """
     def __init__(self, vert, channels, region=None, name=None, gate_manager=None):
         PlottableGate.__init__(self, gate_manager)
@@ -299,12 +299,12 @@ class PolygonGate(PlottableGate, base_gates.PolyGate):
 
     def create_artist(self):
         ## Create polygon
-        self.poly = pl.Polygon(self.vert, **STYLE.ActivePolygonGate)
+        self.poly = pl.Polygon(self.vert, **STYLE.ActivePolyGate)
         self.ax.add_artist(self.poly)
 
         ## Create PolygonBorder
         x, y = zip(*self.poly.xy)
-        self.polygonBorder = pl.Line2D(x[:-1], y[:-1], **STYLE.PolygonGateBorderLine)
+        self.polygonBorder = pl.Line2D(x[:-1], y[:-1], **STYLE.PolyGateBorderLine)
         self.ax.add_artist(self.polygonBorder)
 
         self.artist_list = [self.poly, self.polygonBorder]
@@ -392,13 +392,13 @@ class PolygonGate(PlottableGate, base_gates.PolyGate):
 
     def inactivate(self):
         self.set_state('Inactive')
-        self.poly.update(STYLE.InactivePolygonGate)
+        self.poly.update(STYLE.InactivePolyGate)
         self.polygonBorder.set_visible(False)
         self.poly.figure.canvas.draw()
 
     def activate(self):
         self.set_state('Active')
-        self.poly.update(STYLE.ActivePolygonGate)
+        self.poly.update(STYLE.ActivePolyGate)
         self.polygonBorder.set_visible(True)
         self.poly.figure.canvas.draw()
 

@@ -3,7 +3,7 @@
 Contains the gate manager which keeps track of the order of gates and allows
 user to choose which gates to interact with.
 """
-from gate import PolygonGate, QuadGate, PolygonDrawer
+from gate import PolyGate, QuadGate, PolyDrawer
 import util
 from util import call_wrapper
 from FlowCytometryTools import FCMeasurement
@@ -83,7 +83,7 @@ class GateManager():
         elif self.state == STATE_GK.START_DRAWING_POLY_GATE:
             debugging_print('Creating a polygon gate')
             self.inactivate_all_gates()
-            gate = PolygonDrawer(channels=self.current_channels, gate_manager=self, new_gate_name=self.get_new_gate_name())
+            gate = PolyDrawer(channels=self.current_channels, gate_manager=self, new_gate_name=self.get_new_gate_name())
             gate.on_press(event) # re raise last event
             self._temp = gate
             self.set_state(STATE_GK.KEEP_DRAWING)
