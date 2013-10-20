@@ -149,17 +149,20 @@ class FCMeasurement(Measurement):
         
         return out
 
-    def view(self, channel_names=None):
+    def view(self):
         '''
         Loads the current FCS sample viewer
 
         Parameters
         ----------
         channel_names : str | list of str
+            (Not implemented yet)
             Names of channels to load by default
 
         Returns
         -------
+
+        TODO: Implement channel_names
         '''
         #if launch_new_subprocess: # This is not finished until I can list the gates somewhere
             #from FlowCytometryTools import __path__ as p
