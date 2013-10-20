@@ -103,7 +103,7 @@ def plotFCM(data, channel_names, kind='histogram', ax=None,
 
         x = data[channel_names[0]]
         if len(x):
-            pHandle = x.hist(ax = ax, **kwargs)
+            pHandle = ax.hist(x, **kwargs)
         else:
             return None
 
