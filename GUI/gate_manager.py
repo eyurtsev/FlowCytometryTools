@@ -190,11 +190,11 @@ class GateManager():
         channels = self.current_channels
 
         if channels[0] == channels[1]:
-            self._plt_data = sample.plot(channels[0], transform=('hlog', 'hlog'), ax=ax)
+            self._plt_data = sample.plot(channels[0], ax=ax)
             xlabel = self.current_channels[0]
             ylabel = 'Counts'
         else:
-            self._plt_data = sample.plot(channels, transform=('hlog', 'hlog'), ax=ax)
+            self._plt_data = sample.plot(channels, ax=ax)
             xlabel = self.current_channels[0]
             ylabel = self.current_channels[1]
 
