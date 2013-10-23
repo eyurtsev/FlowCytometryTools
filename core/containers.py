@@ -143,7 +143,7 @@ class FCMeasurement(Measurement):
         
         if plot_gates and gates is not None:
             if gate_colors is None:
-                gate_colors = cycle(('k', 'b', 'g', 'r', 'm', 'c', 'y'))
+                gate_colors = cycle(('b', 'g', 'r', 'm', 'c', 'y'))
             for (g,c) in zip(gates, gate_colors):
                 g.plot(ax=ax, ax_channels=channel_names, color=c)
         
