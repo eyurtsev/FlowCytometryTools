@@ -243,6 +243,8 @@ class TestFCSReader(unittest.TestCase):
         fname = file_formats['mq fcs 3.1']
         number = 1000
 
+        print
+
         time = timeit.timeit(lambda : parse_fcs(fname, meta_data_only=True, output_format='DataFrame', reformat_meta=False), number=number)
         print "Loading fcs file {0} times with meta_data only without reformatting of meta takes {1} per loop".format(time/number, number)
 

@@ -21,6 +21,31 @@ _machine_max = 2**18
 _l_mmax = log10(_machine_max)
 _display_max = 10**4
 
+
+def linear(x, old_range, new_range):
+    """
+    Rescale each channel to the new range as following:
+    new = data/old_range*new_range
+    
+    Parameters
+    ----------
+    data : DataFrame
+        data to be rescaled
+    new_range : float | array | Series
+        Maximal data value after rescaling
+    old_range : float | array | Series
+        Maximal data value before rescaling
+        (If old range is not given use the one specified in self.meta['_channels_']['$PnR']) Depracated!!!
+    """
+#     if old_range is None:
+#         m = self.get_meta()['_channels_']
+#         old_range = m['$PnR'].astype(float)
+#         old_range.index = self.channel_names
+    y = x/old_range*new_range
+    return y
+
+rescale = linear
+
 def tlog(x, th=1, r=_display_max, d=_l_mmax):
     '''
     Truncated log10 transform.
@@ -31,6 +56,7 @@ def tlog(x, th=1, r=_display_max, d=_l_mmax):
         values to be transformed.
     th : num
         values below th are transormed to 0.
+        Must be positive.
     r : num (default = 10**4)
         maximal transformed value.
     d : num (default = log10(2**18))
@@ -41,18 +67,22 @@ def tlog(x, th=1, r=_display_max, d=_l_mmax):
     -------
     Array of transformed values.
     '''
-    return where(x<=th, 0, log10(x) * 1.*r/d)
+    if th<=0:
+        raise ValueError, 'Threshold value must be positive. %s given.' %th
+    return where(x<=th, log10(th) * 1.*r/d, log10(x) * 1.*r/d)
 
 def tlog_inv(y, th=1, r=_display_max, d=_l_mmax):
     '''
     Inverse truncated log10 transform.
+    Values 
 
     Parameters
     ----------
     y : num | num iterable
         values to be transformed.
     th : num
-        values below th are transormed to 0.
+        Inverse values below th are transormed to th.
+        Must be > positive.
     r : num (default = 10**4)
         maximal transformed value.
     d : num (default = log10(2**18))
@@ -63,7 +93,11 @@ def tlog_inv(y, th=1, r=_display_max, d=_l_mmax):
     -------
     Array of transformed values.
     '''
-    return 10**(y * 1.*d/r)
+    if th<=0:
+        raise ValueError, 'Threshold value must be positive. %s given.' %th
+    x = 10**(y * 1.*d/r)
+    x[x<th] = th
+    return x 
 
 def glog(x, l):
     '''
@@ -184,6 +218,9 @@ def hlog(x, b=500, r=_display_max, d=_l_mmax,
 
 
 _canonical_names = {
+'linear':   'linear',
+'lin':      'linear',
+'rescale':  'linear',
 'hlog':     'hlog',
 'hyperlog': 'hlog',
 'glog':     'glog',
@@ -194,9 +231,10 @@ def _get_canonical_name(name):
         return _canonical_names.get(name.lower(), None)
 
 name_transforms = {
-'hlog': {'forward':hlog, 'inverse':hlog_inv},
-'glog': {'forward':glog, 'inverse':glog_inv},
-'tlog': {'forward':tlog, 'inverse':tlog_inv},
+'linear': {'forward':linear, 'inverse':linear},
+'hlog'  : {'forward':hlog, 'inverse':hlog_inv},
+'glog'  : {'forward':glog, 'inverse':glog_inv},
+'tlog'  : {'forward':tlog, 'inverse':tlog_inv},
 }
 
 def get_transform(transform, direction='forward'):

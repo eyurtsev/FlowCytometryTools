@@ -1,24 +1,17 @@
 #!/usr/bin/env python
 import pylab as pl
-from matplotlib.widgets import Button, Cursor
 from matplotlib.collections import RegularPolyCollection
-from matplotlib.path import Path
-from matplotlib.colors import colorConverter
+#from matplotlib.nxutils import points_inside_poly
+#from matplotlib.colors import colorConverter
+from util import call_wrapper
 from GoreUtilities import util
 import numpy
-from FlowCytometryTools import plotFCM, FCMeasurement
+from util import debugging_print
+from manager_states import STATE_GK
+from FlowCytometryTools.core import gates as base_gates
 
 def euclid_distance((x1, y1), (x2, y2)):
     return numpy.sqrt((x1-x2)**2 + (y1 - y2)**2)
-
-
-def debugging_print(mystr, quiet=True):
-    if not quiet:
-        print(mystr)
-
-###################
-# DEFINITIONS 
-###################
 
 class MOUSE:
     leftClick = 1
@@ -37,166 +30,134 @@ class STYLE:
     InactiveQuadGateCenter = {'color' : 'black', 'marker' : 's', 'markersize' : 8}
     ActiveQuadGateCenter   = {'color' : 'red', 'marker' : 's', 'markersize' : 8}
 
-    DATUM_IN_COLOR = colorConverter.to_rgba('red')
-    DATUM_OUT_COLOR = colorConverter.to_rgba('gray')
-
-class STATE_GK:
-    START_DRAWING = 'Start Drawing Gate'
-    START_DRAWING_QUAD_GATE = 'Start Drawing Quad Gate'
-    KEEP_DRAWING = 'Creating a gate'
-    WAITING = 'Waiting'
-    QUIT = 'Quitting'
-    DELETE_GATE = 'Delete Active Gate'
-
-class Filter(object):
-    """An object representing a gatable region"""
-
-    def __init__(self, vert=None, channels=None, name=None, gateKeeper=None):
+class PlottableGate():
+    """ For use with GUI """
+    def __init__(self, gate_manager):
         """
-        vert = vertices of gating region
-        channels = indices of channels to gate on.
         """
-        self.attributeList = ['cidpress', 'cidrelease', 'cidmotion', 'cidpick', 'cidkey']
-        self.set_state('Active')
+        self.gate_manager = gate_manager
 
-        for attribute in self.attributeList:
-            setattr(self, attribute, None)
-
-        self.vert = vert
-        self.channels = list(channels)
-        self.press = None
-        self.active = False
-
-        if name is None:
-            self.name = "Unnamed Gate"
-        else:
-            self.name = name
-
-        self.gateKeeper = gateKeeper
-        ### Used while drawing the gate ###
-
-        ### Used for GUI ###
-        self.fig = gateKeeper.fig
-        self.ax = gateKeeper.ax
-        self.connect()
-        debugging_print('Just created a new gate: ' + str(self))
-
-    def __repr__(self):
-        #return "{0} ({1}, {2}, {3})".format(self.__class__, self.vert, self.channels, self.name)
-        if isinstance(self, PolyGate):
-            region = 'in'
-        else:
-            region = 'YOU MUST SPECIFY A REGION (top left, top right, bottom left, bottom right)'
-        return "gate = {0}({1}, {2}, region='{region}', name='{name}')".format(self.__class__.__name__, self.vert, self.channels, name=self.name, region=region)
-
-
-    def __str__(self):
-        return self.__repr__()
+        ##
+        # GUI Attributes
+        self.fig = gate_manager.fig
+        self.ax = gate_manager.ax
 
     def set_state(self, state):
         self.state = state
 
-    def is_active(self):
+    @property
+    def active(self):
         return self.state == 'Active'
 
+    def connect(self, event_list):
+        mpl_connect_dict = {
+                'mouse press' : ('button_press_event', self.on_press),
+                'mouse release' :  ('button_release_event', self.on_release),
+                'mouse motion' : ('motion_notify_event', self.on_mouse_motion),
+                'pick event' : ('pick_event', self.on_mouse_pick),
+                'keyboard press' : ('key_press_event', self.on_keyboard_press)
+            }
 
-    #################
-    ## GUI Control 
-    #################
+        self.mpl_cid = {}
+
+        for event in event_list:
+            event_type, bound_function = mpl_connect_dict[event]
+            self.mpl_cid[event] = self.fig.canvas.mpl_connect(event_type, bound_function)
 
     def disconnect(self):
         """ disconnects all the stored connection ids """
-        for attribute in self.attributeList:
-            cid = getattr(self, attribute)
-            if cid is not None:
-                self.fig.canvas.mpl_disconnect(cid)
+        for cid in self.mpl_cid:
+            self.fig.canvas.mpl_disconnect(self.mpl_cid[cid])
 
     def on_mouse_motion(self, event):
-        debugging_print('on_mouse_motion: not defined')
+        util.raiseNotDefined()
 
     def on_release(self, event):
-        'on release we reset the press data'
-        debugging_print('on_release: not defined')
+        util.raiseNotDefined()
 
     def on_mouse_pick(self, event):
         util.raiseNotDefined()
 
     def on_press(self, event):
-        debugging_print('on_press: not defined')
+        util.raiseNotDefined()
 
     def on_keyboard_press(self, event):
-        debugging_print('on_keyboard_press: not defined')
+        util.raiseNotDefined()
 
     def get_control_artist(self):
-        util.raiseNotDefined('The control artist has not been defined for the given gate.')
-
-    def get_gate_artists(self):
-        '''
-        Returns a list of all the graphical components that make up a gate.
-        '''
-        return self.artistList
+        util.raiseNotDefined()
 
     def contains(self, event):
-        if self.channels != self.gateKeeper.current_channels:
+        if self.channels != self.gate_manager.current_channels:
             return False
         contains, attrd = self.get_control_artist().contains(event)
         return contains
 
-
     def set_visible(self, visible=True):
-        '''
+        """
         Method is responsible for showing or hiding the gate.
         Useful when the x/y axis change.
-        '''
-        for artist in self.artistList:
+        """
+        for artist in self.artist_list:
             artist.set_visible(visible)
 
         if visible:
             if self.state == 'Active':
                 self.activate()
             elif self.state == 'Inactive':
-                self.activate()
-        pl.draw()
+                self.inactivate()
+        self.fig.canvas.draw()
 
     def remove_gate(self):
+        """ Removes the gate properly. """
         self.disconnect()
-        self.remove_artist()
-        self.fig.canvas.draw()
-        self.gateKeeper.remove_gate(self)
 
-    def remove_artist(self):
-        for artist in self.artistList:
+        # Remove artists
+        for artist in self.artist_list:
             artist.remove()
 
+        self.fig.canvas.draw()
+        self.gate_manager.remove_gate(self)
 
-class QuadGate(Filter):
+    def get_generation_code(self):
+        """
+        Generates python code that can create the gate.
+        """
+        if isinstance(self, PolyGate):
+            region = 'in'
+            vert_list = ['(' + ', '.join(map(lambda x : '{:.2f}'.format(x), vert)) + ')' for vert in self.vert]
+        else:
+            region = "?"
+            vert_list = ['{:.2f}'.format(vert) for vert in self.vert]
+
+        vert_list = '[' + ','.join(vert_list) + ']'
+
+        format_string = "{name} = {0}({1}, {2}, region='{region}', name='{name}')"
+        return format_string.format(self.__class__.__name__, vert_list,
+                                self.channels, name=self.name, region=region)
+
+
+class QuadGate(PlottableGate, base_gates.QuadGate):
     """ Defines a polygon gate. """
-    def __init__(self, vert=None, channels=None, name=None, gateKeeper=None):
-        Filter.__init__(self, vert, channels, name, gateKeeper)
+    def __init__(self, vert, channels, region, name=None, gate_manager=None):
+        #base_gates.Gate.__init__(self, vert=vert, channels=channels, region=region, name=name)
+        PlottableGate.__init__(self, gate_manager)
+        base_gates.QuadGate.__init__(self, vert, channels, region, name)
         self.create_artist()
         self.set_state('Active')
+        self.connect(['mouse press', 'mouse release', 'mouse motion', 'keyboard press'])
 
-    def connect(self):
-        '''
-        connect to all the events we need
-        '''
-        self.cidpress   = self.fig.canvas.mpl_connect('button_press_event', self.on_press)
-        self.cidrelease = self.fig.canvas.mpl_connect('button_release_event', self.on_release)
-        self.cidmotion  = self.fig.canvas.mpl_connect('motion_notify_event', self.on_mouse_motion)
-        #self.cidpick    = self.fig.canvas.mpl_connect('pick_event', self.on_mouse_pick)
-        self.cidkey     = self.fig.canvas.mpl_connect('key_press_event', self.on_keyboard_press)
-
-
+    #@call_wrapper
     def create_artist(self):
-        artistList = []
         vert = self.vert
         self.vline = self.ax.axvline(x=vert[0], **STYLE.ActiveQuadGate)
         self.hline = self.ax.axhline(y=vert[1], **STYLE.ActiveQuadGate)
-        self.center = pl.Line2D([vert[0]], [vert[1]], picker=10, **STYLE.ActiveQuadGateCenter)
+        self.center = pl.Line2D([vert[0]], [vert[1]], **STYLE.ActiveQuadGateCenter)
         self.ax.add_artist(self.center)
-        self.artistList = [self.vline, self.hline, self.center]
+        self.artist_list = [self.vline, self.hline, self.center]
         self.fig.canvas.draw()
 
+    #@call_wrapper
     def on_press(self, event):
         debugging_print('Quad Gate. Mouse motion: ')
         debugging_print(self)
@@ -206,9 +167,11 @@ class QuadGate(Filter):
             if not self.contains(event):
                 self.inactivate()
             else:
-                self.set_state('Moving Vertix')
+                print ("CONTAINS EVENT")
+                self.state = 'Moving Vertix'
+                print 'new state = {}'.format(self.state)
 
-
+    #@call_wrapper
     def on_mouse_motion(self, event):
         debugging_print('Quad Gate. Mouse motion: ')
         debugging_print(self)
@@ -217,6 +180,7 @@ class QuadGate(Filter):
             self.vert = (event.xdata, event.ydata)
             self.draw()
 
+    #@call_wrapper
     def on_release(self, event):
         if self.state == 'Moving Vertix':
             self.vline.set_xdata((event.xdata, event.xdata))
@@ -224,8 +188,9 @@ class QuadGate(Filter):
             self.center.set_xdata([event.xdata])
             self.center.set_ydata([event.ydata])
             self.set_state('Active')
-            pl.draw()
+            self.fig.canvas.draw()
 
+    #@call_wrapper
     def inactivate(self):
         self.set_state('Inactive')
         self.vline.update(STYLE.InactiveQuadGate)
@@ -233,6 +198,10 @@ class QuadGate(Filter):
         self.center.update(STYLE.InactiveQuadGateCenter)
         self.fig.canvas.draw()
 
+    def get_control_artist(self):
+        return self.center
+
+    #@call_wrapper
     def activate(self):
         self.set_state('Active')
         self.vline.update(STYLE.ActiveQuadGate)
@@ -247,50 +216,23 @@ class QuadGate(Filter):
         self.hline.set_ydata((ydata, ydata))
         self.center.set_xdata([xdata])
         self.center.set_ydata([ydata])
-        pl.draw()
+        self.fig.canvas.draw()
 
-    def get_control_artist(self):
-        return self.center
+class PolyDrawer(PlottableGate):
+    """ Used to create a polygon gate by drawing it on the axis. """
+    def __init__(self, channels, gate_manager, new_gate_name=None):
+        PlottableGate.__init__(self, gate_manager)
 
-class PolyGate(Filter):
-    """ Defines a polygon gate. """
-    def __init__(self, vert=None, channels=None, name=None, gateKeeper=None):
-        Filter.__init__(self, vert, channels, name, gateKeeper)
+        # Connect gate to GUI events
+        self.connect(['mouse press', 'mouse motion'])
 
-        if vert is not None:
-            self.vert = vert
-        else:
-            self.vert = []
-
-        self.set_state('Creating Gate')
-
+        # Initialization sequence
         self.lineToProposedVertix = None
         self.temporaryBorderLineList = []
 
-
-    def connect(self):
-        '''
-        connect to all the events we need
-        '''
-        self.cidpress   = self.fig.canvas.mpl_connect('button_press_event', self.on_press)
-        self.cidrelease = self.fig.canvas.mpl_connect('button_release_event', self.on_release)
-        self.cidmotion  = self.fig.canvas.mpl_connect('motion_notify_event', self.on_mouse_motion)
-        #self.cidpick    = self.fig.canvas.mpl_connect('pick_event', self.on_mouse_pick)
-        self.cidkey     = self.fig.canvas.mpl_connect('key_press_event', self.on_keyboard_press)
-
-    def get_control_artist(self):
-        return self.poly
-
-    def get_closest_vertix(self, currentCoordinate):
-        """ Get closest vertix. """
-        #for thisVertix in self.get_vertices()
-        distancesList = [(euclid_distance(currentCoordinate, thisVertix), thisIndex, thisVertix) for thisIndex, thisVertix in enumerate(self.get_vertices())]
-        distancesList.sort(key = lambda x : x[0])
-        distance, closestVerticIndex, closestVertixPosition = distancesList[0]
-        debugging_print('Computing Closest')
-        debugging_print(distancesList[0])
-        debugging_print(closestVerticIndex)
-        return distance, closestVerticIndex, closestVertixPosition
+        self.vert = []
+        self.channels = channels
+        self.new_gate_name = new_gate_name
 
     def add_vertix_to_growing_polygon(self, vertix):
         self.vert.append(vertix)
@@ -308,12 +250,56 @@ class PolyGate(Filter):
         for temporaryBorderLine in self.temporaryBorderLineList:
             temporaryBorderLine.remove()
 
-        # Create the artist
+        # instantiate polygon gate and add to gate manager
+        pg = PolyGate(vert=self.vert, channels=self.channels,
+                region='in', name=self.new_gate_name, gate_manager=self.gate_manager)
+
+        self.gate_manager.add_gate(pg)
+        self.gate_manager.set_state(STATE_GK.WAITING)
+        self.disconnect()
+
+    def on_press(self, event):
+        if event.inaxes != self.ax: return
+
+        newVertix = (event.xdata, event.ydata)
+
+        if event.button == MOUSE.leftClick:
+            self.add_vertix_to_growing_polygon(newVertix)
+
+        if event.button == MOUSE.rightClick:
+            self.finish_drawing_polygon(newVertix)
+            self.gate_manager.set_state(STATE_GK.WAITING)
+
+        self.fig.canvas.draw()
+
+    def on_mouse_motion(self, event):
+        'on motion we will move the rect if the mouse is over us'
+        lastVertix = self.vert[-1]
+        potentialVertixPosition = (event.xdata, event.ydata)
+        line_xydata = zip(lastVertix, potentialVertixPosition)
+
+        if self.lineToProposedVertix is None:
+            self.lineToProposedVertix = pl.Line2D(line_xydata[0], line_xydata[1])
+            self.ax.add_artist(self.lineToProposedVertix)
+        else:
+            self.lineToProposedVertix.set_xdata(line_xydata[0])
+            self.lineToProposedVertix.set_ydata(line_xydata[1])
+        self.fig.canvas.draw()
+
+class PolyGate(PlottableGate, base_gates.PolyGate):
+    """ Defines a polygon gate. """
+    def __init__(self, vert, channels, region=None, name=None, gate_manager=None):
+        PlottableGate.__init__(self, gate_manager)
+        base_gates.PolyGate.__init__(self, vert, channels, region, name)
+
+        # Connect gate to GUI events
+        self.set_state('Active')
+        self.connect(['mouse press', 'mouse release', 'mouse motion', 'keyboard press'])
         self.create_artist()
 
     def create_artist(self):
         ## Create polygon
-        self.poly = pl.Polygon(self.vert, picker=15, **STYLE.ActivePolyGate)
+        self.poly = pl.Polygon(self.vert, **STYLE.ActivePolyGate)
         self.ax.add_artist(self.poly)
 
         ## Create PolygonBorder
@@ -321,9 +307,11 @@ class PolyGate(Filter):
         self.polygonBorder = pl.Line2D(x[:-1], y[:-1], **STYLE.PolyGateBorderLine)
         self.ax.add_artist(self.polygonBorder)
 
-        self.artistList = [self.poly, self.polygonBorder]
-
+        self.artist_list = [self.poly, self.polygonBorder]
         self.adjust_border()
+
+    def get_control_artist(self):
+        return self.poly
 
     def get_vertices(self, transAxes=False):
         """ Return vertices in axis coordinates """
@@ -335,30 +323,26 @@ class PolyGate(Filter):
         else:
             return self.poly.get_xy()
 
+    def get_closest_vertix(self, currentCoordinate):
+        """ Get closest vertix. """
+        #for thisVertix in self.get_vertices()
+        distancesList = [(euclid_distance(currentCoordinate, thisVertix), thisIndex, thisVertix) for thisIndex, thisVertix in enumerate(self.get_vertices())]
+        distancesList.sort(key = lambda x : x[0])
+        distance, closestVerticIndex, closestVertixPosition = distancesList[0]
+        debugging_print('Computing Closest')
+        debugging_print(distancesList[0])
+        debugging_print(closestVerticIndex)
+        return distance, closestVerticIndex, closestVertixPosition
+
     def on_press(self, event):
         'on button press we will see if the mouse is over us and store some data'
-        debugging_print('mouse press')
-        debugging_print(self)
         if event.inaxes != self.ax: return
 
-        #if self.state == 'Inactive' and self.gateKeeper.state not in [STATE_GK.START_DRAWING, STATE_GK.KEEP_DRAWING]:
-            #if self.contains(event):
-                #self.activate()
-        if self.state == 'Creating Gate':
-            newVertix = (event.xdata, event.ydata)
-            if event.button == MOUSE.leftClick:
-                self.add_vertix_to_growing_polygon(newVertix)
-            if event.button == MOUSE.rightClick:
-                self.finish_drawing_polygon(newVertix)
-                self.set_state('Active')
-                self.gateKeeper.set_state(STATE_GK.WAITING)
-        elif self.state == 'Active':
+        if self.state == 'Active':
             if self.contains(event):
                 debugging_print('contains the event.')
                 self.info = self.get_closest_vertix((event.xdata, event.ydata))
                 self.set_state('Moving Vertix')
-            else:
-                self.inactivate()
 
         self.fig.canvas.draw()
 
@@ -367,27 +351,12 @@ class PolyGate(Filter):
         debugging_print(self)
         if self.state == 'Inactive':
             return
-        elif self.state == 'Creating Gate':
-            debugging_print('mouse moving')
-            lastVertix = self.vert[-1]
-            potentialVertixPosition = (event.xdata, event.ydata)
-            debugging_print(potentialVertixPosition)
-            debugging_print(lastVertix)
-            line_xydata = zip(lastVertix, potentialVertixPosition)
-
-            if self.lineToProposedVertix is None:
-                self.lineToProposedVertix = pl.Line2D(line_xydata[0], line_xydata[1])
-                self.ax.add_artist(self.lineToProposedVertix)
-            else:
-                self.lineToProposedVertix.set_xdata(line_xydata[0])
-                self.lineToProposedVertix.set_ydata(line_xydata[1])
-            self.fig.canvas.draw()
         elif self.state == 'Moving Vertix':
             closestVertixIndex = self.info[1]
 
             numVertices = len(self.get_vertices())
-
             xy = self.poly.get_xy()
+
             if closestVertixIndex == 0 or closestVertixIndex == numVertices-1: # TODO needed because of unintuitive matplotlib behavior. first and last vertix to be the same
                 xy[0] = (event.xdata, event.ydata)
                 xy[-1] = (event.xdata, event.ydata)
@@ -403,9 +372,6 @@ class PolyGate(Filter):
 
         self.polygonBorder.set_xdata(xy[:, 0])
         self.polygonBorder.set_ydata(xy[:, 1])
-
-        #self.gateKeeper.grayout_all_points()
-        #self.gateKeeper.highlight_points_inside_gate(self)
 
         self.fig.canvas.draw()
 
@@ -436,260 +402,3 @@ class PolyGate(Filter):
         self.polygonBorder.set_visible(True)
         self.poly.figure.canvas.draw()
 
-class GateKeeper():
-    """ This will maintain a list of all the active gates. """
-
-    def __init__(self, ax, fig, gateList=None):
-        if gateList is not None: GateKeeper.gateList = gateList
-        else: GateKeeper.gateList = []
-        GateKeeper.current_channels = None
-
-        self.sample = None
-        self.collection = None
-        self.fig =  fig
-        self.ax = ax
-        self.set_state(STATE_GK.WAITING)
-        self.connect()
-
-        # For Quad Gate
-        self.cursorWidget = None
-        self.new_gate_num = 1
-
-    def connect(self):
-        #self.cidrelease = self.fig.canvas.mpl_connect('button_release_event', self.on_release)
-        self.cidmotion  = self.fig.canvas.mpl_connect('motion_notify_event', self.on_mouse_motion)
-        self.cidpress   = self.fig.canvas.mpl_connect('button_press_event',  self.on_mouse_press)
-        self.cidkey     = self.fig.canvas.mpl_connect('key_press_event',  self.on_keyboard_press)
-        self.cidpick    = self.fig.canvas.mpl_connect('pick_event', self.on_mouse_pick)
-
-    def disconnect(self):
-        'disconnect all the stored connection ids'
-        ## TODO Define disconnect event properly
-        self.fig.canvas.mpl_disconnect(self.cidpress)
-        #self.fig.canvas.mpl_disconnect(self.cidrelease)
-        self.fig.canvas.mpl_disconnect(self.cidmotion)
-        self.fig.canvas.mpl_disconnect(self.cidpick)
-        self.fig.canvas.mpl_disconnect(self.cidkey)
-
-    def on_mouse_motion(self, event):
-        """ Motion events. """
-        debugging_print('Gate Keeper state: ', self.state)
-        if self.state == STATE_GK.START_DRAWING_QUAD_GATE:
-            if self.cursorWidget == None:
-                self.cursorWidget = Cursor(self.ax)
-
-    def on_mouse_press(self, event):
-        """ Button press events. """
-        debugging_print('Mouse Press. Gate Keeper state: ', self.state)
-        if self.state == STATE_GK.WAITING:
-            debugging_print('Selecting gates...')
-            # Quick and dirty code here. Can optimize
-
-            ## Choose gate
-            if len(GateKeeper.gateList) > 0:
-                self.inactivate_all_gates()
-                #activeGateList = [thisGate for thisGate in GateKeeper.gateList if thisGate.contains(event)]
-
-                for thisGate in GateKeeper.gateList:
-                    if thisGate.contains(event):
-                        thisGate.activate()
-                        self.bring_gate_to_top_layer(thisGate)
-                        #if not thisGate.is_active():
-                            #thisGate.activate()
-                            #self.grayout_all_points()
-                            #self.highlight_points_inside_gate(thisGate)
-#
-                            #for gateToInactivate in activeGateList:
-                                #if gateToInactivate is not thisGate:
-                                    #gateToInactivate.inactivate()
-#
-                        #break
-
-                # Now let's put the active gate on the top layer...
-                self.bring_gate_to_top_layer(thisGate)
-                debugging_print('Gate on top layer is: ')
-                debugging_print(thisGate)
-        elif self.state == STATE_GK.START_DRAWING:
-            debugging_print('Creating a polygon gate')
-            self.inactivate_all_gates()
-            name = 'Gate #{0}'.format(self.new_gate_num)
-            self.new_gate_num += 1
-            gate = PolyGate(vert=None, channels=GateKeeper.current_channels, name=name, gateKeeper=self)
-            self.add_gate(gate)
-            gate.on_press(event)
-            self.set_state(STATE_GK.KEEP_DRAWING)
-
-        elif self.state == STATE_GK.START_DRAWING_QUAD_GATE:
-            self.inactivate_all_gates()
-            name = 'Gate #{0}'.format(self.new_gate_num)
-            self.new_gate_num += 1
-            quadGate = QuadGate(vert=(event.xdata, event.ydata), channels=GateKeeper.current_channels, name=name, gateKeeper=self)
-            self.add_gate(quadGate)
-            self.cursorWidget = None
-            self.set_state(STATE_GK.WAITING)
-
-    def change_axis(self, event):
-        """
-        Function controls the x and y labels. Upon clicking on them the user can change what is plotted on the
-        x and y axis.
-        """
-        from GoreUtilities import dialogs
-        if event.artist == self.xlabelArtist:
-            userchoice = dialogs.select_option_dialog('Select channel for x axis', self.sample.channel_names)
-
-            if userchoice is None:
-                return
-
-            index, value = userchoice
-            GateKeeper.current_channels[0] = value
-
-        elif event.artist == self.ylabelArtist:
-            #y_options = list(self.sample.channel_names)
-            #y_options.append('Counts')
-            userchoice = dialogs.select_option_dialog('Select channel for y axis', self.sample.channel_names)
-
-            if userchoice is None:
-                return
-
-            index, value = userchoice
-            GateKeeper.current_channels[1] = value
-
-        self.show_visible_gates()
-        self.plot_data()
-
-    def show_visible_gates(self):
-        for thisGate in GateKeeper.gateList:
-            debugging_print(thisGate.channels)
-            debugging_print(GateKeeper.current_channels)
-            if thisGate.channels == GateKeeper.current_channels:
-                thisGate.set_visible(True)
-            else:
-                thisGate.set_visible(False)
-        pl.draw()
-
-    def inactivate_all_gates(self):
-        for gate in GateKeeper.gateList:
-            gate.inactivate()
-
-    def on_mouse_pick(self, event):
-        """ Event picker """
-        if event.artist == self.xlabelArtist or event.artist == self.ylabelArtist:
-            ### In case we want to change the axis
-            self.change_axis(event)
-
-    def on_keyboard_press(self, event):
-        if event.key == 'c':
-            self.set_state(STATE_GK.START_DRAWING)
-        elif event.key == 'w':
-            debugging_print(GateKeeper.gateList)
-
-    def add_gate(self, gate):
-        """ Adds the current gate to the gate list. """
-        GateKeeper.gateList.insert(0, gate)#append(gate)
-
-    def bring_gate_to_top_layer(self, gate):
-        GateKeeper.gateList.remove(gate)
-        GateKeeper.gateList.insert(0, gate)
-
-    def remove_gate(self, gate):
-        GateKeeper.gateList.remove(gate)
-        del gate
-
-    def get_active_gate(self):
-        for thisGate in GateKeeper.gateList:
-            if thisGate.is_active():
-                debugging_print('Active gate is: ')
-                debugging_print(thisGate)
-                return thisGate
-
-    def set_state(self, state):
-        """ TODO Remove the handling of deleting gates here. """
-        if state == STATE_GK.DELETE_GATE:
-            activeGate = self.get_active_gate()
-            if activeGate:
-                activeGate.remove_gate()
-            state = STATE_GK.WAITING
-
-        self.ax.set_title(state)
-        self.fig.canvas.draw()
-        self.state = state
-
-    def plot_data(self, numpoints=1000):
-        sample = self.sample
-
-        ax = self.ax
-        ax.cla()
-
-        channels = GateKeeper.current_channels
-
-        if channels[0] == channels[1]:
-            sample.plot(channels[0], transform=('hlog', 'hlog'), ax=ax, colorbar=False)
-            xlabel = GateKeeper.current_channels[0]
-            ylabel = 'Counts'
-
-            self.xlabelArtist = ax.set_xlabel(xlabel, picker=5)
-            self.ylabelArtist = ax.set_ylabel(ylabel, picker=5)
-        else:
-            sample.plot(channels, transform=('hlog', 'hlog'), ax=ax, colorbar=False)
-            xlabel = GateKeeper.current_channels[0]
-            ylabel = GateKeeper.current_channels[1]
-
-            self.xlabelArtist = ax.set_xlabel(xlabel, picker=5)
-            self.ylabelArtist = ax.set_ylabel(ylabel, picker=5)
-
-        pl.draw()
-
-    def grayout_all_points(self):
-        """ gray out all points """
-        return
-        if self.sample is None: return
-
-        numDataPoints = len(self.dataxy)
-
-        facecolors = self.collection.get_facecolors()
-        for i in range(numDataPoints):
-            facecolors[i] = STYLE.DATUM_OUT_COLOR
-        self.fig.canvas.draw()
-
-    def highlight_points_inside_gate(self, gate):
-        """ Locates the points inside the given polygon vertices. """
-        return # Does nothing atm
-        if self.sample is None: return
-
-        numDataPoints = len(self.dataxy)
-
-        debugging_print('Data points length')
-        debugging_print(numDataPoints)
-
-        if isinstance(gate, PolyGate):
-            facecolors = self.collection.get_facecolors()
-            path = Path(gate.get_vertices())
-            inPointsIndexes = numpy.nonzero(path.contains_points(pself.dataxy))[0]
-            for i in inPointsIndexes:
-                facecolors[i] = STYLE.DATUM_IN_COLOR
-
-        self.fig.canvas.draw()
-
-    #def set_current_channels(self, channel_names=None):
-        #""" Note potentially confusing I am going back between names and indexes. """
-        #if
-
-    def load_fcs(self, filepath=None):
-        ''' '''
-        if filepath is None:
-            from GoreUtilities import dialogs
-            filepath = dialogs.open_file_dialog('Select an FCS file to load', 'FCS files (*.fcs)|*.fcs')
-        if filepath is not None:
-            self.sample = FCMeasurement('temp', datafile=filepath)
-
-            if GateKeeper.current_channels == None:
-                GateKeeper.current_channels = list(self.sample.channel_names[0:2]) # Assigns first two channels by default if none have been specified yet.
-
-            self.plot_data()
-
-    def load_gates(self, filepath=None):
-        ''' '''
-        pass
-    def save_gates(self, filepath=None):
-        ''' '''
-        pass

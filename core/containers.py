@@ -35,39 +35,14 @@ class FCMeasurement(Measurement):
         if self.meta is not None:
             return self.meta['_channel_names_']
 
-    def read_data(self, rescale=True, new_range=2**18, **kwargs):
+    def read_data(self, **kwargs):
         '''
         Read the datafile specified in Sample.datafile and
         return the resulting object.
         Does NOT assign the data to self.data
         '''
         meta, data = parse_fcs(self.datafile, **kwargs)
-        if rescale:
-            data = self._rescale_data(data, new_range=new_range)
         return data
-
-    def _rescale_data(self, data, new_range=2**18, old_range=None):
-        """
-        Rescale each channel to the new range as following:
-        new = data/old_range*new_range
-        
-        Parameters
-        ----------
-        data : DataFrame
-            data to be rescaled
-        new_range : float | array | Series
-            Maximal data value after rescaling
-        old_range : float | array | Series
-            Maximal data value before rescaling
-            If old range is not given use the one specified in self.meta['_channels_']['$PnR']. 
-        """
-        if old_range is None:
-            m = self.get_meta()['_channels_']
-            names = m['$PnS']
-            old_range = m['$PnR'].astype(float)
-            old_range.index = names
-        new = data/old_range*new_range
-        return new
 
     def read_meta(self, **kwargs):
         '''
@@ -168,35 +143,36 @@ class FCMeasurement(Measurement):
         
         if plot_gates and gates is not None:
             if gate_colors is None:
-                gate_colors = cycle(('k', 'b', 'g', 'r', 'm', 'c', 'y'))
+                gate_colors = cycle(('b', 'g', 'r', 'm', 'c', 'y'))
             for (g,c) in zip(gates, gate_colors):
                 g.plot(ax=ax, ax_channels=channel_names, color=c)
         
         return out
 
-    def view(self, channel_names=None, launch_new_subprocess=True):
+    def view(self):
         '''
         Loads the current FCS sample viewer
 
         Parameters
         ----------
         channel_names : str | list of str
+            (Not implemented yet)
             Names of channels to load by default
 
         Returns
         -------
 
-        Output from sample_viewer
+        TODO: Implement channel_names
         '''
-        if launch_new_subprocess: # This is not finished until I can list the gates somewhere
-            from FlowCytometryTools import __path__ as p
-            from subprocess import call
-            import os
-            script_path = os.path.join(p[0], 'GUI', 'flowGUI.py')
-            call(["python", script_path, self.datafile])
-        else:
-            from FlowCytometryTools import flowGUI
-            return flowGUI.sample_viewer(self.datafile, channel_names=channel_names)
+        #if launch_new_subprocess: # This is not finished until I can list the gates somewhere
+            #from FlowCytometryTools import __path__ as p
+            #from subprocess import call
+            #import os
+            #script_path = os.path.join(p[0], 'GUI', 'flomeasurementwGUI.py')
+            #call(["python", script_path, self.datafile])
+        #else:
+        from FlowCytometryTools.GUI import gui
+        return gui.launch_from_fc_measurement(self)
 
     def transform(self, transform, channels=None, direction='forward',  
                   return_all=True, args=(), **kwargs):
@@ -211,7 +187,7 @@ class FCMeasurement(Measurement):
         newsample = self.copy()
         newsample.set_data(data=newdata)
         return newsample
-    
+
     def gate(self, gate):
         '''
         Apply given gate and return new gated sample (with assigned data).
@@ -221,7 +197,12 @@ class FCMeasurement(Measurement):
         newdata = gate(data)
         newsample = self.copy()
         newsample.set_data(data=newdata)
-        return newsample        
+        return newsample
+    
+    @property
+    def counts(self):
+        data = self.get_data()
+        return data.shape[0]       
 
 class FCCollection(MeasurementCollection):
     '''
@@ -243,8 +224,8 @@ class FCCollection(MeasurementCollection):
         new = self.copy()
         for k,v in new.iteritems(): 
             new[k] = v.transform(transform, channels, direction, return_all, args, **kwargs)
-        ID = self.ID + '.transformed' if ID is None else ID
-        self.ID = ID
+        if ID is not None:
+            new.ID = ID
         return new
 
     def gate(self, gate, ID=None):
@@ -258,9 +239,29 @@ class FCCollection(MeasurementCollection):
         new = self.copy()
         for k,v in new.iteritems(): 
             new[k] = v.gate(gate)
-        ID = self.ID + '.gated' if ID is None else ID
-        self.ID = ID
-        return new   
+        if ID is not None:
+            new.ID = ID
+        return new
+    
+    def counts(self, ids=None, setdata=False, output_format='DataFrame'):
+        '''
+        Return the counts in each of the specified measurements.
+        
+        Parameters
+        ----------
+        ids : hashable| iterable of hashables | None
+            Keys of measurements to get counts of.
+            If None is given get counts of all measurements. 
+        setdata : bool
+            Whether to set the data in the Measurement object.
+            Used only if data is not already set.
+        output_format: 'DataFrame' | 'dict
+                
+        Returns
+        -------
+        DataFrame/Dictionary keyed by measurement keys containing the corresponding counts.
+        ''' 
+        return self.apply(lambda x:x.counts, ids=ids, setdata=setdata, output_format=output_format)   
 
 
 class FCOrderedCollection(OrderedCollection, FCCollection):
@@ -339,6 +340,7 @@ class FCOrderedCollection(OrderedCollection, FCCollection):
         return self.grid_plot(plot_sample, xlim=xlim, ylim=ylim,
                     xlabel=xlabel, ylabel=ylabel,
                     **grid_plot_kwargs)
+            
 
 FCPlate = FCOrderedCollection
 

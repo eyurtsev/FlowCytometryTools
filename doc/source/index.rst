@@ -1,48 +1,34 @@
-.. FlowCytometryTools documentation master file.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
+:mod:`FlowCytometryTools`
+-------------------------------
 
-FlowCytometryTools: Quantitaive analysis of flow cytometry data
-===============================================================
+The :mod:`FlowCytometryTools` package is a `Python <http://www.python.org>`__ package designed to perform quantitaive analysis of flow cytometry data. 
 
-**Version**: |version|
+It is based on the powerful `pandas <http://pandas.pydata.org/>`__ package which is tailored and optimized for interactive analysis of large data tables.
+
+
+**Package Version**: |version|
+
 **Date**: |today| 
 
-:mod:`FlowCytometryTools` is a `Python <http://www.python.org>`__ package designed to perform quantitaive analysis of flow cytometry data. 
+**Authors**: Jonathan Friedman and Eugene Yurtsev
 
-:mod:`FlowCytometryTools` is based on the powerful `pandas <http://pandas.pydata.org/>`__ package which offers rich data structures which are 
-tailored and optimized for interactive analysis of large data tables.
+Key Features
+===================
+- Works with individual measurements, measurement collections, or plates of any shape.
+- Transformation: hyperlog, truncated log
+- Gating
+- Plotting
+- Supports multiple FCS formats (2.0, 3.0, 3.1)
 
---------------------------------
-``FlowCytometryTools`` Resources
---------------------------------
+Resources
+===================
+
 - **Documentation:** https://bitbucket.org/gorelab/flowcytometrytools/wiki/Home
 - **Source Repository:** https://bitbucket.org/gorelab/flowcytometrytools
+- **Comments or questions:** https://bitbucket.org/gorelab/flowcytometrytools/issues
 
--------------
-Key Features
--------------
-  - Works with individual measurements, measurement collections, or plates of any shape.
-  - Transformation: hyperlog, truncated log
-  - Gating
-  - Plotting
-  - Supports multiple FCS formats (2.0, 3.0, 3.1)
-
-  	
-Contents:
 
 .. toctree::
+   :hidden:
    :maxdepth: 2
-   
-   quick
-   install
 
-Please post comments or questions at https://bitbucket.org/gorelab/flowcytometrytools/issues.
-
-..   
-   basics
-   transforming
-   ploting
-   gating
-   analysis
-   api

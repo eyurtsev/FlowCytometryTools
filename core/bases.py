@@ -18,29 +18,68 @@ import pylab as pl
 from GoreUtilities.util import get_files, save, load, to_list
 from GoreUtilities import graph
 
-def _assign_IDS_to_datafiles(datafiles, parser, measurement_class=None):
-    '''
+def _assign_IDS_to_datafiles(datafiles, parser, measurement_class=None, **kwargs):
+    """
     Assign measurement IDS to datafiles using specified parser.
-    Return a dict of ID:datafile
-    '''
+    
+    Parameters
+    ----------
+    datafiles : iterable of str
+        Path to datafiles. An ID will be assigned to each.
+        Note that this function does not check for uniqueness of IDs!
+    parser : mapping | callable | 'name' | 'number' | 'read'
+    measurement_class: object
+        Used to create a temporary object when reading the ID from the datafile.
+        The measurement class needs to have an `ID_from_data` method.
+        Only used when parser='read'.
+    kwargs: dict
+        Additional parametes to be passed to parser is it is a callable, or 'read'.
+        If parser is 'read', kwargs are passed to the measurement class's `ID_from_data` method.
+    
+    Returns
+    -------
+    Dict of ID:datafile
+    """
     if isinstance(parser, collections.Mapping):
         fparse = lambda x: parser[x]
     elif hasattr(parser, '__call__'):
-        fparse = parser
+        fparse = lambda x: parser(x, **kwargs)
     elif parser == 'name':
         fparse = lambda x: x.split('_')[-1].split('.')[0]
     elif parser == 'number':
         fparse = lambda x: int(x.split('.')[-2])
     elif parser == 'read':
-        fparse = lambda x: measurement_class(ID='temporary', datafile=x).ID_from_data()
+        fparse = lambda x: measurement_class(ID='temporary', datafile=x).ID_from_data(**kwargs)
     else:
         raise ValueError,  'Encountered unsupported value "%s" for parser paramter.' %parser 
     d = dict( (fparse(dfile), dfile) for dfile in datafiles )
     return d
 
-def _parse_criteria(criteria):
-    if hasattr(criteria, '__call__'):
-        return criteria
+
+def int2letters(x, alphabet):
+    """
+    Return the alphabet representation of a non-negative integer x.
+    For example, with alphabet=['a','b']
+    0 -> 'a'
+    1 -> 'b'
+    2 -> 'aa'
+    3 -> 'ab'
+    4 -> 'ba'
+    
+    Modified from: 
+    http://stackoverflow.com/questions/2267362/convert-integer-to-a-string-in-a-given-numeric-base-in-python
+    """
+    base = len(alphabet)
+    if x < 0: 
+        raise ValueError, 'Only non-negative numbers are supported. Encounterd %s' %x
+    letters = []
+    quotient = x
+    while quotient>=0:
+        quotient, remainder = divmod(quotient, base) 
+        quotient-=1 
+        letters.append(alphabet[remainder])
+    letters.reverse()
+    return ''.join(letters)
 
 class BaseObject(object):
     '''
@@ -293,7 +332,7 @@ class MeasurementCollection(collections.MutableMapping, BaseObject):
                 self[m.ID] = m 
 
     @classmethod
-    def from_files(cls, ID, datafiles, parser='name'):
+    def from_files(cls, ID, datafiles, parser, **ID_kwargs):
         """
         Create a Collection of measurements from a set of data files.
         
@@ -311,16 +350,19 @@ class MeasurementCollection(collections.MutableMapping, BaseObject):
                        For example, 'JF_2013-08-07_%SampleID%_Well_%Description%.024' will get key 24.
             'read' : Use the measurement ID sspecified in the metadata. 
             mapping : mapping (dict-like) from datafiles to keys.
-            callable : takes datafile name and returns key. 
+            callable : takes datafile name and returns key.
+        ID_kwargs: dict
+            Additional parameters to be used when assigning IDs.
+            Passed to '_assign_IDS_to_datafiles' method. 
         """
-        d = _assign_IDS_to_datafiles(datafiles, parser, cls._measurement_class)
+        d = _assign_IDS_to_datafiles(datafiles, parser, cls._measurement_class, **ID_kwargs)
         measurements = []
         for sID, dfile in d.iteritems():
                 measurements.append(cls._measurement_class(sID, datafile=dfile))
         return cls(ID, measurements)
 
     @classmethod
-    def from_dir(cls, ID, datadir, pattern='*.fcs', recursive=False, parser='name'):
+    def from_dir(cls, ID, datadir, parser, pattern='*.fcs', recursive=False, **ID_kwargs):
         """
         Create a Collection of measurements from data files contained in a directory.
         
@@ -343,6 +385,9 @@ class MeasurementCollection(collections.MutableMapping, BaseObject):
             'read' : Use the measurement ID sspecified in the metadata. 
             mapping : mapping (dict-like) from datafiles to keys.
             callable : takes datafile name and returns key. 
+        ID_kwargs: dict
+            Additional parameters to be used when assigning IDs.
+            Passed to '_assign_IDS_to_datafiles' method. 
         """
         datafiles = get_files(datadir, pattern, recursive)
         return cls.from_files(ID, datafiles, parser)
@@ -493,7 +538,7 @@ class MeasurementCollection(collections.MutableMapping, BaseObject):
         -------
         Filtered Collection.
         """
-        fil = _parse_criteria(criteria)
+        fil = criteria
         new = self.copy()
         if isinstance(applyto, collections.Mapping):
             remove = (k for k,v in self.iteritems() if not fil(applyto[k]))
@@ -567,9 +612,8 @@ class OrderedCollection(MeasurementCollection):
     TODO: 
         - add reshape?         
     """ 
-    def __init__(self, ID, measurements, shape=(8,12),
-                 positions=None, position_parser='name',
-                 row_labels=None, col_labels=None):
+    def __init__(self, ID, measurements, position_parser, shape=(8,12),
+                 positions=None, row_labels=None, col_labels=None):
         """
         A dictionary-like container for holding multiple Measurements in a 2D array.
         
@@ -582,16 +626,17 @@ class OrderedCollection(MeasurementCollection):
             Collection ID
         measurements : mappable | iterable
             values are measurements of appropriate type (type is explicitly check for).
+        position_parser :
+            Determines the positions under which Measurements will be located.
+            callable - gets key and returns position
+            mapping  - key:pos
+            'name'   - parses things like 'A1', 'G12'
+            'number' - converts number to positions, going over rows first.
         shape : 2-tuple
             Shape of the 2D array of measurements (rows, cols).
         positions : dict | None
                 Mapping of measurement_key:(row,col)
                 If None is given set positions as specified by the position_parser arg. 
-        position_parser :
-            callable - gets key and returns position
-            mapping  - key:pos
-            'name'   - parses things like 'A1', 'G12'
-            'number' - converts number to positions, going over rows first.
         row_labels : iterable of str
             If None is given, rows will be labeled 'A','B','C', ...
         col_labels : iterable of str
@@ -622,7 +667,7 @@ class OrderedCollection(MeasurementCollection):
         return 'ID:\n%s\n\nData:\n%s' %(self.ID, repr(print_layout))
 
     @classmethod
-    def from_files(cls, ID, datafiles, parser='name', **kwargs):
+    def from_files(cls, ID, datafiles, parser, position_parser=None, ID_kwargs={}, **kwargs):
         """
         Create an OrderedCollection of measurements from a set of data files.
         
@@ -641,19 +686,34 @@ class OrderedCollection(MeasurementCollection):
             'read' : Use the measurement ID sspecified in the metadata. 
             mapping : mapping (dict-like) from datafiles to keys.
             callable : takes datafile name and returns key. 
+        position_parser :
+            Determines the positions under which Measurements will be located.
+            None     - use the parser value, if it is a string.
+            callable - gets key and returns position
+            mapping  - key:pos
+            'name'   - parses things like 'A1', 'G12'
+            'number' - converts number to positions, going over rows first.
+        ID_kwargs: dict
+            Additional parameters to be used when assigning IDs.
+            Passed to '_assign_IDS_to_datafiles' method. 
         kwargs : dict
             Additional key word arguments to be passed to constructor.
         """
-        d = _assign_IDS_to_datafiles(datafiles, parser, cls._measurement_class)
+        if position_parser is None:
+            if isinstance(parser, basestring):
+                position_parser = parser
+            else:
+                msg = 'position_parser can only be None when parser argument is a string'
+                raise ValueError, msg
+        d = _assign_IDS_to_datafiles(datafiles, parser, cls._measurement_class, **ID_kwargs)
         measurements = []
         for sID, dfile in d.iteritems():
             measurements.append(cls._measurement_class(sID, datafile=dfile))
-        kwargs.setdefault('position_parser', parser)    
-        return cls(ID, measurements, **kwargs)
+        return cls(ID, measurements, position_parser, **kwargs)
 
     @classmethod
-    def from_dir(cls, ID, path, pattern='*.fcs', recursive=False,
-                 parser='name', **kwargs):
+    def from_dir(cls, ID, path, parser, position_parser=None, pattern='*.fcs', recursive=False, 
+                 ID_kwargs={}, **kwargs):
         """
         Create a Collection of measurements from data files contained in a directory.
         
@@ -676,12 +736,22 @@ class OrderedCollection(MeasurementCollection):
             'read' : Use the measurement ID sspecified in the metadata. 
             mapping : mapping (dict-like) from datafiles to keys.
             callable : takes datafile name and returns key. 
+        position_parser :
+            Determines the positions under which Measurements will be located.
+            None     - use the parser value, if it is a string.
+            callable - gets key and returns position
+            mapping  - key:pos
+            'name'   - parses things like 'A1', 'G12'
+            'number' - converts number to positions, going over rows first.
+        ID_kwargs: dict
+            Additional parameters to be used when assigning IDs.
+            Passed to '_assign_IDS_to_datafiles' method. 
         kwargs : dict
             Additional key word arguments to be passed to constructor.
         """
         datafiles = get_files(path, pattern, recursive)
-        kwargs.setdefault('position_parser', parser)
-        return cls.from_files(ID, datafiles, parser=parser, **kwargs)
+        return cls.from_files(ID, datafiles, parser=parser, position_parser=position_parser,
+                              ID_kwargs=ID_kwargs, **kwargs)
 
 #     def set_labels(self, labels, axis='rows'):
 #         '''
@@ -704,7 +774,7 @@ class OrderedCollection(MeasurementCollection):
     def _default_labels(self, axis, shape):
         import string
         if axis == 'rows':
-            return [string.uppercase[i] for i in range(shape[0])]
+            return [int2letters(i, string.uppercase) for i in range(shape[0])]
         else:
             return  range(1, 1+shape[1])
 
@@ -962,7 +1032,6 @@ class OrderedCollection(MeasurementCollection):
             axis = 'y'
         else:
             axis = 'none'
-            
         graph.autoscale_subplots(gHandleList[1], axis)
 
         ###
@@ -994,18 +1063,12 @@ class OrderedCollection(MeasurementCollection):
         if xlabel:
             xlim = ax_label.get_xlim()
 
-            if xlim[0] < 0 < xlim[1]:
-                pl.xticks([xlim[0], 0, xlim[1]], rotation=0)
-            else:
-                pl.xticks([xlim[0], xlim[1]], rotation=0)
+            pl.xticks([xlim[0], xlim[1]], rotation=90)
 
         if ylabel:
             ylim = ax_label.get_ylim()
 
-            if ylim[0] < 0 < ylim[1]:
-                pl.yticks([ylim[0], 0, ylim[1]], rotation=0)
-            else:
-                pl.yticks([ylim[0], ylim[1]], rotation=0)
+            pl.yticks([ylim[0], ylim[1]], rotation=0)
 
         pl.sca(gHandleList[0]) # sets to the main axis -- more intuitive
 
