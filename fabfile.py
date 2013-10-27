@@ -12,13 +12,12 @@ from fabric.decorators import task
 from sphinx_bootstrap_theme import __version__
 
 
-DL_DIR = "demo/source/_static/downloads"
+DL_DIR = "doc/source/_static/downloads"
 
 BUILD_DIRS = (
     "dist",
+    "doc/build",
     "build",
-    "demo/build",
-    "sphinx_bootstrap_theme.egg-info",
 )
 
 SDIST_RST_FILES = (
@@ -39,18 +38,18 @@ def clean():
         local("rm -rf %s" % build_dir)
 
 @task
-def build_html():
+def html():
     """Make html files."""
-    #with lcd("demo"):
-    local("make html")
+    with lcd("doc"):
+        local("make html")
 
 @task
-def demo_server(port="8000"):
-    """Serve demo from localhost.
-
+def serve(port="8000"):
+    """
+    Serve website from localhost.
     @param port  Port to run server on.
     """
-    with lcd("build/html"):
+    with lcd("doc/build/html"):
         local("python -m SimpleHTTPServer %s" % port)
 
 
