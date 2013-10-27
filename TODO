@@ -1,51 +1,8 @@
-TODO BEFORE RELEASE:
-
-Refactor plotting [limits behave correctly] [Eugene] 
-    1 fix default limits for figures. change tick marks according to scale. [Partially fixed. EY 2013-08-sic09]
-    2 add axis labels to one(?) subplot in grid_plot. 
-    3 add colorbar to 2D histograms.
-    4 Allow labeling rows/cols in plots of ordered collection
-
-Documentation
-    * Write doc strings, specifically for the functionality introduced in the ipython notebook examples [EY, JF]
-    * Wiki page with instructions to install / uninstall packages. [Eugene]
-        * ipython notebook with examples.
-            -> basic plotting [EY]
-            -> IO / parsers transformations [JF]
-            -> Gates [JF -> EY]
-            -> Filtering [JF]
-            -> Basics: channel, channel_names, meta data [EY] ** Secondary priority
-            -> Utility examples: Counting cells in a region / statistics [JF->EY] 
-            -> Subgating [JF] 
-            -> utility functions: loading plates recursively [EY]
-        * Find a location that's in the path (for example import numpy and query numpy.__path__)
-        * Indepedent of git (rewrite instructions from plate reader tools)
-        * Link to ipython notebooks put on notebook viewer online
-        
-
-Tests
-    * Importing ipython notebook if easy
-
-* Discuss how the transformations are applied to data and to gating.
-    * Specifically, if not implemented in code, document clearly with examples.
-    * Consider having samples remember which transforms&gates should be applied and apply 
-    them when data is read form the datafile. 
-
-
-----------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-* GUI: Remove hlog transformations by default.
-
-* For each sample / measurement, add reference to parent collection / plate
-	- JF: Agreed. Not sure how to implement as a MutableMapping is not hashable. 
-	
 * Consider changing the type checking on Collections to allow them to 
 contain sub-collections of the same type, or any object that implements
 so necessary attributes (e.g.: ID, apply, plot, etc').
 
 * add 'to_ordered' method to SampleCollection
-* grid_plot label offset should change with shape of plate. labels are now invisible for small collections.
-
 
 * implement decorator that checks if attribute is set and is not None.
 If it is not, return some default (None). Otherwise call wrapped function.
