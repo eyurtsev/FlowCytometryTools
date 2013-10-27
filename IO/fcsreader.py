@@ -370,7 +370,10 @@ def parse_fcs(path, meta_data_only=False, output_format='DataFrame', compensate=
     if compensate == True:
         raise_parser_feature_not_implemented('Compensation has not been implemented yet.')
 
-    parsed_FCS = FCS_Parser(path, channel_naming=channel_naming)
+
+    read_data = not meta_data_only
+
+    parsed_FCS = FCS_Parser(path, read_data=read_data, channel_naming=channel_naming)
 
     if reformat_meta:
         parsed_FCS.reformat_meta()
