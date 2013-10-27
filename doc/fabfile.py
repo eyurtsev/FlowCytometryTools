@@ -1,5 +1,4 @@
 """Fabric file."""
-
 import base64
 import os
 import json
@@ -26,6 +25,7 @@ SDIST_RST_FILES = (
     "README.rst",
     "HISTORY.rst",
 )
+
 SDIST_TXT_FILES = [os.path.splitext(x)[0] + ".txt" for x in SDIST_RST_FILES]
 
 
@@ -38,13 +38,11 @@ def clean():
     for build_dir in list(BUILD_DIRS):
         local("rm -rf %s" % build_dir)
 
-
 @task
-def demo():
-    """Clean build files."""
-    with lcd("demo"):
-        local("make html")
-
+def build_html():
+    """Make html files."""
+    #with lcd("demo"):
+    local("make html")
 
 @task
 def demo_server(port="8000"):
