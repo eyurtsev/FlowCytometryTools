@@ -98,8 +98,8 @@ class FCS_Parser(object):
         header = {}
         header['FCS format'] = file_handle.read(6)
 
-        if header['FCS format'] != 'FCS3.0':
-            warnings.warn("""This parser was designed with the FCS 3.0 format in mind. It may or may not work for other FCS formats.""")
+        #if header['FCS format'] != 'FCS3.0':
+            #warnings.warn("""This parser was designed with the FCS 3.0 format in mind. It may or may not work for other FCS formats.""")
 
         file_handle.read(4) # 4 space characters after the FCS format
 
