@@ -187,7 +187,7 @@ class FCMeasurement(Measurement):
         newsample = self.copy()
         newsample.set_data(data=newdata)
         return newsample
-    
+
     def gate(self, gate):
         '''
         Apply given gate and return new gated sample (with assigned data).
@@ -224,8 +224,8 @@ class FCCollection(MeasurementCollection):
         new = self.copy()
         for k,v in new.iteritems(): 
             new[k] = v.transform(transform, channels, direction, return_all, args, **kwargs)
-        ID = self.ID + '.transformed' if ID is None else ID
-        self.ID = ID
+        if ID is not None:
+            new.ID = ID
         return new
 
     def gate(self, gate, ID=None):
@@ -239,8 +239,8 @@ class FCCollection(MeasurementCollection):
         new = self.copy()
         for k,v in new.iteritems(): 
             new[k] = v.gate(gate)
-        ID = self.ID + '.gated' if ID is None else ID
-        self.ID = ID
+        if ID is not None:
+            new.ID = ID
         return new
     
     def counts(self, ids=None, setdata=False, output_format='DataFrame'):
