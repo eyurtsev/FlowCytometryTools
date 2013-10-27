@@ -1,14 +1,14 @@
 .. _install:
 
 Supported Python versions
-~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Python 2.6 to 2.7. 
 
 Currently, Python 3 is not supported.
 
 Installing dependencies
-~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Required
 =========================
@@ -113,7 +113,7 @@ Do the following:
 .. does not work yet. 
 
     Running the test suite
-    ====================
+    ===========================
 
 
     Running the test suite requires `nose <http://readthedocs.org/docs/nose/en/latest/>`__, and is done by:

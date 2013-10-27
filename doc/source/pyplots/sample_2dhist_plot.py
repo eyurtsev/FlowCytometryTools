@@ -25,4 +25,10 @@ ax2 = subplot(122, sharey=ax1, sharex=ax1);
 gated_sample.plot(('B1-A', 'Y2-A'), bins=100);
 title('Fluorescent Events');
 
+# Adjust font sizes
+ax1.tick_params(axis='both', which='major', labelsize='x-small')
+ax2.tick_params(axis='both', which='major', labelsize='x-small')
+
 tight_layout()
+
+#show()

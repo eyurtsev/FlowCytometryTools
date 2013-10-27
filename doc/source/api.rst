@@ -15,6 +15,7 @@ Containers
 
     FCMeasurement
     FCOrderedCollection
+    FCPlate
 
 Gating
 ----------------------------
