@@ -5,7 +5,6 @@ The :mod:`FlowCytometryTools` package is a `Python <http://www.python.org>`__ pa
 
 It is based on the powerful `pandas <http://pandas.pydata.org/>`__ package which is tailored and optimized for interactive analysis of large data tables.
 
-
 **Package Version**: |version|
 
 **Date**: |today| 
@@ -23,7 +22,7 @@ Key Features
 Resources
 ===================
 
-- **Documentation:** https://bitbucket.org/gorelab/flowcytometrytools/wiki/Home
+- **Documentation:** http://gorelab.bitbucket.org/flowcytometrytools/
 - **Source Repository:** https://bitbucket.org/gorelab/flowcytometrytools
 - **Comments or questions:** https://bitbucket.org/gorelab/flowcytometrytools/issues
 

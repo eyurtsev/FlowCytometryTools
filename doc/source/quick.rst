@@ -283,10 +283,10 @@ Let's construct a flow cytometry plate object by loading all the '\*.fcs' files 
 .. ipython:: python
 
 	from FlowCytometryTools import FCPlate
-    plate = FCPlate.from_dir(ID='Demo Plate', path=datadir).transform('hlog', channels=('Y2-A', 'B1-A'))
+    plate = FCPlate.from_dir(ID='Demo Plate', path=datadir, parser='name').transform('hlog', channels=('Y2-A', 'B1-A'))
 
     # The line above is equivalent to the two steps below:
-    # plate = FCPlate.from_dir(ID='Demo Plate', path=datadir)
+    # plate = FCPlate.from_dir(ID='Demo Plate', path=datadir, parser='name')
     # plate = plate.transform('hlog', channels=('Y2-A', 'B1-A'))                                                                 
 
 .. note:: Parsers
