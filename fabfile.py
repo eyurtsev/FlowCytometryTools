@@ -9,15 +9,13 @@ from contextlib import contextmanager
 from fabric.api import local, lcd, abort
 from fabric.decorators import task
 
-from sphinx_bootstrap_theme import __version__
-
-
 DL_DIR = "doc/source/_static/downloads"
 
 BUILD_DIRS = (
     "dist",
     "doc/build",
     "build",
+    "FlowCytometryTools.egg-info",
 )
 
 SDIST_RST_FILES = (

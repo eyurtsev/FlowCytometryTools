@@ -13,7 +13,6 @@ else:
 
 setup(
     name = 'FlowCytometryTools',
-    #packages = ['FlowCytometryTools', 'FlowCytometryTools.tests', 'FlowCytometryTools.IO'],
     packages=find_packages(),
     version = version,
     description = 'A python package for performing flow cytometry analysis',
@@ -42,6 +41,4 @@ setup(
     package_data = {
         '': ['*.fcs'],
     },
-
-
 )
