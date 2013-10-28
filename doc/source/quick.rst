@@ -405,12 +405,9 @@ Like this:
 The ``apply`` method is a functional, which is just a fancy way of saying
 that it accepts functions as inputs. If you've got a function that can 
 operate on a well (like the function ``count_events``), you can feed it into the ``apply``
-method. 
+method. Check the API for the ``apply`` method for more details.
 
-Also, check the API for the ``apply`` method if you're curious. The method supports a few useful
-options.
-
-Anyway, the ``apply`` method is particularly useful because it works on plates:
+Anyway, the ``apply`` method is particularly useful because it works on plates.
 
 .. ipython:: python
 
@@ -418,7 +415,7 @@ Anyway, the ``apply`` method is particularly useful because it works on plates:
     print type(total_counts_using_our_function)
     print total_counts_using_our_function
 
-Holy Rabbit! Sexy output!
+Holy Rabbit! That was smokin' hot output!
 
 First, for wells without data, a ``nan`` was produced.
 Second, the output that was returned is a DataFrame. 

@@ -16,12 +16,9 @@ Required
 #. `pandas <http://pandas.sourceforge.net/index.html>`__: 0.8.0 or higher.
 #. `matplotlib <http://matplotlib.org/>`__: required for plotting
 
-.. note::
-
-    Mac and Windows users: A simple way of installing all of the dependencies is using a distribution like `canopy <https://www.enthought.com/products/canopy/>`_.
-
-    Ubuntu/Debian: Use pip or apt-get : instructions are available on the package websites.
-
+**Note**
+Mac and Windows users: A simple way of installing all of the dependencies is using a distribution like `canopy <https://www.enthought.com/products/canopy/>`_.
+Ubuntu/Debian: Use pip or apt-get. Instructions will be available on the package websites.
 
 Optional
 =========================
@@ -31,14 +28,26 @@ Optional
 Installing the FlowCytometryTools package
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Currently, only installation from source is possible. Full installation instructions are provided below. 
-
 **IMPORTANT** The required dependencies are **required** for this package to work. Install them.
 
 For programmers, the source code is hosted at bitbucket at the following URLs:
     * Required dependency: https://bitbucket.org/gorelab/goreutilities 
     * Package: https://bitbucket.org/gorelab/flowcytometrytools
 
+
+Installing using pip (recommended)
+====================================
+
+#. `Install pip <http://www.pip-installer.org/en/latest/installing.html>`_ if you do not already have it.
+
+#. Go to your command terminal and enter the following:
+
+   .. code-block:: bash
+
+    sudo pip install setuptools
+    sudo pip install FlowCytometryTools
+
+That should be it!
 
 Installing using git
 =========================
@@ -89,7 +98,7 @@ Installing using git
 
 
 Updating using git
-====================
+```````````````````````
 
 If you've installed the package using git, you can also use git to update the package when new releases are available.
 

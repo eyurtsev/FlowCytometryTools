@@ -13,10 +13,11 @@ It is based on the powerful `pandas <http://pandas.pydata.org/>`__ package which
 
 Key Features
 ===================
+
 - Works with individual measurements, measurement collections, or plates of any shape.
 - Transformation: hyperlog, truncated log
-- Gating
-- Plotting
+- Gating: Threshold, Interval, Quad, Poly
+- Plotting: 1d, 2d histograms for both single samples and plates.
 - Supports multiple FCS formats (2.0, 3.0, 3.1)
 
 Resources
@@ -25,7 +26,6 @@ Resources
 - **Documentation:** http://gorelab.bitbucket.org/flowcytometrytools/
 - **Source Repository:** https://bitbucket.org/gorelab/flowcytometrytools
 - **Comments or questions:** https://bitbucket.org/gorelab/flowcytometrytools/issues
-
 
 .. toctree::
    :hidden:
