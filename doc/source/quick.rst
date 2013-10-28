@@ -346,10 +346,39 @@ FCPlate supports indexing to make it easier to work with single wells.
 Examples
 ------------------------------------------------
 
-Counting total number of events
+Counting using the counts method
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-Let's write code to count the total number of events in each well of the plate.
+Use the ``counts`` method to count total number of events.
+
+.. ipython:: python
+
+    total_counts = plate.counts()
+    print total_counts
+
+Let's count the number of events that pass a certain gate:
+
+.. ipython:: python
+
+    y2_counts = plate.gate(y2_gate).counts()
+    print y2_counts
+
+What about the events that land outside the y2_gate?
+
+.. ipython:: python
+
+    outside_of_y2_counts = plate.gate(~y2_gate).counts()
+    print outside_of_y2_counts
+
+
+Counting on our own
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+To learn how to do more complex calculations, let's start by writing our
+own counting function. At the end of this, we better get the
+same result as was produced using the ``counts`` method above.
+
+Here's the function:
 
 .. ipython:: python
     
@@ -359,96 +388,52 @@ Let's write code to count the total number of events in each well of the plate.
         count = data.shape[0]
         return count
 
-Before we use this function on a plate, we have to check that it works
-on a single well.
+Let's check that it works on a single well.
 
 .. ipython:: python
 
     print count_events(plate['A3'])
 
-Alternatively, we could have used the ``apply`` method:
+
+Now, to use it in a calculation we need to feed it to the ``apply`` method.
+Like this:
 
 .. ipython:: python
 
     print plate['A3'].apply(count_events)
 
-The really nice thing about the ``apply`` method is that it works on plate:
+The ``apply`` method is a functional, which is just a fancy way of saying
+that it accepts functions as inputs. If you've got a function that can 
+operate on a well (like the function ``count_events``), you can feed it into the ``apply``
+method. 
+
+Also, check the API for the ``apply`` method if you're curious. The method supports a few useful
+options.
+
+Anyway, the ``apply`` method is particularly useful because it works on plates:
 
 .. ipython:: python
 
-    output = plate.apply(count_events)
-    print type(output)
-    print output
+    total_counts_using_our_function = plate.apply(count_events)
+    print type(total_counts_using_our_function)
+    print total_counts_using_our_function
 
-That's some real sexy output that we got out of the ``apply`` function!
+Holy Rabbit! Sexy output!
 
 First, for wells without data, a ``nan`` was produced.
 Second, the output that was returned is a DataFrame. 
-(Check the example below to see why that's so cool.)
 
+Also, as you can see the total counts we computed (``total_counts_using_our_function``)
+agrees with the counts computed using the ``counts`` methods in the previous example.
 
-Counting events passing through a gate
-++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-Let's build on top of the previous example and count the number
-of events that pass a given gate.
-
-.. ipython:: python
-    
-    def count_events_in_gate(well, gate):
-        """ Counts the number of events in fcs_sample that pass the given gate. """
-        data = well.gate(gate).get_data()
-        count = data.shape[0]
-        return count
-
-Let's test this out on a a single well:
+Now, let's apply a gate and count again.
 
 .. ipython:: python
 
-    y2_gate = ThresholdGate(1000.0, 'Y2-A', region='above')
-    print count_events_in_gate(plate['A3'], y2_gate)
-
-Here's tricky part:
-
-The ``apply`` method only accepts functions of a single argument 
-(i.e., the well on which to compute). 
-
-However, the function we have accepts two arguments: well and gate.
-
-We need to provide the gate argument before we pass the function to ``apply``.
-
-To do that let's use a lambda function.
-
-.. ipython:: python
-
-    count_in_y2_gate = lambda well : count_events_in_gate(well, y2_gate)
-
-    print count_in_y2_gate(plate['A3'])
-
-    print plate['A3'].apply(count_in_y2_gate) # Now this works!! Woohoo!!
-
-OK, now we can use this function to count the number of events that pass
-the gate across the entire plate.
-
-
-.. ipython:: python
-
-    output = plate.apply(count_in_y2_gate)
-    print output
-
-Now, amongst one of the cool things about output being a pandas DataFrame is that we can plot it:
-
-.. ipython:: python
-
-    figure();
-
-    output.plot();
-    xlabel('Row');
-	@savefig example_A_dataframe.png width=4.5in
-    ylabel('Counts');
+    print plate.gate(y2_gate).apply(count_events)
 
 Calculating median fluorescence
-++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 Ready for some more baking?
 
@@ -456,35 +441,25 @@ Let's calculate the median Y2-A fluorescence.
 
 .. ipython:: python
     
-    def calculate_median_rfp(well, gate):
-        """ Counts the number of events in fcs_sample that pass the given gate. """
-        if gate is not None:
-            data = well.gate(gate).get_data()
-        else:
-            data = well.get_data()
-
+    def calculate_median_rfp(well):
+        """ Calculates the median on the RFP channel. """
+        data = well.get_data()
         return data['Y2-A'].median()
 
 The median rfp fluorescence for all events in well 'A3'.
 
 .. ipython:: python
     
-    print calculate_median_rfp(plate['A3'], None)
-
+    print calculate_median_rfp(plate['A3'])
 
 The median rfp fluorescence for all events in the plate is:
 
 .. ipython:: python
 
-    calculate_overall_median_rfp = lambda well : calculate_median_rfp(well, None)
-
-    print plate.apply(calculate_overall_median_rfp)
+    print plate.apply(calculate_median_rfp)
 
 The median rfp fluorescence for all events that pass the y2_gate is:
 
 .. ipython:: python
 
-    calculate_in_y2_gate_median_rfp = lambda well : calculate_median_rfp(well, y2_gate)
-
-    print plate.apply(calculate_in_y2_gate_median_rfp)
-
+    print plate.gate(y2_gate).apply(calculate_median_rfp)
