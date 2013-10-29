@@ -278,7 +278,28 @@ Instead, we provided you with the awesome ``FCPlate`` class!
 Loading Data
 ++++++++++++++++++
 
-Let's construct a flow cytometry plate object by loading all the '\*.fcs' files in a directory.
+What we'd like to do is to construct a flow cytometry plate object by loading all the '\*.fcs' files in a directory.
+
+To do that, FCPlate needs to know where on the plate each file belongs; i.e., we need to tell it that the file 'My_awesome_data_Well_C9.fcs' belongs in Well C9.
+
+Here's a summary table that'll help you decide what to do (depending on your file name format):
+
++-------------------------------------+-----------------+------------------------------------------------------------------------------------+
+| File Name Format                    | parser          | Notes                                                                              |
++=====================================+=================+====================================================================================+
+| '[whatever]_Well_C9_[blah].fcs'     | 'name'          |                                                                                    |
++-------------------------------------+-----------------+------------------------------------------------------------------------------------+
+| '[blah]_someothertagC9_[blah].fcs'  | 'name'          | But to use must modify ID_kwargs (see API) for details                             |
++-------------------------------------+-----------------+------------------------------------------------------------------------------------+
+| '[whatever].025.fcs'                | 'number'        | 001 -> A1, 002 -> B1, ... etc. i.e., advances by row first                         |
++-------------------------------------+-----------------+------------------------------------------------------------------------------------+
+|   Some other naming format          | dict            | dict with keys = filenames, values = positions                                     |
++-------------------------------------+-----------------+------------------------------------------------------------------------------------+
+|   Some other naming format          | function        | Provide a function that accepts a filename and returns a position (e.g., 'C9')     |
++-------------------------------------+-----------------+------------------------------------------------------------------------------------+
+
+
+For the analysis below, we'll be using the 'name' parser since our files match that convention. OK. Let's try it out!
 
 .. ipython:: python
 
@@ -289,14 +310,19 @@ Let's construct a flow cytometry plate object by loading all the '\*.fcs' files 
     # plate = FCPlate.from_dir(ID='Demo Plate', path=datadir, parser='name')
     # plate = plate.transform('hlog', channels=('Y2-A', 'B1-A'))                                                                 
 
-.. note:: Parsers
-    TODO
 
 Let's see what data got loaded...
 
 .. ipython:: python
 
     print plate
+
+And just to confirm, let's look at the naming of our files to see that ``parser='name'`` should indeed work.
+
+.. ipython:: python
+
+    import os
+    print os.path.basename(plate['A3'].datafile)
 	
 
 This plate contains many empty rows and columns, which may be dropped for convenience.
