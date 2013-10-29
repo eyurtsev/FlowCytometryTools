@@ -22,13 +22,13 @@ setup(
     download_url = 'https://bitbucket.org/gorelab/flowcytometrytools/get/v{0}.zip'.format(version),
     keywords = ['flow cytometry', 'data analysis', 'cytometry', 'single cell'],
     license='MIT',
-    dependency_links = ['https://bitbucket.org/gorelab/goreutilities/get/v{0}.zip#egg=GoreUtilities-0.3.0'.format(version)],
+    dependency_links = ['https://bitbucket.org/gorelab/goreutilities/get/v{0}.zip#egg=GoreUtilities-{0}'.format(version)],
     #dependency_links = ['https://bitbucket.org/gorelab/goreutilities/get/master.zip#egg=GoreUtilities-0.3.0'.format(version)],
 
     install_requires=[
           "setuptools",
           "pandas >= 0.8.0",
-          "GoreUtilities == 0.3.0",
+          "GoreUtilities == 0.3.1",
       ],
     classifiers = [
         'Intended Audience :: Science/Research',
@@ -38,6 +38,7 @@ setup(
     ],
 
     include_package_data = True,
+    long_description=open('README.rst').read(),
     package_data = {
         '': ['*.fcs'],
     },
