@@ -3,6 +3,7 @@ Created on Jun 18, 2013
 
 @author: jonathanfriedman
 
+Base objects for measurement and plate objects.
 
 TODO:
 - make plate a subclass of collection
@@ -58,7 +59,6 @@ def _assign_IDS_to_datafiles(datafiles, parser, measurement_class=None, **kwargs
     else:
         raise ValueError,  'Encountered unsupported value "%s" for parser paramter.' %parser 
     d = dict( (fparse(dfile), dfile) for dfile in datafiles )
-    print d
     return d
 
 
