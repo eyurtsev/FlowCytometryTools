@@ -21,6 +21,7 @@ _yall = np.r_[_yneg, _ypos]
 class TestTransforms(unittest.TestCase):
 
         def test_tlog(self):
+            print 'This transform is supposed to fail for the time being... Need to update the test'
             th = 2
             result = trans.tlog(_xall, th=th)
             self.assertFalse(np.any(result[_xall<th]))
