@@ -45,7 +45,7 @@ Installing using pip (recommended)
    .. code-block:: bash
 
     sudo pip install setuptools
-    sudo pip install FlowCytometryTools
+    sudo pip install git+https://bitbucket.org/gorelab/flowcytometrytools.git
 
 That should be it!
 

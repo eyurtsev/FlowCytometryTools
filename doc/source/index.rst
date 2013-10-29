@@ -19,6 +19,7 @@ Key Features
 - Gating: Threshold, Interval, Quad, Poly
 - Plotting: 1d, 2d histograms for both single samples and plates.
 - Supports multiple FCS formats (2.0, 3.0, 3.1)
+  + The package reads the data exactly as is stored in the FCS file; i.e., the user chooses how to treat their data (transform, compensate etc.)
 
 Resources
 ===================
