@@ -46,12 +46,10 @@ def _assign_IDS_to_datafiles(datafiles, parser, measurement_class=None, **kwargs
     elif hasattr(parser, '__call__'):
         fparse = lambda x: parser(x, **kwargs)
     elif parser == 'name':
-        #fparse = lambda x : x.split('_')[-1].split('.')[0]
-        kwargs.setdefault('tag', 'Well')
-        kwargs.setdefault('delimiter', '_')
-        kwargs.setdefault('tag_type', str)
-        strip = lambda x : os.path.splitext(os.path.basename(x))[0]
-        fparse = lambda x : get_tag_value(strip(x), **kwargs)
+        kwargs.setdefault('pre', 'Well_')
+        kwargs.setdefault('post', ['_', '\.', '$'])
+        kwargs.setdefault('tagtype', str)
+        fparse = lambda x : get_tag_value(x, **kwargs)
     elif parser == 'number':
         fparse = lambda x: int(x.split('.')[-2])
     elif parser == 'read':
@@ -351,9 +349,9 @@ class MeasurementCollection(collections.MutableMapping, BaseObject):
         parser : 'name' \ 'number' | 'read' | mapping \ callable
             Determines key under which each measurement will be stored in the collection.
             'name' : Use the measurement name given in the file name.
-                     For example, 'JF_2013-08-09_fast_mode_Well_C9.001.fcs' will get key 'C9'.
+                     For example, 'blah_blah_blah_Well_C9.001.fcs' will get key 'C9'.
             'number' : Use the number given in the file name.
-                       For example, 'JF_2013-08-07_%SampleID%_Well_%Description%.024.fcs' will get key 24.
+                       For example, 'blah_blah_blah.024.fcs' will get key 24.
             'read' : Use the measurement ID sspecified in the metadata. 
             mapping : mapping (dict-like) from datafiles to keys.
             callable : takes datafile name and returns key.
