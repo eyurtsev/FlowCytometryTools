@@ -3,7 +3,6 @@ Created on Jun 18, 2013
 
 @author: jonathanfriedman
 
-Base objects for measurement and plate objects.
 
 TODO:
 - make plate a subclass of collection
@@ -15,8 +14,9 @@ using shelve|PyTables|pandas HDFStore
 from pandas import DataFrame as DF
 from numpy import nan, unravel_index
 import pylab as pl
-from GoreUtilities.util import get_files, save, load, to_list
+from GoreUtilities.util import get_files, save, load, to_list, get_tag_value
 from GoreUtilities import graph
+import os
 
 def _assign_IDS_to_datafiles(datafiles, parser, measurement_class=None, **kwargs):
     """
@@ -45,7 +45,12 @@ def _assign_IDS_to_datafiles(datafiles, parser, measurement_class=None, **kwargs
     elif hasattr(parser, '__call__'):
         fparse = lambda x: parser(x, **kwargs)
     elif parser == 'name':
-        fparse = lambda x: x.split('_')[-1].split('.')[0]
+        #fparse = lambda x : x.split('_')[-1].split('.')[0]
+        kwargs.setdefault('tag', 'Well')
+        kwargs.setdefault('delimiter', '_')
+        kwargs.setdefault('tag_type', str)
+        strip = lambda x : os.path.splitext(os.path.basename(x))[0]
+        fparse = lambda x : get_tag_value(strip(x), **kwargs)
     elif parser == 'number':
         fparse = lambda x: int(x.split('.')[-2])
     elif parser == 'read':
@@ -53,6 +58,7 @@ def _assign_IDS_to_datafiles(datafiles, parser, measurement_class=None, **kwargs
     else:
         raise ValueError,  'Encountered unsupported value "%s" for parser paramter.' %parser 
     d = dict( (fparse(dfile), dfile) for dfile in datafiles )
+    print d
     return d
 
 
@@ -347,7 +353,7 @@ class MeasurementCollection(collections.MutableMapping, BaseObject):
             'name' : Use the measurement name given in the file name.
                      For example, 'JF_2013-08-09_fast_mode_Well_C9.001.fcs' will get key 'C9'.
             'number' : Use the number given in the file name.
-                       For example, 'JF_2013-08-07_%SampleID%_Well_%Description%.024' will get key 24.
+                       For example, 'JF_2013-08-07_%SampleID%_Well_%Description%.024.fcs' will get key 24.
             'read' : Use the measurement ID sspecified in the metadata. 
             mapping : mapping (dict-like) from datafiles to keys.
             callable : takes datafile name and returns key.
@@ -390,7 +396,7 @@ class MeasurementCollection(collections.MutableMapping, BaseObject):
             Passed to '_assign_IDS_to_datafiles' method. 
         """
         datafiles = get_files(datadir, pattern, recursive)
-        return cls.from_files(ID, datafiles, parser)
+        return cls.from_files(ID, datafiles, parser, **ID_kwargs)
 
     # ----------------------
     # MutableMapping methods
