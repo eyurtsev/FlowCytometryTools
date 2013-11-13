@@ -21,17 +21,18 @@ _yall = np.r_[_yneg, _ypos]
 class TestTransforms(unittest.TestCase):
 
         def test_tlog(self):
-            print 'This transform is supposed to fail for the time being... Need to update the test'
             th = 2
-            result = trans.tlog(_xall, th=th)
-            self.assertFalse(np.any(result[_xall<th]))
+            r  = 10**4
+            d  = np.log10(2**18) 
+            result = trans.tlog(_xall, th, r, d)            
+            assert_almost_equal(result[_xall<th], np.log10(th) * 1.*r/d, decimal=3)
             self.assertTrue(np.all(result[_xall>th]))
-            assert_almost_equal(_ymax, result.max())
+            assert_almost_equal(r, result.max())
 
         def test_tlog_inv(self):
             th = 2
             expected = _xall.copy()
-            expected[_xall<=th] = 1
+            expected[_xall<=th] = th
             result = trans.tlog_inv(trans.tlog(_xall, th=th), th=th)
             assert_almost_equal(result, expected)
 
