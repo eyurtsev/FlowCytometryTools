@@ -14,7 +14,8 @@ Required
 =========================
 
 #. `pandas <http://pandas.sourceforge.net/index.html>`__: 0.8.0 or higher.
-#. `matplotlib <http://matplotlib.org/>`__: required for plotting
+#. `matplotlib <http://matplotlib.org/>`__: required for plotting.
+#. `scipy <http://www.scipy.org/>`__: required for hyperlog transformations.
 
 **Note**
 Mac and Windows users: A simple way of installing all of the dependencies is using a distribution like `canopy <https://www.enthought.com/products/canopy/>`_.
