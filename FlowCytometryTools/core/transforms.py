@@ -278,6 +278,10 @@ def transform_frame(frame, transform, channels=None, direction='forward',
         transformed = frame.filter(channels).apply(tfun, *args, **kwargs)
     return transformed
 
+
+class Transform(object):
+    pass
+
 if __name__ == '__main__':
     y1 = -1
     y2 = 100
