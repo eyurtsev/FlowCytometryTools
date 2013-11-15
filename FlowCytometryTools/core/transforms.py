@@ -14,11 +14,12 @@ TODO:
 - Implement logicle transformation.
 - Add support for transforming a numpy array
 '''
-from numpy import (log, log10, exp, where, sign, vectorize, 
+from numpy import (log, log10, exp, where, sign, vectorize, apply_along_axis,
                    min, max, linspace, logspace, r_, abs, asarray)
 from scipy.optimize import brentq
 from scipy.interpolate import InterpolatedUnivariateSpline
 from GoreUtilities.util import to_list
+from numpy.lib.shape_base import apply_along_axis
 _machine_max = 2**18
 _l_mmax = log10(_machine_max)
 _display_max = 10**4
@@ -245,7 +246,7 @@ def parse_transform(transform, direction='forward'):
     direction : 'forward' | 'inverse'
     '''
     if hasattr(transform, '__call__'):
-        tfun = vectorize(transform)
+        tfun = transform
         tname = None
     elif hasattr(transform, 'lower'):
         tname = _get_canonical_name(transform)
@@ -338,7 +339,7 @@ class Transformation(BaseObject):
         if use_spln:
             if self.spln is None:
                 self.set_spline(x.min(), x.max(), **kwargs)
-            return self.spln(x)
+            return apply_along_axis(self.spln, 0, x)
         else:
             return self.tfun(x, *self.args, **self.kwargs)
     
@@ -366,7 +367,7 @@ class Transformation(BaseObject):
         x_spln = _x_for_spln([xmin, xmax], nx, log_spacing)
         y_spln = self(x_spln)
         spln   = InterpolatedUnivariateSpline(x_spln, y_spln, **kwargs)
-        self.spln = vectorize(spln)
+        self.spln = spln
         
 if __name__ == '__main__':
 #     y1 = -1
