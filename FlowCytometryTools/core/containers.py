@@ -290,7 +290,7 @@ class FCCollection(MeasurementCollection):
     '''
     _measurement_class = FCMeasurement
     
-    def transform(self, transform, direction='forward',  
+    def transform(self, transform, direction='forward', share_tranform=True, 
                   channels=None, return_all=True, auto_range=True,
                   use_spln=True, get_transformer=False, ID = None, 
                   args=(), **kwargs):
@@ -303,34 +303,39 @@ class FCCollection(MeasurementCollection):
         
         TODO: change default to not transform HDR channels?
         '''
-        meta = self.values()[0].get_meta()
-        channels = to_list(channels)
-        if channels is None:
-            channels = meta['_channels_']['$PnN'].values
-        ## create transformer
-        if isinstance(transform, Transformation):
-            transformer = transform
-        else: 
-            if auto_range: #determine transformation range
-                if 'd' in kwargs:
-                    warnings.warn('Encountered both auto_range=True and user-specified range value in parameter d.\n Range value specified in parameter d is used.') 
-                else:
-                    channel_meta = meta['_channels_']
-                    ranges = []
-                    for i,r in channel_meta.iterrows():
-                        if r['$PnN'] in channels: ranges.append(float(r['$PnR']))
-                    if not np.allclose(ranges, ranges[0]):
-                        raise Exception, 'Not all specified channels have the same data range, therefore they cannot be transformed together.'
-                    kwargs['d'] = np.log10(ranges[0])
-            transformer = Transformation(transform, direction, args, **kwargs)
-            if use_spln:
-                xmax = 10**kwargs['d']
-                transformer.set_spline(-xmax, xmax)
-        ## transform all measurements     
         new = self.copy()
-        for k,v in new.iteritems(): 
-            new[k] = v.transform(transformer, channels=channels, return_all=return_all, use_spln=use_spln)
-
+        if share_tranform:
+            meta = self.values()[0].get_meta()
+            channels = to_list(channels)
+            if channels is None:
+                channels = meta['_channels_']['$PnN'].values
+            ## create transformer
+            if isinstance(transform, Transformation):
+                transformer = transform
+            else: 
+                if auto_range: #determine transformation range
+                    if 'd' in kwargs:
+                        warnings.warn('Encountered both auto_range=True and user-specified range value in parameter d.\n Range value specified in parameter d is used.') 
+                    else:
+                        channel_meta = meta['_channels_']
+                        ranges = []
+                        for i,r in channel_meta.iterrows():
+                            if r['$PnN'] in channels: ranges.append(float(r['$PnR']))
+                        if not np.allclose(ranges, ranges[0]):
+                            raise Exception, 'Not all specified channels have the same data range, therefore they cannot be transformed together.'
+                        kwargs['d'] = np.log10(ranges[0])
+                transformer = Transformation(transform, direction, args, **kwargs)
+                if use_spln:
+                    xmax = 10**kwargs['d']
+                    transformer.set_spline(-xmax, xmax)
+            ## transform all measurements     
+            for k,v in new.iteritems(): 
+                new[k] = v.transform(transformer, channels=channels, return_all=return_all, use_spln=use_spln)
+        else:
+            for k,v in new.iteritems(): 
+                new[k] = v.transform(transform, direction=direction, 
+                                     channels=channels, return_all=return_all, auto_range=auto_range,
+                                     use_spln=use_spln,args=args, **kwargs)
         if ID is not None:
             new.ID = ID
         if get_transformer:
