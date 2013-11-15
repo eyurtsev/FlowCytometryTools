@@ -11,7 +11,8 @@ from GoreUtilities.util import to_list
 from itertools import cycle
 import graph
 import inspect
-import numpy
+import numpy as np
+from FlowCytometryTools.core.transforms import Transformation
 
 class FCMeasurement(Measurement):
     '''
@@ -174,19 +175,98 @@ class FCMeasurement(Measurement):
         from FlowCytometryTools.GUI import gui
         return gui.launch_from_fc_measurement(self)
 
-    def transform(self, transform, channels=None, direction='forward',  
-                  return_all=True, args=(), **kwargs):
+    def transform(self, transform, direction='forward',  
+                  channels=None, return_all=True, auto_range=True,
+                  use_spln=True, get_transformer=False, ID = None, 
+                  args=(), **kwargs):
         '''
         Apply transform to specified channels. 
-        Return a new sample with transformed data.
+        The transformation parameters are shared between all transformed channels.
+        If different parameters need to be applied to different channels, use several calls to `transform`.
+        
+        Parameters
+        ----------
+        transform : callable | str
+            Callable that does a transformation (should accept a number or array),
+            or one of the supported named transformations.
+            Supported transformation are: {}. 
+        direction : 'forward' | 'inverse'
+            Direction of transformation.
+        channels : str | list of str | None
+            Names of channels to transform.
+            If None is given, all channels will be transformed.
+            .. warning:: Time channels will also be transformed if all channels are transformed.
+        return_all : bool
+            True -  return all columns, with specified ones transformed.
+            False - return only specified columns.
+        auto_range : bool 
+            If True data range (machine range) is automatically extracted from $PnR field of metadata.
+            .. warning:: If the data has been previously transformed its range may not match the $PnR value.
+                In these cases auto_range should be set to False.
+        use_spln : bool
+            If True th transform is done using a spline. 
+            See Transformation.transform for more details.
+        get_transformer : bool
+            If True the transformer is returned in addition to the new Measurement. 
+        args : 
+            Additional positional arguments to be passed to the Transformation.
+        kwargs :
+            Additional keyword arguments to be passed to the Transformation.
+            
+        Returns
+        -------
+        new : FCMeasurement
+            New measurement containing the transformed data.
+        transformer : Transformation
+            The Transformation applied to the input measurement.
+            Only returned if get_transformer=True.
+        
+        Examples
+        --------
+        >>> trans = original.transform('hlog')
+        >>> trans = original.transform('tlog', th=2)
+        >>> trans = original.transform('hlog', d=log10(2**18), auto_range=False)
+        >>> trans = original.transform('hlog', r=1000, use_spln=True, get_transformer=True)
+        >>> trans = original.transform('hlog', channels=['FSC-A', 'SSC-A'], b=500).transform('hlog', channels='B1-A', b=100)
         '''
-        from transforms import transform_frame
         data = self.get_data()
-        newdata = transform_frame(data, transform, channels, direction,
-                                           return_all, args, **kwargs)
-        newsample = self.copy()
-        newsample.set_data(data=newdata)
-        return newsample
+
+        channels = to_list(channels)
+        if channels is None:
+            channels = data.columns
+        ## create transformer
+        if isinstance(transform, Transformation):
+            transformer = transform
+        else: 
+            if auto_range: #determine transformation range
+                if 'd' in kwargs:
+                    warnings.warn('Encountered both auto_range=True and user-specified range value in parameter d.\n Range value specified in parameter d is used.') 
+                else:
+                    channel_meta = self.get_meta()['_channels_']
+                    ranges = []
+                    for i,r in channel_meta.iterrows():
+                        if r['$PnN'] in channels: ranges.append(float(r['$PnR']))
+                    if not np.allclose(ranges, ranges[0]):
+                        raise Exception, 'Not all specified channels have the same data range, therefore they cannot be transformed together.'
+                    kwargs['d'] = np.log10(ranges[0])
+            transformer = Transformation(transform, direction, args, **kwargs)        
+        ## create new data
+        transformed = transformer(data[channels], use_spln)   
+        if return_all:
+            new_data = data
+        else:
+            new_data = data.filter(columns)
+        new_data[channels] = transformed
+        ## create new Measurement
+        new = self.copy()    
+        new.set_data(data=new_data)
+        
+        if ID is not None:
+            new.ID = ID
+        if get_transformer:
+            return new, transformer
+        else:
+            return new       
 
     def gate(self, gate):
         '''
@@ -210,8 +290,10 @@ class FCCollection(MeasurementCollection):
     '''
     _measurement_class = FCMeasurement
     
-    def transform(self, transform, channels=None, direction='forward',  
-                  return_all=True, args=(), ID=None, **kwargs):
+    def transform(self, transform, direction='forward',  
+                  channels=None, return_all=True, auto_range=True,
+                  use_spln=True, get_transformer=False, ID = None, 
+                  args=(), **kwargs):
         '''
         Apply transform to each Measurement in the Collection. 
         Return a new Collection with transformed data.
@@ -221,12 +303,40 @@ class FCCollection(MeasurementCollection):
         
         TODO: change default to not transform HDR channels?
         '''
+        meta = self.values()[0].get_meta()
+        channels = to_list(channels)
+        if channels is None:
+            channels = meta['_channels_']['$PnN'].values
+        ## create transformer
+        if isinstance(transform, Transformation):
+            transformer = transform
+        else: 
+            if auto_range: #determine transformation range
+                if 'd' in kwargs:
+                    warnings.warn('Encountered both auto_range=True and user-specified range value in parameter d.\n Range value specified in parameter d is used.') 
+                else:
+                    channel_meta = meta['_channels_']
+                    ranges = []
+                    for i,r in channel_meta.iterrows():
+                        if r['$PnN'] in channels: ranges.append(float(r['$PnR']))
+                    if not np.allclose(ranges, ranges[0]):
+                        raise Exception, 'Not all specified channels have the same data range, therefore they cannot be transformed together.'
+                    kwargs['d'] = np.log10(ranges[0])
+            transformer = Transformation(transform, direction, args, **kwargs)
+            if use_spln:
+                xmax = 10**kwargs['d']
+                transformer.set_spline(-xmax, xmax)
+        ## transform all measurements     
         new = self.copy()
         for k,v in new.iteritems(): 
-            new[k] = v.transform(transform, channels, direction, return_all, args, **kwargs)
+            new[k] = v.transform(transformer, channels=channels, return_all=return_all, use_spln=use_spln)
+
         if ID is not None:
             new.ID = ID
-        return new
+        if get_transformer:
+            return new, transformer
+        else:
+            return new
 
     def gate(self, gate, ID=None):
         '''
@@ -346,14 +456,29 @@ FCPlate = FCOrderedCollection
 
 if __name__ == '__main__':
     import glob
-    datadir = '../tests/data/Plate02/'
+    datadir = '../tests/data/Plate01/'
     fname = glob.glob(datadir + '*.fcs')[0]
     sample = FCMeasurement(1, datafile=fname)
     #print sample.channels
     #print sample.channel_names
-    print FCPlate.plot.__doc__
+#     hs = sample.transform('hlog', use_spln=True)
+#     hs.plot(('FSC-A','SSC-A'))
+#     import pylab
+#     pylab.show()
 
-#     print plate
+    plate = FCPlate.from_dir('p', datadir).dropna()
+    print plate.counts()
+    print plate
+
+    import time
+    s = time.clock()
+    hplate = plate.transform('hlog', channels=['FSC-A', 'SSC-A'], use_spln=False)
+    e = time.clock()
+    
+    ss = time.clock()
+    hplate = plate.transform('hlog', channels=['FSC-A', 'SSC-A'])
+    es = time.clock()
+    print e-s, es-ss
     #print plate.wells 
     #print plate.well_IDS
     
