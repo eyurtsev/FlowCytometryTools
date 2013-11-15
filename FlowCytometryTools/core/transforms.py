@@ -126,15 +126,28 @@ def hlog_inv(y, b=500, r=_display_max, d=_l_mmax):
         s = 1
     return s*10**(s*aux) + b*aux - s
 
-def _x_for_spln(x, nx):
+def _x_for_spln(x, nx, log_spacing):
     '''
-    Create vector of logarithmically spaced values to be used in constructing a spline.
-    Resulting values span the range the input 'x'. 
-    To extend to negative values, the spacing is done separately on the 
-    negative and positive range, and these are later combined.
-    The number of points in the negative/positive range is proportional
-    to their relative range in log space. i.e., for data in the range
-    [-100, 1000] 2/5 of the resulting points will be in the negative range. 
+    Create vector of values to be used in constructing a spline.
+
+    Parameters
+    ----------
+    x : num | num iterable
+        Resulted values will span the range [min(x), max(x)]
+    nx : int
+        Length of returned vector.
+    log_spacing: bool
+        False - Create linearly spaced values.
+        True - Create logarithmically spaced values.
+            To extend to negative values, the spacing is done separately on the 
+            negative and positive range, and these are later combined.
+            The number of points in the negative/positive range is proportional
+            to their relative range in log space. i.e., for data in the range
+            [-100, 1000] 2/5 of the resulting points will be in the negative range.
+    
+    Returns
+    -------
+    x_spln : array
     '''
     x = asarray(x)
     xmin = min(x)
@@ -143,21 +156,23 @@ def _x_for_spln(x, nx):
         return asarray([xmin]*nx)
     if xmax<=0: #all values<=0
         return -_get_x_spln(-x, nx)[::-1]
-    lxmax = log10(xmax)
-    lxmin = log10(abs(xmin))
-    if xmin>0:
-        x_spln = logspace(lxmin, lxmax, nx)
-    elif xmin==0:
-        x_spln = r_[0, logspace(-1, lxmax, nx)]
+    if not log_spacing:
+        x_spln = linspace(xmin, xmax, nx)
     else:
-        f     = lxmin/(lxmin+lxmax)
-        nx_neg = int(f*nx)
-        nx_pos = nx - nx_neg
-        x_spln_pos  = logspace(-1, lxmax, nx_pos)
-        x_spln_neg  = -logspace(-1, lxmin, nx_neg)[::-1]
-        x_spln      = r_[x_spln_neg, x_spln_pos]
+        lxmax = log10(xmax)
+        lxmin = log10(abs(xmin))
+        if xmin>0:
+            x_spln = logspace(lxmin, lxmax, nx)
+        elif xmin==0:
+            x_spln = r_[0, logspace(-1, lxmax, nx)]
+        else:
+            f     = lxmin/(lxmin+lxmax)
+            nx_neg = int(f*nx)
+            nx_pos = nx - nx_neg
+            x_spln_pos  = logspace(-1, lxmax, nx_pos)
+            x_spln_neg  = -logspace(-1, lxmin, nx_neg)[::-1]
+            x_spln      = r_[x_spln_neg, x_spln_pos]
     return x_spln
-
 
 def _make_hlog_numeric(b, r, d):
     '''
@@ -168,20 +183,7 @@ def _make_hlog_numeric(b, r, d):
                                         args=(x, b, r, d)))
     return find_inv 
 
-def _make_hlog_spln(x, b=500, r=_display_max, d=_l_mmax, nx=1000, **kwargs):
-    '''
-    Construct a spline interpolation of the hlog transformation with given parameters.
-    '''
-    # create x values for spline
-    x_spln = _get_x_spln(x, nx)
-    #make spline
-    hlog_fun = _make_hlog_numeric(b, r, d)
-    y_spln = hlog_fun(x_spln)
-    spln = InterpolatedUnivariateSpline(x_spln, y_spln, **kwrgs)
-    return spln
-
-def hlog(x, b=500, r=_display_max, d=_l_mmax, 
-        use_spln=None, spln_min=1000, spln_nx=1000, spln_kwrgs={}):
+def hlog(x, b=500, r=_display_max, d=_l_mmax):
     '''
     Base 10 hyperlog transform.
 
@@ -197,19 +199,7 @@ def hlog(x, b=500, r=_display_max, d=_l_mmax,
     d : num (default = log10(2**18))
         log10 of maximal possible measured value.
         hlog_inv(r) = 10**d
-    use_spln : bool | None
-        Determines whether to transform fewer points and use spline 
-        interpulation to get all transformed values. This is a speed hack.
-        If None, set based on the number of points to be transformed.
-    spln_min : num
-        If transforming more than spln_min points, transform fewer points
-        and use spline interpulation to get all transformed values.
-        This is just a speed hack.
-    spln_nx : int
-        number of points to use to construct spline
-    spln_kwrgs :
-        kwrgs for scipy.interpolate.InterpolatedUnivariateSpline    
-    
+     
     Returns
     -------
     Array of transformed values.
@@ -221,16 +211,6 @@ def hlog(x, b=500, r=_display_max, d=_l_mmax,
         n = len(x)
         if not n: #if transforming empty container
             return x
-        ## decide whether to use spline or not
-        if use_spln is None: 
-            if n>=spln_min:
-                use_spln = True
-            else:
-                use_spln = False
-        ## do transform
-        if use_spln:
-            spln = _make_hlog_spln(x, b, r, d, spln_nx=1000, **spln_kwrgs)
-            y = spln(x)
         else:
             y = hlog_fun(x)
     return y
@@ -265,7 +245,8 @@ def parse_transform(transform, direction='forward'):
     direction : 'forward' | 'inverse'
     '''
     if hasattr(transform, '__call__'):
-        tfun = transform
+        tfun = vectorize(transform)
+        tname = None
     elif hasattr(transform, 'lower'):
         tname = _get_canonical_name(transform)
         if tname is None:
@@ -274,7 +255,7 @@ def parse_transform(transform, direction='forward'):
             tfun = name_transforms[tname][direction]        
     else:
         raise TypeError, 'Unsupported transform type: %s' %type(transform)
-    return tfun
+    return tfun, tname
 
 
 def transform_frame(frame, transform, columns=None, direction='forward',
@@ -287,9 +268,9 @@ def transform_frame(frame, transform, columns=None, direction='forward',
         True -  return all columns, with specified ones transformed.
         False - return only specified columns.
     
-    TODO: add detailed doc
+    ..warning: deprecated
     '''
-    tfun = parse_transform(transform, direction)
+    tfun, tname = parse_transform(transform, direction)
     columns = to_list(columns)
     if columns is None:
         columns = frame.columns
@@ -300,14 +281,15 @@ def transform_frame(frame, transform, columns=None, direction='forward',
     else:
         transformed = frame.filter(columns).apply(tfun, *args, **kwargs)
     return transformed
-
+        
 from GoreUtilities import BaseObject
 class Transformation(BaseObject):
+    '''
+    A transformation for flow cytometry data. 
+    '''
     
-    def __init__(self, transform, direction='forward', name=None, args=(), **kwargs):
-        '''
-        A transformation for flow cytometry data. 
-        
+    def __init__(self, transform, direction='forward', name=None, spln=None, args=(), **kwargs):
+        '''        
         Parameters
         ----------
         transform: callable | str
@@ -315,38 +297,76 @@ class Transformation(BaseObject):
             or one of the supported named transformations.
             Supported transformation are: {}. 
         direction: 'forward' | 'inverse'
+            Direction of the transformation.
         '''
-        self.tfun   = parse_transform(transform, direction)
-        self.transform = transform
+        tfun, tname = parse_transform(transform, direction)
+        self.tfun      = tfun
+        self.tname     = tname
         self.direction = direction
-        self.args   = args
-        self.kwargs = kwargs
-        self.name   = name
+        self.args      = args
+        self.kwargs    = kwargs
+        self.name      = name
+        self.spln      = spln
     
     __init__.__doc__ = __init__.__doc__.format(', '.join(name_transforms.keys()))
     
     def __repr__(self): return repr(self.name)
         
-    def __call__(self, x):
+    def transform(self, x, use_spln=False, **kwargs):
         '''
         Apply transform to x
+        
+        Parameters
+        ----------
+        x : float-array-convertible
+            Data to be transformed. 
+            Should support conversion to an array of floats.
+        use_spln: bool
+            True - transform using the spline specified in self.slpn.
+                    If self.spln is None, set the spline.
+            False - transform using self.tfun
+        kwargs:
+            Keyword arguments to be passed to self.set_spline.
+            Only used if use_spln=True & self.spln=None.
+        
+        Returns
+        -------
+        Array of transformed values.
         '''
-        return self.tfun(x,  *self.args, **self.kwargs)
+        x = asarray(x, dtype=float)
+        n = x.shape[0]
+        if use_spln:
+            if self.spln is None:
+                self.set_spline(x.min(), x.max(), **kwargs)
+            return self.spln(x)
+        else:
+            return self.tfun(x, *self.args, **self.kwargs)
+    
+    __call__ = transform
     
     @property
     def inverse(self):
-        tname = _get_canonical_name(self.transform)
-        if tname is None:
+        if self.tname is None:
             warnings.warn('inverse is supported only for named transforms. Returning None.')
             return None
         else:
             direction = 'forward' if self.direction=='inverse' else 'inverse'
-            ifun = name_transforms[tname][direction] 
+            ifun = name_transforms[self.tname][direction] 
             tinv = self.copy()
             tinv.tfun = ifun
             tinv.direction = direction
         return tinv
-
+    
+    def set_spline(self, xmin, xmax, nx=1000, log_spacing=None, **kwargs):
+        if log_spacing is None:
+            if self.tname in ['hlog', 'tlog', 'glog']:
+                log_spacing = True
+            else:
+                log_spacing = False
+        x_spln = _x_for_spln([xmin, xmax], nx, log_spacing)
+        y_spln = self(x_spln)
+        spln   = InterpolatedUnivariateSpline(x_spln, y_spln, **kwargs)
+        self.spln = vectorize(spln)
         
 if __name__ == '__main__':
 #     y1 = -1
@@ -365,9 +385,20 @@ if __name__ == '__main__':
 #     print hlog(x)
 
     import numpy as np
-    x = np.random.rand(3,2)*100
+    x = np.random.rand(50,2)*100
     t = Transformation('hlog', 'forward', b=5, r=3)
-    tinv = t.inverse
+#     t.set_spline(x.min(), x.max())
     
-    print x
-    print tinv(t(x))
+    import time
+    s = time.clock()
+    y = t(x)
+    e = time.clock()
+    
+    ss = time.clock()
+    ys = t(x, use_spln=True)
+    es = time.clock()
+    print e-s, es-ss
+    print y/ys
+#     
+    print x/t.inverse(y)
+    
