@@ -208,6 +208,8 @@ class FCMeasurement(Measurement):
             See Transformation.transform for more details.
         get_transformer : bool
             If True the transformer is returned in addition to the new Measurement. 
+        ID : hashable | None
+            ID for the resulting collection. If None is passed, the original ID is used.
         args : 
             Additional positional arguments to be passed to the Transformation.
         kwargs :
@@ -290,21 +292,67 @@ class FCCollection(MeasurementCollection):
     '''
     _measurement_class = FCMeasurement
     
-    def transform(self, transform, direction='forward', share_tranform=True, 
+    def transform(self, transform, direction='forward', share_transform=True, 
                   channels=None, return_all=True, auto_range=True,
                   use_spln=True, get_transformer=False, ID = None, 
                   args=(), **kwargs):
         '''
         Apply transform to each Measurement in the Collection. 
         Return a new Collection with transformed data.
-        Note that the new Collection will hold the data for ALL Measurements in memory!
+        .. warning : The new Collection will hold the data for **ALL** Measurements in memory!
         
-        see FCMeasurement.transform for more details.
+        Parameters
+        ----------
+        transform : callable | str
+            Callable that does a transformation (should accept a number or array),
+            or one of the supported named transformations.
+            Supported transformation are: {}. 
+        share_transform : bool
+            True - same transformer will be used for all measurements in the collection.
+            False - a new transformer will be created for each measurement, allowing for varying data ranges. 
+        direction : 'forward' | 'inverse'
+            Direction of transformation.
+        channels : str | list of str | None
+            Names of channels to transform.
+            If None is given, all channels will be transformed.
+            .. warning:: Time channels will also be transformed if all channels are transformed.
+        return_all : bool
+            True -  return all columns, with specified ones transformed.
+            False - return only specified columns.
+        auto_range : bool 
+            If True data range (machine range) is automatically extracted from $PnR field of metadata.
+            .. warning:: If the data has been previously transformed its range may not match the $PnR value.
+                In these cases auto_range should be set to False.
+        use_spln : bool
+            If True th transform is done using a spline. 
+            See Transformation.transform for more details.
+        get_transformer : bool
+            If True the transformer is returned in addition to the new Measurement.
+        ID : hashable | None
+            ID for the resulting collection. If None is passed, the original ID is used.
+        args : 
+            Additional positional arguments to be passed to the Transformation.
+        kwargs :
+            Additional keyword arguments to be passed to the Transformation.
+            
+        Returns
+        -------
+        new : FCCollection
+            New collection containing the transformed measurements.
+        transformer : Transformation
+            The Transformation applied to the measurements.
+            Only returned if get_transformer=True & share_transform=True.
         
-        TODO: change default to not transform HDR channels?
+        Examples
+        --------
+        >>> trans = original.transform('hlog')share_transform
+        >>> trans = original.transform('tlog', th=2)
+        >>> trans = original.transform('hlog', d=log10(2**18), auto_range=False)
+        >>> trans = original.transform('hlog', r=1000, use_spln=True, get_transformer=True)
+        >>> trans = original.transform('hlog', channels=['FSC-A', 'SSC-A'], b=500).transform('hlog', channels='B1-A', b=100)
         '''
         new = self.copy()
-        if share_tranform:
+        if share_transform:
             meta = self.values()[0].get_meta()
             channels = to_list(channels)
             if channels is None:
@@ -333,12 +381,12 @@ class FCCollection(MeasurementCollection):
                 new[k] = v.transform(transformer, channels=channels, return_all=return_all, use_spln=use_spln)
         else:
             for k,v in new.iteritems(): 
-                new[k] = v.transform(transform, direction=direction, 
-                                     channels=channels, return_all=return_all, auto_range=auto_range,
-                                     use_spln=use_spln,args=args, **kwargs)
+                new[k] = v.transform(transform, direction=direction, channels=channels, 
+                                     return_all=return_all, auto_range=auto_range, get_transformer=False,
+                                     use_spln=use_spln, args=args, **kwargs)
         if ID is not None:
             new.ID = ID
-        if get_transformer:
+        if share_transform and get_transformer:
             return new, transformer
         else:
             return new
