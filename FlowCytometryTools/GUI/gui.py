@@ -38,9 +38,9 @@ class GUIEmbedded(GeneratedWireframe):
             # of the frame - so appearance is closer to GTK version.
             # As noted above, doesn't work for Mac.
             self.toolbar.SetSize(wx.Size(fw, th))
-            self.sizer_5.Add(self.toolbar, 0, wx.LEFT | wx.TOP | wx.GROW)
         # update the axes menu on the toolbar
         self.toolbar.update()
+        return self.toolbar
 
     def load_fc_measurement(self, measurement):
         self.fc_widget_ref.gate_manager.load_measurement(measurement)
