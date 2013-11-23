@@ -4,8 +4,6 @@ matplotlib.use('WXAgg')
 import matplotlib.pylab as pl
 
 from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
-#from matplotlib.backends.backend_wx import NavigationToolbar2Wx
-
 
 from matplotlib.figure import Figure
 
@@ -41,39 +39,3 @@ class FCWidget(FigureCanvas):
 
 if __name__ == '__main__':
     pass
-
-
-
-################
-# Garbage code
-################
-
-        #def list_gates(*args):
-            #print('='*80)
-            #print('Gates created\n' + 80*'-')
-            #print('\n'.join([str(g) for g in GateManager.gateList]))
-#
-        #def load_fcs(*args):
-            #gateKeeper.load_fcs()
-#
-#
-        #def create_quad_gate(*args):
-            #gateKeeper.set_state(STATE_GK.START_DRAWING_QUAD_GATE)
-#
-        #buttonList = [
-                #{'Label' : 'Load FCS\nFile',                  'Button Location' : buttonSizes, 'event': load_fcs},
-                ##{'Label' : 'Load Gates\nfrom File',           'Button Location' : buttonSizes, 'event': lambda do : gateKeeper.load_gates('Choose a gates file', '*.xml')},
-                ##{'Label' : 'Save Current\nGates to File',     'Button Location' : buttonSizes, 'event': lambda do : gateKeeper.save_gates('Gate File (*.xml)|*.xml')},
-                #{'Label' : 'List Gates',                      'Button Location' : buttonSizes, 'event': list_gates},
-                #{'Label' : 'Polygon Gate',                    'Button Location' : buttonSizes, 'event': create_poly_gate},
-                #{'Label' : 'Quad Gate',                       'Button Location' : buttonSizes, 'event': create_quad_gate},
-                #{'Label' : 'Delete Gate',                     'Button Location' : buttonSizes, 'event': lambda do : gateKeeper.set_state(STATE_GK.DELETE_GATE)},
-                ##{'Label' : 'Quit',                            'Button Location' : buttonSizes, 'event': lambda do : pl.close()}]
-                #]
-#
-        #for thisIndex, thisButton in enumerate(buttonList):
-            #thisButton['Button Location'][0] = 0.05 + thisIndex * buttonSpacing
-            #thisButton['Axes'] = pl.axes(thisButton['Button Location'])
-            #thisButton['Reference'] = Button(thisButton['Axes'], thisButton['Label'])
-            #thisButton['Reference'].on_clicked(thisButton['event'])
-
