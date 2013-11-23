@@ -3,9 +3,9 @@
 import wx
 from wireframe import GeneratedWireframe
 from manager_states import STATE_GK
+from matplotlib.backends.backend_wx import NavigationToolbar2Wx
 
 class GUIEmbedded(GeneratedWireframe):
-
     def _update_axes(self):
         # Quick fix. Should actually fire events
         if self.fc_widget_ref.gate_manager.sample is not None:
@@ -15,6 +15,32 @@ class GUIEmbedded(GeneratedWireframe):
             self.x_axis_list.InsertItems(options, 0)
             self.y_axis_list.Clear()
             self.y_axis_list.InsertItems(options, 0)
+
+    def add_toolbar(self):
+        """
+        See http://matplotlib.org/examples/user_interfaces/embedding_in_wx2.html
+        for details
+        """
+        self.canvas = self.fc_widget_ref.fig1.canvas
+        self.toolbar = NavigationToolbar2Wx(self.canvas)
+        self.toolbar.Realize()
+        if wx.Platform == '__WXMAC__':
+            # Mac platform (OSX 10.3, MacPython) does not seem to cope with
+            # having a toolbar in a sizer. This work-around gets the buttons
+            # back, but at the expense of having the toolbar at the top
+            self.SetToolBar(self.toolbar)
+        else:
+            # On Windows platform, default window size is incorrect, so set
+            # toolbar width to figure width.
+            tw, th = self.toolbar.GetSizeTuple()
+            fw, fh = self.canvas.GetSizeTuple()
+            # By adding toolbar in sizer, we are able to put it at the bottom
+            # of the frame - so appearance is closer to GTK version.
+            # As noted above, doesn't work for Mac.
+            self.toolbar.SetSize(wx.Size(fw, th))
+            self.sizer_5.Add(self.toolbar, 0, wx.LEFT | wx.TOP | wx.GROW)
+        # update the axes menu on the toolbar
+        self.toolbar.update()
 
     def load_fc_measurement(self, measurement):
         self.fc_widget_ref.gate_manager.load_measurement(measurement)
