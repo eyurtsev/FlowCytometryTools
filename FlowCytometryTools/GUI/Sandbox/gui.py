@@ -7,6 +7,7 @@ from numpy import random
 import numpy
 from FlowCytometryTools import FCMeasurement
 
+from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
 
 class MOUSE:
     LEFT_CLICK = 1
@@ -188,21 +189,17 @@ class PolyDrawer(AxesWidget):
         self.disconnect_events()
         self.line.remove()
 
-class FCToolBar():
+class FCToolBar(object):
     """
     Manages gate creation widgets.
     """
-    def __init__(self):
+    def __init__(self, ax):
         self.gates = []
-        fig = figure()
-
-        self.fig = fig
-        self.ax = fig.add_subplot(111)
+        self.fig = ax.figure
+        self.ax = ax
         self._plt_data = None
         self.current_channels = None
 
-        xlim(-10, 10)
-        ylim(-10, 10)
         connect('key_press_event', lambda event : self.gate_drawer(event, self.ax))
         show()
 
@@ -225,10 +222,10 @@ class FCToolBar():
     def create_threshold_gate(self, event, orientation, ax):
         gate = ThresholdGate((event.xdata, event.ydata), orientation, ax=ax)
         self.gates.append(gate)
-        self.cs.clear(event)
         self.cs.disconnect_events()
+        self.cs.clear(event)
         del self.cs
-        gcf().canvas.draw()
+        self.fig.canvas.draw_idle()
 
     def load_fcs(self, parent=None):
         ax = self.ax
@@ -260,7 +257,7 @@ class FCToolBar():
                 self.cs.connect_event('button_press_event',
                         lambda event : self.create_threshold_gate(event, orientation, ax))
         elif event.key in ['9', '9']:
-            if not hasattr(self, 'cs'):
+            if not hasattr(self, 'cs') or self.cs is None:
                 self.cs = Cursor(ax)
                 self.cs.connect_event('button_press_event', self.create_vertex)
         elif event.key in ['0']:
@@ -269,6 +266,36 @@ class FCToolBar():
         #if event.key in ['R', 'r']:
             #print 'Launching rectangle selector'
             #onselect.RS = RectangleSelector(ax, onselect, drawtype='box')
+
+    ####################
+    ### Loading Data ###
+    ####################
+
+    def load_measurement(self, measurement):
+        self.sample = measurement.copy()
+        self._sample_loaded_event()
+
+    def _sample_loaded_event(self):
+        if self.sample is not None:
+            if self.current_channels == None:
+                # Assigns first two channels by default if none have been specified yet.
+                self.current_channels = list(self.sample.channel_names[0:2])
+
+            self.set_axis(self.current_channels)
+            self.plot_data()
+
+    def set_axis(self, channels):
+        """
+        Sets the x and y axis
+        """
+        channels = tuple([ch.encode("UTF-8") for ch in channels]) # To get rid of u's
+
+        self.current_channels = channels
+        self.plot_data()
+
+    ####################
+    ### Plotting Data ##
+    ####################
 
     def plot_data(self):
         """ Plots the loaded data """
@@ -316,119 +343,50 @@ class FCToolBar():
 
         self.fig.canvas.draw()
 
-
-
 class Global:
     pass
 
 if __name__ == '__main__':
-    Global.manager = FCToolBar()
+    fig = figure()
+    ax = fig.add_subplot(111)
+    xlim(-10, 10)
+    ylim(-10, 10)
+    Global.manager = FCToolBar(ax)
+    #Global.manager = FCWidget(None, 1)
 
 ###############################
-def key_press_handler(event, canvas, toolbar=None):
-    """
-    Implement the default mpl key bindings for the canvas and toolbar
-    described at :ref:`key-event-handling`
-
-    *event*
-      a :class:`KeyEvent` instance
-    *canvas*
-      a :class:`FigureCanvasBase` instance
-    *toolbar*
-      a :class:`NavigationToolbar2` instance
-
-    """
-    # these bindings happen whether you are over an axes or not
-
-    if event.key is None:
-        return
-
-    # Load key-mappings from your matplotlibrc file.
-    fullscreen_keys = rcParams['keymap.fullscreen']
-    home_keys = rcParams['keymap.home']
-    back_keys = rcParams['keymap.back']
-    forward_keys = rcParams['keymap.forward']
-    pan_keys = rcParams['keymap.pan']
-    zoom_keys = rcParams['keymap.zoom']
-    save_keys = rcParams['keymap.save']
-    quit_keys = rcParams['keymap.quit']
-    grid_keys = rcParams['keymap.grid']
-    toggle_yscale_keys = rcParams['keymap.yscale']
-    toggle_xscale_keys = rcParams['keymap.xscale']
-    all = rcParams['keymap.all_axes']
-
-    # toggle fullscreen mode (default key 'f')
-    if event.key in fullscreen_keys:
-        canvas.manager.full_screen_toggle()
-
-    # quit the figure (defaut key 'ctrl+w')
-    if event.key in quit_keys:
-        Gcf.destroy_fig(canvas.figure)
-
-    if toolbar is not None:
-        # home or reset mnemonic  (default key 'h', 'home' and 'r')
-        if event.key in home_keys:
-            toolbar.home()
-        # forward / backward keys to enable left handed quick navigation
-        # (default key for backward: 'left', 'backspace' and 'c')
-        elif event.key in back_keys:
-            toolbar.back()
-        # (default key for forward: 'right' and 'v')
-        elif event.key in forward_keys:
-            toolbar.forward()
-        # pan mnemonic (default key 'p')
-        elif event.key in pan_keys:
-            toolbar.pan()
-        # zoom mnemonic (default key 'o')
-        elif event.key in zoom_keys:
-            toolbar.zoom()
-        # saving current figure (default key 's')
-        elif event.key in save_keys:
-            toolbar.save_figure()
-
-    if event.inaxes is None:
-        return
-
-    # these bindings require the mouse to be over an axes to trigger
-
-    # switching on/off a grid in current axes (default key 'g')
-    if event.key in grid_keys:
-        event.inaxes.grid()
-        canvas.draw()
-    # toggle scaling of y-axes between 'log and 'linear' (default key 'l')
-    elif event.key in toggle_yscale_keys:
-        ax = event.inaxes
-        scale = ax.get_yscale()
-        if scale == 'log':
-            ax.set_yscale('linear')
-            ax.figure.canvas.draw()
-        elif scale == 'linear':
-            ax.set_yscale('log')
-            ax.figure.canvas.draw()
-    # toggle scaling of x-axes between 'log and 'linear' (default key 'k')
-    elif event.key in toggle_xscale_keys:
-        ax = event.inaxes
-        scalex = ax.get_xscale()
-        if scalex == 'log':
-            ax.set_xscale('linear')
-            ax.figure.canvas.draw()
-        elif scalex == 'linear':
-            ax.set_xscale('log')
-            ax.figure.canvas.draw()
-
-    elif (event.key.isdigit() and event.key != '0') or event.key in all:
-        # keys in list 'all' enables all axes (default key 'a'),
-        # otherwise if key is a number only enable this particular axes
-        # if it was the axes, where the event was raised
-        if not (event.key in all):
-            n = int(event.key) - 1
-        for i, a in enumerate(canvas.figure.get_axes()):
-            # consider axes, in which the event was raised
-            # FIXME: Why only this axes?
-            if event.x is not None and event.y is not None \
-                    and a.in_axes(event):
-                if event.key in all:
-                    a.set_navigate(True)
-                else:
-                    a.set_navigate(i == n)
-
+# SAMPLE KEY PRESS HANDLER
+#################################
+#def key_press_handler(event, canvas, toolbar=None):
+    #"""
+    #Implement the default mpl key bindings for the canvas and toolbar
+    #described at :ref:`key-event-handling`
+#
+    #*event*
+      #a :class:`KeyEvent` instance
+    #*canvas*
+      #a :class:`FigureCanvasBase` instance
+    #*toolbar*
+      #a :class:`NavigationToolbar2` instance
+#
+    #"""
+    ## these bindings happen whether you are over an axes or not
+#
+    #if event.key is None:
+        #return
+    ## toggle fullscreen mode (default key 'f')
+    #if event.key in fullscreen_keys:
+        #canvas.manager.full_screen_toggle()
+#
+    ## quit the figure (defaut key 'ctrl+w')
+    #if event.key in quit_keys:
+        #Gcf.destroy_fig(canvas.figure)
+#
+    #if toolbar is not None:
+        ## home or reset mnemonic  (default key 'h', 'home' and 'r')
+        #if event.key in home_keys:
+            #toolbar.home()
+        ## forward / backward keys to enable left handed quick navigation
+        ## (default key for backward: 'left', 'backspace' and 'c')
+        #elif event.key in back_keys:
+            #toolbar.back()
