@@ -5,6 +5,7 @@ from pylab import *
 import pylab as pl
 from numpy import random
 import numpy
+from FlowCytometryTools import FCMeasurement
 
 
 class MOUSE:
@@ -73,7 +74,6 @@ class Vertex(AxesWidget):
         if self.update_notify_callback is not None:
             self.update_notify_callback(self)
         pl.gcf().canvas.draw_idle()
-
 
 class PolyGate(AxesWidget):
     def __init__(self, verts, ax=None):
@@ -188,7 +188,7 @@ class PolyDrawer(AxesWidget):
         self.disconnect_events()
         self.line.remove()
 
-class Manager():
+class FCToolBar():
     """
     Manages gate creation widgets.
     """
@@ -198,6 +198,8 @@ class Manager():
 
         self.fig = fig
         self.ax = fig.add_subplot(111)
+        self._plt_data = None
+        self.current_channels = None
 
         xlim(-10, 10)
         ylim(-10, 10)
@@ -206,11 +208,10 @@ class Manager():
 
     def create_vertex(self, event):
         ax = self.ax
-        #rect = DraggableRectangle.from_vert(plt.gca(), (event.xdata, event.ydata, 0.3, 0.3))
-        rect = Vertex((event.xdata, event.ydata), ax)
-        self.gates.append(rect)
-        self.cs.clear(event)
+        vertex = Vertex((event.xdata, event.ydata), ax)
+        self.gates.append(vertex)
         self.cs.disconnect_events()
+        self.cs.clear(event)
         del self.cs
         self.fig.canvas.draw()
 
@@ -240,8 +241,8 @@ class Manager():
                     'FCS files (*.fcs)|*.fcs', parent=parent)
 
         if filepath is not None:
-            self.sample = FCMeasurement('temp', datafile=filepath)
-            self._sample_loaded_event()
+            self.sample = FCMeasurement('temp', datafile=filepath).transform('hlog')
+            #self._sample_loaded_event()
 
     def gate_drawer(self, event, ax):
         """
@@ -258,22 +259,20 @@ class Manager():
                 self.cs = Cursor(ax, vertOn=vertOn, horizOn=horizOn)
                 self.cs.connect_event('button_press_event',
                         lambda event : self.create_threshold_gate(event, orientation, ax))
-        elif event.key in ['C', 'c']:
+        elif event.key in ['9', '9']:
             if not hasattr(self, 'cs'):
                 self.cs = Cursor(ax)
                 self.cs.connect_event('button_press_event', self.create_vertex)
         elif event.key in ['0']:
-            self.load_fcs(ax, pl.gcf().canvas)
+            self.load_fcs()
+            self.plot_data()
         #if event.key in ['R', 'r']:
             #print 'Launching rectangle selector'
             #onselect.RS = RectangleSelector(ax, onselect, drawtype='box')
 
-
-    @staticmethod
-    def plot_data():
+    def plot_data(self):
         """ Plots the loaded data """
         sample = self.sample
-
         ax = self.ax
 
         if self._plt_data is not None:
@@ -286,6 +285,10 @@ class Manager():
             del self._plt_data
             self._plt_data = None
 
+
+        if self.current_channels is None:
+            self.current_channels = sample.channel_names[4:6]
+
         channels = self.current_channels
 
         if channels[0] == channels[1]:
@@ -296,8 +299,6 @@ class Manager():
             self._plt_data = sample.plot(channels, ax=ax)
             xlabel = self.current_channels[0]
             ylabel = self.current_channels[1]
-
-
 
         if hasattr(self._plt_data, 'get_datalim'):
             bbox = self._plt_data.get_datalim(self.ax.transData)
@@ -315,5 +316,119 @@ class Manager():
 
         self.fig.canvas.draw()
 
+
+
+class Global:
+    pass
+
 if __name__ == '__main__':
-    manager = Manager()
+    Global.manager = FCToolBar()
+
+###############################
+def key_press_handler(event, canvas, toolbar=None):
+    """
+    Implement the default mpl key bindings for the canvas and toolbar
+    described at :ref:`key-event-handling`
+
+    *event*
+      a :class:`KeyEvent` instance
+    *canvas*
+      a :class:`FigureCanvasBase` instance
+    *toolbar*
+      a :class:`NavigationToolbar2` instance
+
+    """
+    # these bindings happen whether you are over an axes or not
+
+    if event.key is None:
+        return
+
+    # Load key-mappings from your matplotlibrc file.
+    fullscreen_keys = rcParams['keymap.fullscreen']
+    home_keys = rcParams['keymap.home']
+    back_keys = rcParams['keymap.back']
+    forward_keys = rcParams['keymap.forward']
+    pan_keys = rcParams['keymap.pan']
+    zoom_keys = rcParams['keymap.zoom']
+    save_keys = rcParams['keymap.save']
+    quit_keys = rcParams['keymap.quit']
+    grid_keys = rcParams['keymap.grid']
+    toggle_yscale_keys = rcParams['keymap.yscale']
+    toggle_xscale_keys = rcParams['keymap.xscale']
+    all = rcParams['keymap.all_axes']
+
+    # toggle fullscreen mode (default key 'f')
+    if event.key in fullscreen_keys:
+        canvas.manager.full_screen_toggle()
+
+    # quit the figure (defaut key 'ctrl+w')
+    if event.key in quit_keys:
+        Gcf.destroy_fig(canvas.figure)
+
+    if toolbar is not None:
+        # home or reset mnemonic  (default key 'h', 'home' and 'r')
+        if event.key in home_keys:
+            toolbar.home()
+        # forward / backward keys to enable left handed quick navigation
+        # (default key for backward: 'left', 'backspace' and 'c')
+        elif event.key in back_keys:
+            toolbar.back()
+        # (default key for forward: 'right' and 'v')
+        elif event.key in forward_keys:
+            toolbar.forward()
+        # pan mnemonic (default key 'p')
+        elif event.key in pan_keys:
+            toolbar.pan()
+        # zoom mnemonic (default key 'o')
+        elif event.key in zoom_keys:
+            toolbar.zoom()
+        # saving current figure (default key 's')
+        elif event.key in save_keys:
+            toolbar.save_figure()
+
+    if event.inaxes is None:
+        return
+
+    # these bindings require the mouse to be over an axes to trigger
+
+    # switching on/off a grid in current axes (default key 'g')
+    if event.key in grid_keys:
+        event.inaxes.grid()
+        canvas.draw()
+    # toggle scaling of y-axes between 'log and 'linear' (default key 'l')
+    elif event.key in toggle_yscale_keys:
+        ax = event.inaxes
+        scale = ax.get_yscale()
+        if scale == 'log':
+            ax.set_yscale('linear')
+            ax.figure.canvas.draw()
+        elif scale == 'linear':
+            ax.set_yscale('log')
+            ax.figure.canvas.draw()
+    # toggle scaling of x-axes between 'log and 'linear' (default key 'k')
+    elif event.key in toggle_xscale_keys:
+        ax = event.inaxes
+        scalex = ax.get_xscale()
+        if scalex == 'log':
+            ax.set_xscale('linear')
+            ax.figure.canvas.draw()
+        elif scalex == 'linear':
+            ax.set_xscale('log')
+            ax.figure.canvas.draw()
+
+    elif (event.key.isdigit() and event.key != '0') or event.key in all:
+        # keys in list 'all' enables all axes (default key 'a'),
+        # otherwise if key is a number only enable this particular axes
+        # if it was the axes, where the event was raised
+        if not (event.key in all):
+            n = int(event.key) - 1
+        for i, a in enumerate(canvas.figure.get_axes()):
+            # consider axes, in which the event was raised
+            # FIXME: Why only this axes?
+            if event.x is not None and event.y is not None \
+                    and a.in_axes(event):
+                if event.key in all:
+                    a.set_navigate(True)
+                else:
+                    a.set_navigate(i == n)
+
