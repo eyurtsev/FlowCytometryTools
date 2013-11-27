@@ -6,6 +6,13 @@ from manager_states import STATE_GK
 from matplotlib.backends.backend_wx import NavigationToolbar2Wx
 
 class GUIEmbedded(GeneratedWireframe):
+
+    def __init__(self, *args, **kwargs):
+        GeneratedWireframe.__init__(self, *args, **kwargs)
+        print self.canvas
+        self.fig = self.canvas.figure
+        self.ax = self.fig.add_subplot(111)
+
     def _update_axes(self):
         # Quick fix. Should actually fire events
         if self.fc_widget_ref.gate_manager.sample is not None:
