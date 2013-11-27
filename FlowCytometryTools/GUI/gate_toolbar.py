@@ -197,7 +197,7 @@ class FCToolBar(object):
         self._plt_data = None
         self.current_channels = None
         self.canvas = self.fig.canvas
-        self.canvas.mpl_connect('key_press_event', lambda event : self.gate_drawer(event, self.ax))
+        self.canvas.mpl_connect('key_press_event', lambda event : key_press_handler(event, self.canvas, self))
 
     def create_vertex(self, event):
         ax = self.ax
@@ -208,21 +208,6 @@ class FCToolBar(object):
         del self.cs
         self.fig.canvas.draw()
 
-    def create_polygon(self, poly_drawer_instance):
-        ax = self.ax
-        verts = poly_drawer_instance.verts
-        gate = PolyGate(verts, ax)
-        self.gates.append(gate)
-        del poly_drawer_instance
-
-    def create_threshold_gate(self, event, orientation, ax):
-        print 'creating threshold gate'
-        gate = ThresholdGate((event.xdata, event.ydata), orientation, ax=ax)
-        self.gates.append(gate)
-        self.cs.disconnect_events()
-        self.cs.clear(event)
-        del self.cs
-        self.fig.canvas.draw_idle()
 
     def load_fcs(self, parent=None):
         ax = self.ax
@@ -237,36 +222,47 @@ class FCToolBar(object):
         if filepath is not None:
             self.sample = FCMeasurement('temp', datafile=filepath)
             self._sample_loaded_event()
-
-
-    def create_polygon_gate_widget():
-        self.pd = PolyDrawer(ax, oncreated=self.create_polygon, lineprops = dict(color='k', marker='o'))
-
-    def gate_drawer(self, event, ax):
-        """
-        Launches different drawing tools
-        """
-        if event.key.lower() in ['1']:
-            self.pd = PolyDrawer(ax, oncreated=self.create_polygon, lineprops = dict(color='k', marker='o'))
-        elif event.key in ['2', '3', '4']:
-            orientation = {'2' : 'both', '3' : 'horizontal', '4' : 'vertical'}[event.key]
-
-            if not hasattr(self, 'cs'):
-                vertOn  = event.key in ['2', '4']
-                horizOn = event.key in ['2', '3']
-                self.cs = Cursor(ax, vertOn=vertOn, horizOn=horizOn)
-                self.cs.connect_event('button_press_event',
-                        lambda event : self.create_threshold_gate(event, orientation, ax))
-        elif event.key in ['9', '9']:
-            if not hasattr(self, 'cs') or self.cs is None:
-                self.cs = Cursor(ax)
-                self.cs.connect_event('button_press_event', self.create_vertex)
-        elif event.key in ['0']:
-            self.load_fcs()
             self.plot_data()
-        #if event.key in ['R', 'r']:
-            #print 'Launching rectangle selector'
-            #onselect.RS = RectangleSelector(ax, onselect, drawtype='box')
+
+    def create_threshold_gate_widget(self, orientation):
+        """
+        Call this widget to create a threshold gate.
+        Orientation : 'horizontal' | 'vertical' | 'both'
+        """
+        def clear_cursor(cs):
+            cs.disconnect_events()
+            cs.clear(None)
+            del cs
+            fig.canvas.draw_idle()
+
+        if hasattr(self, 'cs') and self.cs is not None:
+            clear_cursor(self.cs)
+
+        def create_threshold_gate(event, orientation, ax):
+            print 'creating threshold gate'
+            gate = ThresholdGate((event.xdata, event.ydata), orientation, ax=ax)
+            self.gates.append(gate)
+            clear_cursor(self.cs)
+
+        vertOn  = orientation in ['both', 'vertical']
+        horizOn = orientation in ['both', 'horizontal']
+
+        self.cs = Cursor(ax, vertOn=vertOn, horizOn=horizOn)
+        self.cs.connect_event('button_press_event',
+                lambda event : create_threshold_gate(event, orientation, ax))
+
+    def create_polygon_gate_widget(self):
+        """
+        Call this function to start drawing a polygon on the ax.
+        """
+        def create_polygon(poly_drawer_instance):
+            ax = self.ax
+            verts = poly_drawer_instance.verts
+            gate = PolyGate(verts, ax)
+            self.gates.append(gate)
+            del poly_drawer_instance
+
+        self.pd = PolyDrawer(ax, oncreated=create_polygon, lineprops = dict(color='k', marker='o'))
 
     ####################
     ### Loading Data ###
@@ -345,6 +341,21 @@ class FCToolBar(object):
 
 class Global:
     pass
+
+
+def key_press_handler(event, canvas, toolbar=None):
+    """
+    Handles keyboard shortcuts for the FCToolbar.
+    """
+    if not isinstance(event.key, str): return
+
+    if event.key.lower() in ['1']:
+        toolbar.create_polygon_gate_widget()
+    elif event.key in ['2', '3', '4']:
+        orientation = {'2' : 'both', '3' : 'horizontal', '4' : 'vertical'}[event.key]
+        toolbar.create_threshold_gate_widget(orientation)
+    elif event.key in ['0']:
+        toolbar.load_fcs()
 
 if __name__ == '__main__':
     fig = figure()
