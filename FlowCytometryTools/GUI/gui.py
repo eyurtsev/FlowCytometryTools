@@ -17,10 +17,8 @@ class GUIEmbedded(GeneratedWireframe):
         self.fc_toolbar = gate_toolbar.FCToolBar(self.ax)
 
     def _update_axes(self):
-        # Quick fix. Should actually fire events
-        return
-        if self.fc_widget_ref.gate_manager.sample is not None:
-            options = list(self.fc_widget_ref.gate_manager.sample.channel_names)
+        if self.fc_toolbar.sample is not None:
+            options = list(self.fc_toolbar.sample.channel_names)
             options.sort() # May not be necessary
             self.x_axis_list.Clear()
             self.x_axis_list.InsertItems(options, 0)
@@ -54,19 +52,19 @@ class GUIEmbedded(GeneratedWireframe):
         self.toolbar.update()
         return self.toolbar
 
-    def load_fc_measurement(self, measurement):
-        self.fc_widget_ref.gate_manager.load_measurement(measurement)
-        self._update_axes()
+    #def load_fc_measurement(self, measurement):
+        #self.fc_widget_ref.gate_manager.load_measurement(measurement)
+        #self._update_axes()
 
     def load_fcs(self, filepath=None):
-        self.fc_widget_ref.gate_manager.load_fcs(filepath=filepath, parent=self)
+        self.fc_toolbar.load_fcs(filepath=filepath, parent=self)
         self._update_axes()
 
     def btnLoadFCS(self, event):
         self.load_fcs()
 
     def btnQuitApp(self, event):
-        print 'Quitting'
+        print 'Application Exiting'
         for gate in self.fc_toolbar.gates:
             gate.disconnect_events()
         self.fc_toolbar.disconnect_events()
@@ -75,16 +73,15 @@ class GUIEmbedded(GeneratedWireframe):
     def btn_choose_x_channel(self, event):
         if event.GetExtraLong(): # Quick hack
             new_channel = event.GetString()
-            gate_manager = self.fc_widget_ref.gate_manager
-            current_channels = gate_manager.current_channels
-            gate_manager.set_axis((new_channel, current_channels[1]))
+            current_channels = self.fc_toolbar.current_channels
+            self.fc_toolbar.set_axis((new_channel, current_channels[1]))
 
     def btn_choose_y_channel(self, event):
         if event.GetExtraLong(): # Quick hack
             new_channel = event.GetString()
-            gate_manager = self.fc_widget_ref.gate_manager
-            current_channels = gate_manager.current_channels
-            gate_manager.set_axis((current_channels[0], new_channel))
+            new_channel = event.GetString()
+            current_channels = self.fc_toolbar.current_channels
+            self.fc_toolbar.set_axis((current_channels[0], new_channel))
 
     def btn_create_poly_gate(self, event):
         self.fc_toolbar.create_polygon_gate_widget()
@@ -93,7 +90,7 @@ class GUIEmbedded(GeneratedWireframe):
         self.fc_toolbar.create_threshold_gate_widget('both')
 
     def btn_gen_code(self, event):
-        generated_code = self.fc_widget_ref.gate_manager.get_generation_code()
+        generated_code = self.fc_toolbar.get_generation_code()
         self.tb_gen_code.SetValue(generated_code)
 
 
