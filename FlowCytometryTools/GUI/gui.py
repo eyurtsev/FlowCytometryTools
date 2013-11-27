@@ -1,20 +1,24 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import wx
+import matplotlib
+matplotlib.use('wxagg')
 from wireframe import GeneratedWireframe
 from manager_states import STATE_GK
 from matplotlib.backends.backend_wx import NavigationToolbar2Wx
+import gate_toolbar
 
 class GUIEmbedded(GeneratedWireframe):
 
     def __init__(self, *args, **kwargs):
         GeneratedWireframe.__init__(self, *args, **kwargs)
-        print self.canvas
         self.fig = self.canvas.figure
         self.ax = self.fig.add_subplot(111)
+        self.fc_toolbar = gate_toolbar.FCToolBar(self.ax)
 
     def _update_axes(self):
         # Quick fix. Should actually fire events
+        return
         if self.fc_widget_ref.gate_manager.sample is not None:
             options = list(self.fc_widget_ref.gate_manager.sample.channel_names)
             options.sort() # May not be necessary
@@ -28,6 +32,7 @@ class GUIEmbedded(GeneratedWireframe):
         See http://matplotlib.org/examples/user_interfaces/embedding_in_wx2.html
         for details
         """
+        return
         self.canvas = self.fc_widget_ref.fig1.canvas
         self.toolbar = NavigationToolbar2Wx(self.canvas)
         self.toolbar.Realize()
@@ -87,57 +92,62 @@ class GUIEmbedded(GeneratedWireframe):
         generated_code = self.fc_widget_ref.gate_manager.get_generation_code()
         self.tb_gen_code.SetValue(generated_code)
 
-class FC_GUI(wx.App):
-    def OnInit(self):
-        wx.InitAllImageHandlers()
-        self.sample_viewer = GUIEmbedded(None, -1, "")
-        self.SetTopWindow(self.sample_viewer)
-        self.sample_viewer.Show()
-        return 1
-
-    def load_fcs(self, filepath):
-        self.sample_viewer.load_fcs(filepath)
-
-    def load_fc_measurement(self, measurement):
-        self.sample_viewer.load_fc_measurement(measurement)
-
-def parse_input():
-    """
-    Examples of use:
-        Opens up the specified FCS file with channels showing B1-A and Y2-A
-        python flowGUI.py ../tests/data/Plate01/CFP_Well_A4.fcs -c B1-A Y2-A
-    """
-    import argparse
-    epilog = parse_input.__doc__
-
-    parser = argparse.ArgumentParser(epilog=epilog, formatter_class=argparse.RawTextHelpFormatter)
-    parser.add_argument(metavar="FILE", dest="filename", help='fcs file to open', nargs='?', default=None)
-
-    parser.add_argument("-c", "--channel-names", dest="channel_names", nargs='+', help="channel names to plot on the x and y axis")
-
-    return parser.parse_args()
-
-
-def launch_from_fc_measurement(measurement):
-    """
-    Launches the GUI from an FCmeasurement.
-    """
-    app = FC_GUI()
-    app.load_fc_measurement(measurement)
-    app.MainLoop()
-
-
 
 if __name__ == "__main__":
-    import glob
-    import os
-    import FlowCytometryTools
-    datadir = os.path.join(FlowCytometryTools.__path__[0], 'tests', 'data', 'Plate01', '*.fcs')
-    files = glob.glob(datadir)[0]
-
-    #files = glob.glob('./*.fcs')[0]
-    #files = glob.glob('datadir/')[0]
-    print files
-    app = FC_GUI()
-    app.load_fcs(files)
+    app = wx.PySimpleApp(0)
+    wx.InitAllImageHandlers()
+    generated_wireframe = GUIEmbedded(None, -1, "")
+    app.SetTopWindow(generated_wireframe)
+    generated_wireframe.Show()
     app.MainLoop()
+
+#class FC_GUI(wx.App):
+    #def OnInit(self):
+        #wx.InitAllImageHandlers()
+        #self.sample_viewer = GUIEmbedded(None, -1, "")
+        #self.SetTopWindow(self.sample_viewer)
+        #self.sample_viewer.Show()
+        #return 1
+#
+    #def load_fcs(self, filepath):
+        #self.sample_viewer.load_fcs(filepath)
+#
+    #def load_fc_measurement(self, measurement):
+        #self.sample_viewer.load_fc_measurement(measurement)
+#
+#def parse_input():
+    #"""
+    #OLD DO NOT USE
+    #Examples of use:
+        #Opens up the specified FCS file with channels showing B1-A and Y2-A
+        #python flowGUI.py ../tests/data/Plate01/CFP_Well_A4.fcs -c B1-A Y2-A
+    #"""
+    #import argparse
+    #epilog = parse_input.__doc__
+    #parser = argparse.ArgumentParser(epilog=epilog, formatter_class=argparse.RawTextHelpFormatter)
+    #parser.add_argument(metavar="FILE", dest="filename", help='fcs file to open', nargs='?', default=None)
+    #parser.add_argument("-c", "--channel-names", dest="channel_names", nargs='+', help="channel names to plot on the x and y axis")
+    #return parser.parse_args()
+
+#def launch_from_fc_measurement(measurement):
+    #"""
+    #Launches the GUI from an FCmeasurement.
+    #"""
+    #app = FC_GUI()
+    #app.load_fc_measurement(measurement)
+    #app.MainLoop()
+
+
+#if __name__ == "__main2__":
+    #import glob
+    #import os
+    #import FlowCytometryTools
+    #datadir = os.path.join(FlowCytometryTools.__path__[0], 'tests', 'data', 'Plate01', '*.fcs')
+    #files = glob.glob(datadir)[0]
+#
+    ##files = glob.glob('./*.fcs')[0]
+    ##files = glob.glob('datadir/')[0]
+    #print files
+    #app = FC_GUI()
+    ##app.load_fcs(files)
+    #app.MainLoop()
