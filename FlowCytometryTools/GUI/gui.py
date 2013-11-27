@@ -89,6 +89,12 @@ class GUIEmbedded(GeneratedWireframe):
     def btn_create_quad_gate(self, event):
         self.fc_toolbar.create_threshold_gate_widget('both')
 
+    def btn_create_horizontal_threshold_gate(self, event):
+        self.fc_toolbar.create_threshold_gate_widget('horizontal')
+
+    def btn_create_vertical_threshold_gate(self, event):
+        self.fc_toolbar.create_threshold_gate_widget('vertical')
+
     def btn_gen_code(self, event):
         generated_code = self.fc_toolbar.get_generation_code()
         self.tb_gen_code.SetValue(generated_code)
