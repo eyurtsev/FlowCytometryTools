@@ -84,13 +84,18 @@ class Vertex(AxesWidget):
             self.update_notify_callback(self)
         self.canvas.draw()
 
+    def remove(self):
+        """ Removes the vertex & disconnects events """
+        self.artist.remove()
+        self.disconnect_events()
+
     def update_looks(self, state):
         if state == 'active':
-            style = {'color' : 'red', 'linewidth' : 2, 'marker' : 's',
-                        'ms' : 5}
+            style = {'color' : 'red', 'marker' : 's',
+                        'ms' : 8}
         else:
-            style = {'color' : 'black', 'linewidth' : 1, 'marker' : 'o',
-                    'ms' : 3}
+            style = {'color' : 'black', 'marker' : 'o',
+                    'ms' : 5}
         self.artist.update(style)
 
 class BaseGate(object):
@@ -100,12 +105,21 @@ class BaseGate(object):
     def _update(self):
         self.canvas.draw()
 
+    def delete(self):
+        for artist in self.artist_list:
+            artist.remove()
+        for vertex in to_list(self.vertex):
+            vertex.remove()
+        self._update()
+
     def activate(self):
         if not hasattr(self, 'state') or self.state != 'active':
             self.state = 'active'
             for vertex in to_list(self.vertex):
                 vertex.update_looks(self.state)
             self.update_looks()
+            self._update()
+        print self.state
 
     def inactivate(self):
         if not hasattr(self, 'state') or self.state == 'active':
@@ -113,6 +127,8 @@ class BaseGate(object):
             for vertex in to_list(self.vertex):
                 vertex.update_looks(self.state)
             self.update_looks()
+            self._update()
+        print self.state
 
 class ThresholdGate(AxesWidget, BaseGate):
     def __init__(self, verts, orientation, ax, toolbar):
@@ -169,6 +185,7 @@ class PolyGate(AxesWidget, BaseGate):
 
     def create_artist(self):
         self.poly = pl.Polygon(self.verts, color='k', fill=False)
+        self.artist_list = to_list(self.poly)
         self.ax.add_artist(self.poly)
         update_notify_callback = lambda vertex : self.update_position(vertex)
         self.vertex_list = [Vertex(vert, self.ax, update_notify_callback)
@@ -188,7 +205,6 @@ class PolyGate(AxesWidget, BaseGate):
         else:
             style = {'color' : 'black', 'fill' : False}
         self.poly.update(style)
-        self._update()
 
     @property
     def vertex(self):
@@ -283,10 +299,16 @@ class FCToolBar(object):
         self.gates.append(gate)
         self.set_active_gate(gate)
 
+    def delete_active_gate(self):
+        if self.active_gate is not None:
+            self.gates.remove(self.active_gate)
+            self.active_gate.delete()
+            self.active_gate = None
+
     def set_active_gate(self, gate):
         if self.active_gate is None:
             self.active_gate = gate
-        else:
+        elif self.active_gate is not gate:
             self.active_gate.inactivate()
             self.active_gate = gate
             gate.activate()
@@ -446,6 +468,8 @@ def key_press_handler(event, canvas, toolbar=None):
     elif event.key in ['2', '3', '4']:
         orientation = {'2' : 'both', '3' : 'horizontal', '4' : 'vertical'}[event.key]
         toolbar.create_threshold_gate_widget(orientation)
+    elif event.key in ['9']:
+        toolbar.delete_active_gate()
     elif event.key in ['0']:
         toolbar.load_fcs()
 
