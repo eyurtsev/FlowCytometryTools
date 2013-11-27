@@ -228,18 +228,21 @@ class FCToolBar(object):
         del self.cs
         self.fig.canvas.draw()
 
-    def load_fcs(self, parent=None):
+    def load_fcs(self, filepath=None, parent=None):
         ax = self.ax
 
         if parent is None:
             parent = self.fig.canvas
 
         from GoreUtilities import dialogs
-        filepath = dialogs.open_file_dialog('Select an FCS file to load',
-                    'FCS files (*.fcs)|*.fcs', parent=parent)
+
+        if filepath is None:
+            filepath = dialogs.open_file_dialog('Select an FCS file to load',
+                        'FCS files (*.fcs)|*.fcs', parent=parent)
 
         if filepath is not None:
-            self.sample = FCMeasurement('temp', datafile=filepath)
+            self.sample = FCMeasurement('temp', datafile=filepath).transform('hlog')
+            print 'WARNING: hlog transforming all data.'
             self._sample_loaded_event()
             self.plot_data()
 
@@ -360,9 +363,14 @@ class FCToolBar(object):
 
         self.fig.canvas.draw()
 
-class Global:
-    pass
-
+    def get_generation_code(self):
+        """
+        Returns python code that generates all drawn gates.
+        """
+        code_list = [gate.get_generation_code() for gate in self.gates]
+        code_list.sort()
+        code_list = '\n'.join(code_list)
+        return code_list
 
 def key_press_handler(event, canvas, toolbar=None):
     """
@@ -383,8 +391,7 @@ if __name__ == '__main__':
     ax = fig.add_subplot(111)
     xlim(-10, 10)
     ylim(-10, 10)
-    Global.manager = FCToolBar(ax)
-    #Global.manager = FCWidget(None, 1)
+    manager = FCToolBar(ax)
     show()
 
 ###############################
