@@ -12,9 +12,15 @@ class MOUSE:
 
 class Vertex(AxesWidget):
     """
+    Defines a moveable vertex. The vertex must be associated
+    wth an axis.
+
+    The update_notify_callback function is called whenever the
+    vertex is updated.
+
     TODO Finish trackx, tracky to include mixed coordinate system.
     """
-    def __init__(self, coordinates, ax=None, update_notify_callback=None,
+    def __init__(self, coordinates, ax, update_notify_callback=None,
                             trackx=True, tracky=True):
         AxesWidget.__init__(self, ax)
         self.update_notify_callback = update_notify_callback
@@ -49,6 +55,8 @@ class Vertex(AxesWidget):
             return
         self.selected = not self.selected
 
+        print self.selected
+
     def mouse_button_release(self, event):
         if self.ignore(event):
             return
@@ -71,22 +79,33 @@ class Vertex(AxesWidget):
     def _update(self):
         if self.update_notify_callback is not None:
             self.update_notify_callback(self)
-        pl.gcf().canvas.draw_idle()
+        self.canvas.draw()
 
-class PolyGate(AxesWidget):
+class BaseGate(object):
+    def _update(self):
+        self.canvas.draw()
+
+class PolyGate(AxesWidget, BaseGate):
     def __init__(self, verts, ax):
         AxesWidget.__init__(self, ax)
-        update_notify_callback = lambda vertex : self.update_position(vertex)
+        self.verts = verts
+        self.create_artist()
 
-        self.poly = pl.Polygon(verts, color='k', fill=False)
+    def create_artist(self):
+        self.poly = pl.Polygon(self.verts, color='k', fill=False)
         self.ax.add_artist(self.poly)
-        self.vertex_list = [Vertex(vert, ax, update_notify_callback) for vert in verts]
+        update_notify_callback = lambda vertex : self.update_position(vertex)
+        self.vertex_list = [Vertex(vert, self.ax, update_notify_callback)
+                for vert in self.verts]
+        self._update()
 
     def update_position(self, vertex):
         xy = [vertex.coordinates for vertex in self.vertex_list]
+        self.verts = xy
         self.poly.set_xy(xy)
 
-class ThresholdGate(AxesWidget):
+
+class ThresholdGate(AxesWidget, BaseGate):
     def __init__(self, verts, orientation, ax):
         self.orientation = orientation
         AxesWidget.__init__(self, ax)
@@ -145,8 +164,6 @@ class PolyDrawer(AxesWidget):
         self.connect_event('motion_notify_event', self.onmove)
 
     def ignore(self, event):
-        #wrong_button = hasattr(event, 'button') and event.button != 1
-        #return not self.active or wrong_button
         return event.inaxes != self.ax
 
     def onpress(self, event):
@@ -180,7 +197,7 @@ class PolyDrawer(AxesWidget):
         self._update()
 
     def _update(self):
-        self.canvas.draw_idle()
+        self.canvas.draw()
 
     def _clean(self):
         self.disconnect_events()
@@ -197,7 +214,10 @@ class FCToolBar(object):
         self._plt_data = None
         self.current_channels = None
         self.canvas = self.fig.canvas
-        self.canvas.mpl_connect('key_press_event', lambda event : key_press_handler(event, self.canvas, self))
+        key_handler_cid = self.canvas.mpl_connect('key_press_event', lambda event : key_press_handler(event, self.canvas, self))
+
+    def disconnect_events(self):
+        self.canvas.mpl_disconnect(key_press_handler)
 
     def create_vertex(self, event):
         ax = self.ax
@@ -207,7 +227,6 @@ class FCToolBar(object):
         self.cs.clear(event)
         del self.cs
         self.fig.canvas.draw()
-
 
     def load_fcs(self, parent=None):
         ax = self.ax
@@ -229,17 +248,19 @@ class FCToolBar(object):
         Call this widget to create a threshold gate.
         Orientation : 'horizontal' | 'vertical' | 'both'
         """
+        ax = self.ax
+        fig = self.fig
+
         def clear_cursor(cs):
             cs.disconnect_events()
             cs.clear(None)
             del cs
-            fig.canvas.draw_idle()
+            fig.canvas.draw()
 
         if hasattr(self, 'cs') and self.cs is not None:
             clear_cursor(self.cs)
 
         def create_threshold_gate(event, orientation, ax):
-            print 'creating threshold gate'
             gate = ThresholdGate((event.xdata, event.ydata), orientation, ax=ax)
             self.gates.append(gate)
             clear_cursor(self.cs)
@@ -256,13 +277,13 @@ class FCToolBar(object):
         Call this function to start drawing a polygon on the ax.
         """
         def create_polygon(poly_drawer_instance):
-            ax = self.ax
             verts = poly_drawer_instance.verts
-            gate = PolyGate(verts, ax)
+            gate = PolyGate(verts, self.ax)
             self.gates.append(gate)
+            self.pd.disconnect_events()
             del poly_drawer_instance
 
-        self.pd = PolyDrawer(ax, oncreated=create_polygon, lineprops = dict(color='k', marker='o'))
+        self.pd = PolyDrawer(self.ax, oncreated=create_polygon, lineprops = dict(color='k', marker='o'))
 
     ####################
     ### Loading Data ###
@@ -310,7 +331,7 @@ class FCToolBar(object):
 
 
         if self.current_channels is None:
-            self.current_channels = sample.channel_names[4:6]
+            self.current_channels = sample.channel_names[:2]
 
         channels = self.current_channels
 
