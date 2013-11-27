@@ -5,6 +5,11 @@ import pylab as pl
 from numpy import random
 import numpy
 from FlowCytometryTools import FCMeasurement
+from GoreUtilities.util import to_list
+
+
+## TODO
+# 1. Make it impossible to pick multiple vertexes at once. (right now if vertex are too close they will be selected.)
 
 class MOUSE:
     LEFT_CLICK = 1
@@ -36,8 +41,8 @@ class Vertex(AxesWidget):
 
     def create_artist(self):
         verts = self.coordinates
-        self.artist = pl.Line2D([verts[0]], [verts[1]], picker=10,
-                                        marker='s', color='r', ms=10)
+        self.artist = pl.Line2D([verts[0]], [verts[1]], picker=10)
+        self.update_looks('active')
         self.ax.add_artist(self.artist)
 
     def ignore(self, event):
@@ -54,8 +59,6 @@ class Vertex(AxesWidget):
         if self.ignore(event):
             return
         self.selected = not self.selected
-
-        print self.selected
 
     def mouse_button_release(self, event):
         if self.ignore(event):
@@ -81,34 +84,41 @@ class Vertex(AxesWidget):
             self.update_notify_callback(self)
         self.canvas.draw()
 
+    def update_looks(self, state):
+        if state == 'active':
+            style = {'color' : 'red', 'linewidth' : 2, 'marker' : 's',
+                        'ms' : 5}
+        else:
+            style = {'color' : 'black', 'linewidth' : 1, 'marker' : 'o',
+                    'ms' : 3}
+        self.artist.update(style)
+
 class BaseGate(object):
+    def __init__(self, toolbar):
+        self.toolbar = toolbar
+
     def _update(self):
         self.canvas.draw()
 
-class PolyGate(AxesWidget, BaseGate):
-    def __init__(self, verts, ax):
-        AxesWidget.__init__(self, ax)
-        self.verts = verts
-        self.create_artist()
+    def activate(self):
+        if not hasattr(self, 'state') or self.state != 'active':
+            self.state = 'active'
+            for vertex in to_list(self.vertex):
+                vertex.update_looks(self.state)
+            self.update_looks()
 
-    def create_artist(self):
-        self.poly = pl.Polygon(self.verts, color='k', fill=False)
-        self.ax.add_artist(self.poly)
-        update_notify_callback = lambda vertex : self.update_position(vertex)
-        self.vertex_list = [Vertex(vert, self.ax, update_notify_callback)
-                for vert in self.verts]
-        self._update()
-
-    def update_position(self, vertex):
-        xy = [vertex.coordinates for vertex in self.vertex_list]
-        self.verts = xy
-        self.poly.set_xy(xy)
-
+    def inactivate(self):
+        if not hasattr(self, 'state') or self.state == 'active':
+            self.state = 'inactive'
+            for vertex in to_list(self.vertex):
+                vertex.update_looks(self.state)
+            self.update_looks()
 
 class ThresholdGate(AxesWidget, BaseGate):
-    def __init__(self, verts, orientation, ax):
+    def __init__(self, verts, orientation, ax, toolbar):
         self.orientation = orientation
         AxesWidget.__init__(self, ax)
+        BaseGate.__init__(self, toolbar)
         update_notify_callback = lambda vertex : self.update_position(vertex)
 
         trackx = orientation in ['both', 'vertical']
@@ -123,11 +133,12 @@ class ThresholdGate(AxesWidget, BaseGate):
         self.artist_list = []
 
         if self.orientation in ('both', 'horizontal'):
-            self.hline = self.ax.axhline(y=vert[1])
+            self.hline = self.ax.axhline(y=vert[1], color='k')
             self.artist_list.append(self.hline)
         if self.orientation in ('both', 'vertical'):
-            self.vline = self.ax.axvline(x=vert[0])
+            self.vline = self.ax.axvline(x=vert[0], color='k')
             self.artist_list.append(self.vline)
+        self.activate()
 
     def update_position(self, vertex):
         xdata, ydata = vertex.coordinates
@@ -136,6 +147,53 @@ class ThresholdGate(AxesWidget, BaseGate):
             self.vline.set_xdata((xdata, xdata))
         if hasattr(self, 'hline'):
             self.hline.set_ydata((ydata, ydata))
+
+        self.toolbar.set_active_gate(self)
+
+    def update_looks(self):
+        """ Updates the looks of the gate depending on state. """
+        if self.state == 'active':
+            style = {'color' : 'red', 'linewidth' : 2}
+        else:
+            style = {'color' : 'black', 'linewidth' : 1}
+
+        for artist in self.artist_list:
+            artist.update(style)
+
+class PolyGate(AxesWidget, BaseGate):
+    def __init__(self, verts, ax, toolbar):
+        AxesWidget.__init__(self, ax)
+        BaseGate.__init__(self, toolbar)
+        self.verts = verts
+        self.create_artist()
+
+    def create_artist(self):
+        self.poly = pl.Polygon(self.verts, color='k', fill=False)
+        self.ax.add_artist(self.poly)
+        update_notify_callback = lambda vertex : self.update_position(vertex)
+        self.vertex_list = [Vertex(vert, self.ax, update_notify_callback)
+                for vert in self.verts]
+        self.activate()
+
+    def update_position(self, vertex):
+        xy = [vertex.coordinates for vertex in self.vertex_list]
+        self.verts = xy
+        self.poly.set_xy(xy)
+        self.toolbar.set_active_gate(self)
+
+    def update_looks(self):
+        """ Updates the looks of the gate depending on state. """
+        if self.state == 'active':
+            style = {'color' : 'red', 'linestyle' : 'solid', 'fill' : False}
+        else:
+            style = {'color' : 'black', 'fill' : False}
+        self.poly.update(style)
+        self._update()
+
+    @property
+    def vertex(self):
+        """ Short hand for vertex_list """
+        return self.vertex_list
 
 class PolyDrawer(AxesWidget):
     """
@@ -213,38 +271,25 @@ class FCToolBar(object):
         self.ax = ax
         self._plt_data = None
         self.current_channels = None
+        self.active_gate = None
         self.canvas = self.fig.canvas
         key_handler_cid = self.canvas.mpl_connect('key_press_event', lambda event : key_press_handler(event, self.canvas, self))
 
     def disconnect_events(self):
         self.canvas.mpl_disconnect(key_press_handler)
 
-    def create_vertex(self, event):
-        ax = self.ax
-        vertex = Vertex((event.xdata, event.ydata), ax)
-        self.gates.append(vertex)
-        self.cs.disconnect_events()
-        self.cs.clear(event)
-        del self.cs
-        self.fig.canvas.draw()
 
-    def load_fcs(self, filepath=None, parent=None):
-        ax = self.ax
+    def add_gate(self, gate):
+        self.gates.append(gate)
+        self.set_active_gate(gate)
 
-        if parent is None:
-            parent = self.fig.canvas
-
-        from GoreUtilities import dialogs
-
-        if filepath is None:
-            filepath = dialogs.open_file_dialog('Select an FCS file to load',
-                        'FCS files (*.fcs)|*.fcs', parent=parent)
-
-        if filepath is not None:
-            self.sample = FCMeasurement('temp', datafile=filepath).transform('hlog')
-            print 'WARNING: hlog transforming all data.'
-            self._sample_loaded_event()
-            self.plot_data()
+    def set_active_gate(self, gate):
+        if self.active_gate is None:
+            self.active_gate = gate
+        else:
+            self.active_gate.inactivate()
+            self.active_gate = gate
+            gate.activate()
 
     def create_threshold_gate_widget(self, orientation):
         """
@@ -264,8 +309,8 @@ class FCToolBar(object):
             clear_cursor(self.cs)
 
         def create_threshold_gate(event, orientation, ax):
-            gate = ThresholdGate((event.xdata, event.ydata), orientation, ax=ax)
-            self.gates.append(gate)
+            gate = ThresholdGate((event.xdata, event.ydata), orientation, ax, self)
+            self.add_gate(gate)
             clear_cursor(self.cs)
 
         vertOn  = orientation in ['both', 'vertical']
@@ -281,8 +326,8 @@ class FCToolBar(object):
         """
         def create_polygon(poly_drawer_instance):
             verts = poly_drawer_instance.verts
-            gate = PolyGate(verts, self.ax)
-            self.gates.append(gate)
+            gate = PolyGate(verts, self.ax, self)
+            self.add_gate(gate)
             self.pd.disconnect_events()
             del poly_drawer_instance
 
@@ -291,6 +336,24 @@ class FCToolBar(object):
     ####################
     ### Loading Data ###
     ####################
+
+    def load_fcs(self, filepath=None, parent=None):
+        ax = self.ax
+
+        if parent is None:
+            parent = self.fig.canvas
+
+        from GoreUtilities import dialogs
+
+        if filepath is None:
+            filepath = dialogs.open_file_dialog('Select an FCS file to load',
+                        'FCS files (*.fcs)|*.fcs', parent=parent)
+
+        if filepath is not None:
+            self.sample = FCMeasurement('temp', datafile=filepath).transform('hlog')
+            print 'WARNING: hlog transforming all data.'
+            self._sample_loaded_event()
+            self.plot_data()
 
     def load_measurement(self, measurement):
         self.sample = measurement.copy()
