@@ -215,8 +215,8 @@ class FCToolBar(object):
     def create_polygon(self, poly_drawer_instance):
         ax = self.ax
         verts = poly_drawer_instance.verts
-        pg = PolyGate(verts, ax)
-        self.pg = pg
+        gate = PolyGate(verts, ax)
+        self.gates.append(gate)
         del poly_drawer_instance
 
     def create_threshold_gate(self, event, orientation, ax):
@@ -238,8 +238,8 @@ class FCToolBar(object):
                     'FCS files (*.fcs)|*.fcs', parent=parent)
 
         if filepath is not None:
-            self.sample = FCMeasurement('temp', datafile=filepath).transform('hlog')
-            #self._sample_loaded_event()
+            self.sample = FCMeasurement('temp', datafile=filepath)
+            self._sample_loaded_event()
 
     def gate_drawer(self, event, ax):
         """
@@ -289,7 +289,6 @@ class FCToolBar(object):
         Sets the x and y axis
         """
         channels = tuple([ch.encode("UTF-8") for ch in channels]) # To get rid of u's
-
         self.current_channels = channels
         self.plot_data()
 
