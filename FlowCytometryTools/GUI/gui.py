@@ -66,6 +66,10 @@ class GUIEmbedded(GeneratedWireframe):
         self.load_fcs()
 
     def btnQuitApp(self, event):
+        print 'Quitting'
+        for gate in self.fc_toolbar.gates:
+            gate.disconnect_events()
+        self.fc_toolbar.disconnect_events()
         self.Close(1)
 
     def btn_choose_x_channel(self, event):
@@ -83,10 +87,10 @@ class GUIEmbedded(GeneratedWireframe):
             gate_manager.set_axis((current_channels[0], new_channel))
 
     def btn_create_poly_gate(self, event):
-        self.fc_widget_ref.gate_manager.set_state(STATE_GK.START_DRAWING_POLY_GATE)
+        self.fc_toolbar.create_polygon_gate_widget()
 
     def btn_create_quad_gate(self, event):
-        self.fc_widget_ref.gate_manager.set_state(STATE_GK.START_DRAWING_QUAD_GATE)
+        self.fc_toolbar.create_threshold_gate_widget('both')
 
     def btn_gen_code(self, event):
         generated_code = self.fc_widget_ref.gate_manager.get_generation_code()
