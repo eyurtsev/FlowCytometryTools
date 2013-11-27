@@ -92,6 +92,9 @@ class GUIEmbedded(GeneratedWireframe):
     def btn_create_horizontal_threshold_gate(self, event):
         self.fc_toolbar.create_threshold_gate_widget('horizontal')
 
+    def btn_delete_gate(self, event):
+        self.fc_toolbar.delete_active_gate()
+
     def btn_create_vertical_threshold_gate(self, event):
         self.fc_toolbar.create_threshold_gate_widget('vertical')
 
