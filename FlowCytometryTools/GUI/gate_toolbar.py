@@ -292,8 +292,7 @@ class FCToolBar(object):
         key_handler_cid = self.canvas.mpl_connect('key_press_event', lambda event : key_press_handler(event, self.canvas, self))
 
     def disconnect_events(self):
-        self.canvas.mpl_disconnect(key_press_handler)
-
+        self.canvas.mpl_disconnect(key_handler_cid)
 
     def add_gate(self, gate):
         self.gates.append(gate)
@@ -308,6 +307,7 @@ class FCToolBar(object):
     def set_active_gate(self, gate):
         if self.active_gate is None:
             self.active_gate = gate
+            gate.activate()
         elif self.active_gate is not gate:
             self.active_gate.inactivate()
             self.active_gate = gate
@@ -461,16 +461,18 @@ def key_press_handler(event, canvas, toolbar=None):
     """
     Handles keyboard shortcuts for the FCToolbar.
     """
-    if not isinstance(event.key, str): return
+    if event.key is None: return
 
-    if event.key.lower() in ['1']:
+    key = event.key.encode('ascii', 'ignore')
+
+    if key in ['1']:
         toolbar.create_polygon_gate_widget()
-    elif event.key in ['2', '3', '4']:
-        orientation = {'2' : 'both', '3' : 'horizontal', '4' : 'vertical'}[event.key]
+    elif key in ['2', '3', '4']:
+        orientation = {'2' : 'both', '3' : 'horizontal', '4' : 'vertical'}[key]
         toolbar.create_threshold_gate_widget(orientation)
-    elif event.key in ['9']:
+    elif key in ['9']:
         toolbar.delete_active_gate()
-    elif event.key in ['0']:
+    elif key in ['0']:
         toolbar.load_fcs()
 
 if __name__ == '__main__':
