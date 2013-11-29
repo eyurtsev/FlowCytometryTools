@@ -100,6 +100,7 @@ class Vertex(AxesWidget):
 
 class BaseGate(object):
     def __init__(self, toolbar):
+        #self.name = name
         self.toolbar = toolbar
 
     def _update(self):
@@ -112,23 +113,16 @@ class BaseGate(object):
             vertex.remove()
         self._update()
 
-    def activate(self):
-        if not hasattr(self, 'state') or self.state != 'active':
-            self.state = 'active'
+    def _change_activation(self, new_state):
+        if not hasattr(self, 'state') or self.state != new_state:
+            self.state = new_state
             for vertex in to_list(self.vertex):
                 vertex.update_looks(self.state)
             self.update_looks()
             self._update()
-        print self.state
 
-    def inactivate(self):
-        if not hasattr(self, 'state') or self.state == 'active':
-            self.state = 'inactive'
-            for vertex in to_list(self.vertex):
-                vertex.update_looks(self.state)
-            self.update_looks()
-            self._update()
-        print self.state
+    def activate(self): self._change_activation('active')
+    def inactivate(self): self._change_activation('inactive')
 
     def get_generation_code(self):
         """
