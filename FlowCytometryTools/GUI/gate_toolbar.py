@@ -130,6 +130,26 @@ class BaseGate(object):
             self._update()
         print self.state
 
+    def get_generation_code(self):
+        """
+        Generates python code that can create the gate.
+        """
+        return 'Code to generate this gate'
+        #if isinstance(self, PolyGate):
+            #region = 'in'
+            #vert_list = ['(' + ', '.join(map(lambda x : '{:.2f}'.format(x), vert)) + ')' for vert in self.vert]
+        #else:
+            #region = "?"
+            #vert_list = ['{:.2f}'.format(vert) for vert in self.vert]
+#
+        #vert_list = '[' + ','.join(vert_list) + ']'
+#
+        #format_string = "{name} = {0}({1}, {2}, region='{region}', name='{name}')"
+        #return format_string.format(self.__class__.__name__, vert_list,
+                                #self.channels, name=self.name, region=region)
+
+
+
 class ThresholdGate(AxesWidget, BaseGate):
     def __init__(self, verts, orientation, ax, toolbar):
         self.orientation = orientation
@@ -289,10 +309,10 @@ class FCToolBar(object):
         self.current_channels = None
         self.active_gate = None
         self.canvas = self.fig.canvas
-        key_handler_cid = self.canvas.mpl_connect('key_press_event', lambda event : key_press_handler(event, self.canvas, self))
+        self.key_handler_cid = self.canvas.mpl_connect('key_press_event', lambda event : key_press_handler(event, self.canvas, self))
 
     def disconnect_events(self):
-        self.canvas.mpl_disconnect(key_handler_cid)
+        self.canvas.mpl_disconnect(self.key_handler_cid)
 
     def add_gate(self, gate):
         self.gates.append(gate)
