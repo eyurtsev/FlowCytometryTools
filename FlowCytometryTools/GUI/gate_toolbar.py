@@ -10,6 +10,8 @@ from GoreUtilities.util import to_list
 
 ## TODO
 # 1. Make it impossible to pick multiple vertexes at once. (right now if vertex are too close they will be selected.)
+# 2. Make verties live in 1d and 2d (not just 2d). This will simplify
+# some of the code for gates that use only 1d.
 
 class MOUSE:
     LEFT_CLICK = 1
@@ -94,14 +96,16 @@ class Vertex(AxesWidget):
             style = {'color' : 'red', 'marker' : 's',
                         'ms' : 8}
         else:
-            style = {'color' : 'black', 'marker' : 'o',
+            style = {'color' : 'black', 'marker' : 's',
                     'ms' : 5}
         self.artist.update(style)
 
 class BaseGate(object):
-    def __init__(self, toolbar):
-        #self.name = name
+    def __init__(self, toolbar, name):
         self.toolbar = toolbar
+        self.name = name
+        self.region = '?'
+        self.gate_type = self.__class__.__name__
 
     def _update(self):
         self.canvas.draw()
@@ -124,11 +128,26 @@ class BaseGate(object):
     def activate(self): self._change_activation('active')
     def inactivate(self): self._change_activation('inactive')
 
-    def get_generation_code(self):
+    @property
+    def verts(self):
+        return [vertex.coordinates for vertex in to_list(self.vertex)]
+
+    def get_generation_code(self, **gen_code_kwds):
         """
         Generates python code that can create the gate.
         """
-        return 'Code to generate this gate'
+        gen_code_kwds.setdefault('name', self.name)
+        gen_code_kwds.setdefault('region', self.region)
+        gen_code_kwds.setdefault('gate_type', self.gate_type)
+        gen_code_kwds.setdefault('verts', self.verts)
+
+        if isinstance(self.channels, str):
+            gen_code_kwds.setdefault('channels', "'{0}'".format(self.channels))
+        else:
+            gen_code_kwds.setdefault('channels', self.channels)
+
+        format_string = "{name} = {gate_type}({verts}, {channels}, region='{region}', name='{name}')"
+        return format_string.format(**gen_code_kwds)
         #if isinstance(self, PolyGate):
             #region = 'in'
             #vert_list = ['(' + ', '.join(map(lambda x : '{:.2f}'.format(x), vert)) + ')' for vert in self.vert]
@@ -143,16 +162,34 @@ class BaseGate(object):
                                 #self.channels, name=self.name, region=region)
 
 
-
 class ThresholdGate(AxesWidget, BaseGate):
-    def __init__(self, verts, orientation, ax, toolbar):
-        self.orientation = orientation
+    def __init__(self, verts, orientation, ax, toolbar, name):
         AxesWidget.__init__(self, ax)
-        BaseGate.__init__(self, toolbar)
-        update_notify_callback = lambda vertex : self.update_position(vertex)
+        BaseGate.__init__(self, toolbar, name)
 
-        trackx = orientation in ['both', 'vertical']
-        tracky = orientation in ['both', 'horizontal']
+        ## Set orientation and channels on which the gate is defined
+        self.orientation = orientation
+
+        if toolbar.current_channels is None:
+            channel = None, None
+        else:
+            channel = toolbar.current_channels
+
+        if orientation == 'vertical':
+            self.channels = channel[0]
+            self.gate_type = 'ThresholdGate'
+        elif orientation == 'horizontal':
+            self.channels = channel[1]
+            self.gate_type = 'ThresholdGate'
+        else:
+            self.channels = tuple(channel)
+            self.gate_type = 'QuadGate'
+
+        trackx = orientation in ('both', 'vertical')
+        tracky = orientation in ('both', 'horizontal')
+
+        ## Set up call back events
+        update_notify_callback = lambda vertex : self.update_position(vertex)
 
         self.vertex = Vertex(verts, ax, update_notify_callback=update_notify_callback,
                     trackx=trackx, tracky=tracky)
@@ -190,25 +227,36 @@ class ThresholdGate(AxesWidget, BaseGate):
         for artist in self.artist_list:
             artist.update(style)
 
-class PolyGate(AxesWidget, BaseGate):
-    def __init__(self, verts, ax, toolbar):
-        AxesWidget.__init__(self, ax)
-        BaseGate.__init__(self, toolbar)
-        self.verts = verts
-        self.create_artist()
+    def get_generation_code(self):
+        orientation = self.orientation
+        if orientation == 'vertical':
+            verts = self.vertex.coordinates[0]
+        elif orientation == 'horizontal':
+            verts = self.vertex.coordinates[1]
+        else:
+            verts = self.vertex.coordinates
+        return BaseGate.get_generation_code(self, verts=verts)
 
-    def create_artist(self):
-        self.poly = pl.Polygon(self.verts, color='k', fill=False)
+
+class PolyGate(AxesWidget, BaseGate):
+    def __init__(self, verts, ax, toolbar, name):
+        AxesWidget.__init__(self, ax)
+        BaseGate.__init__(self, toolbar, name)
+        self.region = 'in'
+        self.channels = tuple(toolbar.current_channels) if toolbar.current_channels else None, None
+        self.create_artist(verts)
+
+    def create_artist(self, verts):
+        self.poly = pl.Polygon(verts, color='k', fill=False)
         self.artist_list = to_list(self.poly)
         self.ax.add_artist(self.poly)
         update_notify_callback = lambda vertex : self.update_position(vertex)
         self.vertex_list = [Vertex(vert, self.ax, update_notify_callback)
-                for vert in self.verts]
+                for vert in verts]
         self.activate()
 
     def update_position(self, vertex):
         xy = [vertex.coordinates for vertex in self.vertex_list]
-        self.verts = xy
         self.poly.set_xy(xy)
         self.toolbar.set_active_gate(self)
 
@@ -304,6 +352,7 @@ class FCToolBar(object):
         self.active_gate = None
         self.canvas = self.fig.canvas
         self.key_handler_cid = self.canvas.mpl_connect('key_press_event', lambda event : key_press_handler(event, self.canvas, self))
+        self.gate_num = 1
 
     def disconnect_events(self):
         self.canvas.mpl_disconnect(self.key_handler_cid)
@@ -327,6 +376,11 @@ class FCToolBar(object):
             self.active_gate = gate
             gate.activate()
 
+    def _get_next_gate_name(self):
+        gate_name = 'gate{0}'.format(self.gate_num)
+        self.gate_num +=1
+        return gate_name
+
     def create_threshold_gate_widget(self, orientation):
         """
         Call this widget to create a threshold gate.
@@ -345,7 +399,9 @@ class FCToolBar(object):
             clear_cursor(self.cs)
 
         def create_threshold_gate(event, orientation, ax):
-            gate = ThresholdGate((event.xdata, event.ydata), orientation, ax, self)
+            gate = ThresholdGate((event.xdata, event.ydata),
+                        orientation, ax, self,
+                        self._get_next_gate_name())
             self.add_gate(gate)
             clear_cursor(self.cs)
 
@@ -362,7 +418,8 @@ class FCToolBar(object):
         """
         def create_polygon(poly_drawer_instance):
             verts = poly_drawer_instance.verts
-            gate = PolyGate(verts, self.ax, self)
+            gate = PolyGate(verts, self.ax, self,
+                    self._get_next_gate_name())
             self.add_gate(gate)
             self.pd.disconnect_events()
             del poly_drawer_instance
