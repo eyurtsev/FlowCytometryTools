@@ -17,6 +17,57 @@ class MOUSE:
     LEFT_CLICK = 1
     RIGHT_CLICK = 3
 
+class BaseVertex(object):
+
+    # self._dim holds the number of dimensions on which the vertex is defined.
+    # At the moment, there should be support for only 1 or 2 dimensions.
+    def __init__(self, coordinates, update_notify_callback=None):
+        self.coordinates = {c[0] : c[1] for c in coordinates}
+
+
+        if not isinstance(coordinates, tuple):
+            raise TypeError('coordinates must be a tuple')
+        elif isinstance(coordinates[0], tuple):
+            self._dim = len(coordinates)
+
+            if self._dim > 2:
+                raise ValueError('Only 1d and 2d vertexes are supported')
+        else:
+            self._dim = 1
+
+    def spawn_vertex(self, ax, spawn_channels):
+        """
+        'd1' can be shown on ('d1', 'd2') or ('d1')
+        'd1', 'd2' can be shown only on ('d1', 'd2') or on ('d2', 'd1')
+
+        This means that the channels on which the vertex
+        is defined has to be a subset of the spawn_channels
+
+        spawn_channels : names of channels on which to spawn
+            the vertex
+        """
+        print spawn_channels
+        print self.coordinates
+        print self._dim
+
+        if len(spawn_channels) != len(set(spawn_channels)):
+            raise Exceptioon('Spawn channels must be unique')
+
+        if not set(self.coordinates.keys()).issubset(set(spawn_channels)):
+            print 'not a subset'
+            return
+
+        verts = tuple([self.coordinates.get(ch, None) for ch in spawn_channels])
+
+        def do_nothing(*args): print args
+
+        spawned_vertex  = Vertex(verts, ax, do_nothing)
+
+        if self.spawn_list is None:
+            self.spawn_list = []
+
+        self.spawn_list.append(spawned_vertex)
+
 class Vertex(AxesWidget):
     """
     Defines a moveable vertex. The vertex must be associated
@@ -25,16 +76,34 @@ class Vertex(AxesWidget):
     The update_notify_callback function is called whenever the
     vertex is updated.
 
-    TODO Finish trackx, tracky to include mixed coordinate system.
+    coordinates - n 2-tuple
+
+    ((1st dimension name, 1st dimension coordinate),
+     (2nd dimension name, 2nd dimension coordinate),
+     ...
+     (nth dimension name, nth dimension coordinate))
+
+    Actually only need this at the moment for 1 or 2 dimensions
+    n dimensions are not needed.
+
+    The idea is that a lower dimensional "vertex"
+    can be visualized on a higher dimensional space
+
+    For example,
+
+    (d1, 0.1) would appear in (d1, d2) space as a straight line
+    with d1=0.1
     """
     def __init__(self, coordinates, ax, update_notify_callback=None,
-                            trackx=True, tracky=True):
+            trackx=True, tracky=True):
         AxesWidget.__init__(self, ax)
         self.update_notify_callback = update_notify_callback
         self.selected = False
+        self.coordinates = coordinates
+        self.artist = None
         self.trackx = trackx
         self.tracky = tracky
-        self.coordinates = coordinates
+
         self.create_artist()
         self.connect_event('pick_event', lambda event : self.pick(event))
         self.connect_event('motion_notify_event', lambda event : self.motion_notify_event(event))
@@ -42,10 +111,22 @@ class Vertex(AxesWidget):
         self.connect_event('button_release_event', lambda event : self.mouse_button_release(event))
 
     def create_artist(self):
+        """
+        decides whether the artist should be visible
+        or not in the current axis
+
+        current_axis : names of x, y axis
+        """
         verts = self.coordinates
         self.artist = pl.Line2D([verts[0]], [verts[1]], picker=10)
         self.update_looks('active')
         self.ax.add_artist(self.artist)
+
+    def remove(self):
+        """ Removes the vertex & disconnects events """
+        if self.artist is not None:
+            self.artist.remove()
+        self.disconnect_events()
 
     def ignore(self, event):
         """ Ignores events. """
@@ -85,11 +166,6 @@ class Vertex(AxesWidget):
         if self.update_notify_callback is not None:
             self.update_notify_callback(self)
         self.canvas.draw()
-
-    def remove(self):
-        """ Removes the vertex & disconnects events """
-        self.artist.remove()
-        self.disconnect_events()
 
     def update_looks(self, state):
         if state == 'active':
@@ -263,9 +339,6 @@ class PolyGate(AxesWidget, BaseGate):
         BaseGate.__init__(self, toolbar, name)
         self.region = 'in'
         self.channels = tuple(toolbar.current_channels)
-        print toolbar.current_channels
-        print tuple(toolbar.current_channels)
-        print self.channels
         self.create_artist(verts)
 
     def create_artist(self, verts):
@@ -582,41 +655,12 @@ if __name__ == '__main__':
     xlim(-10, 10)
     ylim(-10, 10)
     manager = FCToolBar(ax)
+    def x(*args):
+        pass
+    verts = (('d1', 0.1), ('d2', 0.2))
+    #verts = (('d1', 0.1))#, ('d2', 0.2))
+    #verts = (0.1, 0.1)
+    manager.bv = BaseVertex(verts, x)
+    manager.bv.spawn_vertex(ax, ('d1', 'd3'))
+    #manager.v = Vertex(verts, ax, x, True, True)
     show()
-
-###############################
-# SAMPLE KEY PRESS HANDLER
-#################################
-#def key_press_handler(event, canvas, toolbar=None):
-    #"""
-    #Implement the default mpl key bindings for the canvas and toolbar
-    #described at :ref:`key-event-handling`
-#
-    #*event*
-      #a :class:`KeyEvent` instance
-    #*canvas*
-      #a :class:`FigureCanvasBase` instance
-    #*toolbar*
-      #a :class:`NavigationToolbar2` instance
-#
-    #"""
-    ## these bindings happen whether you are over an axes or not
-#
-    #if event.key is None:
-        #return
-    ## toggle fullscreen mode (default key 'f')
-    #if event.key in fullscreen_keys:
-        #canvas.manager.full_screen_toggle()
-#
-    ## quit the figure (defaut key 'ctrl+w')
-    #if event.key in quit_keys:
-        #Gcf.destroy_fig(canvas.figure)
-#
-    #if toolbar is not None:
-        ## home or reset mnemonic  (default key 'h', 'home' and 'r')
-        #if event.key in home_keys:
-            #toolbar.home()
-        ## forward / backward keys to enable left handed quick navigation
-        ## (default key for backward: 'left', 'backspace' and 'c')
-        #elif event.key in back_keys:
-            #toolbar.back()
