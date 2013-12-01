@@ -100,6 +100,10 @@ class Vertex(AxesWidget):
                     'ms' : 5}
         self.artist.update(style)
 
+    def set_visible(self, visible=True):
+        for artist in to_list(self.artist):
+            artist.set_visible(visible)
+
 class BaseGate(object):
     def __init__(self, toolbar, name):
         self.toolbar = toolbar
@@ -128,6 +132,22 @@ class BaseGate(object):
     def activate(self): self._change_activation('active')
     def inactivate(self): self._change_activation('inactive')
 
+    def set_visible(self, visible):
+        for artist in self.artist_list:
+            artist.set_visible(visible)
+        for vertex in to_list(self.vertex):
+            vertex.set_visible(visible)
+        self._update()
+
+    def set_visibility_based_on_axis(self, channels):
+        """ Sets the visibility of the gate based
+        on the currently viewed channels """
+        print 'setting visibility'
+        print 'cur channels', channels
+        print 'self', self.channels
+        visible = (channels == self.channels)
+        self.set_visible(visible)
+
     @property
     def verts(self):
         return [vertex.coordinates for vertex in to_list(self.vertex)]
@@ -136,18 +156,6 @@ class BaseGate(object):
         """
         Generates python code that can create the gate.
         """
-        gen_code_kwds.setdefault('name', self.name)
-        gen_code_kwds.setdefault('region', self.region)
-        gen_code_kwds.setdefault('gate_type', self.gate_type)
-        gen_code_kwds.setdefault('verts', self.verts)
-
-        if isinstance(self.channels, str):
-            gen_code_kwds.setdefault('channels', "'{0}'".format(self.channels))
-        else:
-            gen_code_kwds.setdefault('channels', self.channels)
-
-        format_string = "{name} = {gate_type}({verts}, {channels}, region='{region}', name='{name}')"
-        return format_string.format(**gen_code_kwds)
         #if isinstance(self, PolyGate):
             #region = 'in'
             #vert_list = ['(' + ', '.join(map(lambda x : '{:.2f}'.format(x), vert)) + ')' for vert in self.vert]
@@ -161,6 +169,18 @@ class BaseGate(object):
         #return format_string.format(self.__class__.__name__, vert_list,
                                 #self.channels, name=self.name, region=region)
 
+        gen_code_kwds.setdefault('name', self.name)
+        gen_code_kwds.setdefault('region', self.region)
+        gen_code_kwds.setdefault('gate_type', self.gate_type)
+        gen_code_kwds.setdefault('verts', self.verts)
+
+        if isinstance(self.channels, str):
+            gen_code_kwds.setdefault('channels', "'{0}'".format(self.channels))
+        else:
+            gen_code_kwds.setdefault('channels', self.channels)
+
+        format_string = "{name} = {gate_type}({verts}, {channels}, region='{region}', name='{name}')"
+        return format_string.format(**gen_code_kwds)
 
 class ThresholdGate(AxesWidget, BaseGate):
     def __init__(self, verts, orientation, ax, toolbar, name):
@@ -198,7 +218,6 @@ class ThresholdGate(AxesWidget, BaseGate):
     def create_artist(self):
         vert = self.vertex.coordinates
         self.artist_list = []
-
         if self.orientation in ('both', 'horizontal'):
             self.hline = self.ax.axhline(y=vert[1], color='k')
             self.artist_list.append(self.hline)
@@ -243,7 +262,10 @@ class PolyGate(AxesWidget, BaseGate):
         AxesWidget.__init__(self, ax)
         BaseGate.__init__(self, toolbar, name)
         self.region = 'in'
-        self.channels = tuple(toolbar.current_channels) if toolbar.current_channels else None, None
+        self.channels = tuple(toolbar.current_channels)
+        print toolbar.current_channels
+        print tuple(toolbar.current_channels)
+        print self.channels
         self.create_artist(verts)
 
     def create_artist(self, verts):
@@ -348,11 +370,12 @@ class FCToolBar(object):
         self.fig = ax.figure
         self.ax = ax
         self._plt_data = None
-        self.current_channels = None
         self.active_gate = None
+        self.sample = None
         self.canvas = self.fig.canvas
         self.key_handler_cid = self.canvas.mpl_connect('key_press_event', lambda event : key_press_handler(event, self.canvas, self))
         self.gate_num = 1
+        self.current_channels = 'd1', 'd2'
 
     def disconnect_events(self):
         self.canvas.mpl_disconnect(self.key_handler_cid)
@@ -462,11 +485,11 @@ class FCToolBar(object):
             self.plot_data()
 
     def set_axis(self, channels):
-        """
-        Sets the x and y axis
-        """
+        """ Sets the x and y axis """
         channels = tuple([ch.encode("UTF-8") for ch in channels]) # To get rid of u's
         self.current_channels = channels
+        for gate in self.gates:
+            gate.set_visibility_based_on_axis(channels)
         self.plot_data()
 
     ####################
@@ -475,6 +498,7 @@ class FCToolBar(object):
 
     def plot_data(self):
         """ Plots the loaded data """
+        if self.sample is None: return
         sample = self.sample
         ax = self.ax
 
@@ -545,6 +569,12 @@ def key_press_handler(event, canvas, toolbar=None):
         toolbar.delete_active_gate()
     elif key in ['0']:
         toolbar.load_fcs()
+    elif key in ['8']:
+        for gate in toolbar.gates:
+            gate.set_visible(False)
+    elif key in ['7']:
+        for gate in toolbar.gates:
+            gate.set_visible(True)
 
 if __name__ == '__main__':
     fig = figure()
