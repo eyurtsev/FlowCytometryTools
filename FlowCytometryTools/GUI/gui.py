@@ -9,21 +9,12 @@ from matplotlib.backends.backend_wx import NavigationToolbar2Wx
 import gate_toolbar
 
 class GUIEmbedded(GeneratedWireframe):
-
     def __init__(self, *args, **kwargs):
         GeneratedWireframe.__init__(self, *args, **kwargs)
         self.fig = self.canvas.figure
         self.ax = self.fig.add_subplot(111)
         self.fc_toolbar = gate_toolbar.FCToolBar(self.ax)
-
-    def _update_axes(self):
-        if self.fc_toolbar.sample is not None:
-            options = list(self.fc_toolbar.sample.channel_names)
-            options.sort() # May not be necessary
-            self.x_axis_list.Clear()
-            self.x_axis_list.InsertItems(options, 0)
-            self.y_axis_list.Clear()
-            self.y_axis_list.InsertItems(options, 0)
+        self._update_axes()
 
     def add_toolbar(self):
         """
@@ -102,6 +93,22 @@ class GUIEmbedded(GeneratedWireframe):
         generated_code = self.fc_toolbar.get_generation_code()
         self.tb_gen_code.SetValue(generated_code)
 
+    def _update_axes(self):
+        if self.fc_toolbar.sample is not None:
+            options = list(self.fc_toolbar.sample.channel_names)
+            options.sort() # May not be necessary
+            self.x_axis_list.Clear()
+            self.x_axis_list.InsertItems(options, 0)
+            self.y_axis_list.Clear()
+            self.y_axis_list.InsertItems(options, 0)
+        else:
+            options = list(['d1', 'd2', 'd3'])
+            options.sort() # May not be necessary
+            self.x_axis_list.Clear()
+            self.x_axis_list.InsertItems(options, 0)
+            self.y_axis_list.Clear()
+            self.y_axis_list.InsertItems(options, 0)
+            self.fc_toolbar.current_channels = options[0], options[0]
 
 if __name__ == "__main__":
     app = wx.PySimpleApp(0)
