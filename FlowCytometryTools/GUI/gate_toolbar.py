@@ -22,8 +22,7 @@ class BaseVertex(object):
     # self._dim holds the number of dimensions on which the vertex is defined.
     # At the moment, there should be support for only 1 or 2 dimensions.
     def __init__(self, coordinates, update_notify_callback=None):
-        self.coordinates = {c[0] : c[1] for c in coordinates}
-
+        self.spawn_list = None
 
         if not isinstance(coordinates, tuple):
             raise TypeError('coordinates must be a tuple')
@@ -34,6 +33,11 @@ class BaseVertex(object):
                 raise ValueError('Only 1d and 2d vertexes are supported')
         else:
             self._dim = 1
+
+        if self._dim == 1:
+            coordinates = [coordinates]
+
+        self.coordinates = {c[0] : c[1] for c in coordinates}
 
     def spawn_vertex(self, ax, spawn_channels):
         """
@@ -58,6 +62,7 @@ class BaseVertex(object):
             return
 
         verts = tuple([self.coordinates.get(ch, None) for ch in spawn_channels])
+        print verts
 
         def do_nothing(*args): print args
 
@@ -94,15 +99,20 @@ class Vertex(AxesWidget):
     (d1, 0.1) would appear in (d1, d2) space as a straight line
     with d1=0.1
     """
-    def __init__(self, coordinates, ax, update_notify_callback=None,
-            trackx=True, tracky=True):
+    def __init__(self, coordinates, ax, update_notify_callback=None):
         AxesWidget.__init__(self, ax)
         self.update_notify_callback = update_notify_callback
         self.selected = False
-        self.coordinates = coordinates
+
+        self.coordinates = tuple([c if c is not None else 0.5 for c in coordinates]) # Replaces all Nones with 0.5
+
+        self.trackx = coordinates[0] is not None
+        self.tracky = coordinates[1] is not None
+
+        if not self.trackx and not self.tracky:
+            raise Exception('Mode not supported')
+
         self.artist = None
-        self.trackx = trackx
-        self.tracky = tracky
 
         self.create_artist()
         self.connect_event('pick_event', lambda event : self.pick(event))
@@ -118,7 +128,15 @@ class Vertex(AxesWidget):
         current_axis : names of x, y axis
         """
         verts = self.coordinates
-        self.artist = pl.Line2D([verts[0]], [verts[1]], picker=10)
+
+        if not self.tracky:
+            trans = self.ax.get_xaxis_transform(which='grid')
+        elif not self.trackx:
+            trans = self.ax.get_yaxis_transform(which='grid')
+        else:
+            trans = self.ax.transData
+
+        self.artist = pl.Line2D([verts[0]], [verts[1]], transform=trans, picker=10)
         self.update_looks('active')
         self.ax.add_artist(self.artist)
 
@@ -652,15 +670,15 @@ def key_press_handler(event, canvas, toolbar=None):
 if __name__ == '__main__':
     fig = figure()
     ax = fig.add_subplot(111)
-    xlim(-10, 10)
-    ylim(-10, 10)
+    xlim(-1, 10)
+    ylim(-1, 10)
     manager = FCToolBar(ax)
     def x(*args):
         pass
+    #verts = (('d1', 0.1))
     verts = (('d1', 0.1), ('d2', 0.2))
-    #verts = (('d1', 0.1))#, ('d2', 0.2))
     #verts = (0.1, 0.1)
     manager.bv = BaseVertex(verts, x)
-    manager.bv.spawn_vertex(ax, ('d1', 'd3'))
+    manager.bv.spawn_vertex(ax, ('d1', 'd2'))
     #manager.v = Vertex(verts, ax, x, True, True)
     show()
