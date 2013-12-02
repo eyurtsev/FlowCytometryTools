@@ -39,7 +39,7 @@ class BaseVertex(object):
 
         self.coordinates = {c[0] : c[1] for c in coordinates}
 
-    def spawn_vertex(self, ax, spawn_channels):
+    def spawn(self, ax, spawn_channels):
         """
         'd1' can be shown on ('d1', 'd2') or ('d1')
         'd1', 'd2' can be shown only on ('d1', 'd2') or on ('d2', 'd1')
@@ -199,6 +199,62 @@ class Vertex(AxesWidget):
             artist.set_visible(visible)
 
 class BaseGate(object):
+    """ Holds information regarding all the vertexes. """
+    def __init__(self, verts, gate_type, update_notify=None):
+        """
+        verts is a list of tuples each tuple represents a vertex
+        """
+        self.coordinates = verts
+        self.verts = [BaseVertex(vert) for vert in verts]
+        self.update_notify = update_notify
+
+    def spawn(self, ax, current_axis):
+        """ Spawns a graphical gate that can be used to update the coordinates of the current gate. """
+        pass
+
+    def get_generation_code(self, **gen_code_kwds):
+        """
+        Generates python code that can create the gate.
+        """
+        #if isinstance(self, PolyGate):
+            #region = 'in'
+            #vert_list = ['(' + ', '.join(map(lambda x : '{:.2f}'.format(x), vert)) + ')' for vert in self.vert]
+        #else:
+            #region = "?"
+            #vert_list = ['{:.2f}'.format(vert) for vert in self.vert]
+#
+        #vert_list = '[' + ','.join(vert_list) + ']'
+#
+        #format_string = "{name} = {0}({1}, {2}, region='{region}', name='{name}')"
+        #return format_string.format(self.__class__.__name__, vert_list,
+                                #self.channels, name=self.name, region=region)
+
+        gen_code_kwds.setdefault('name', self.name)
+        gen_code_kwds.setdefault('region', self.region)
+        gen_code_kwds.setdefault('gate_type', self.gate_type)
+        gen_code_kwds.setdefault('verts', self.verts)
+
+        if isinstance(self.channels, str):
+            gen_code_kwds.setdefault('channels', "'{0}'".format(self.channels))
+        else:
+            gen_code_kwds.setdefault('channels', self.channels)
+
+        format_string = "{name} = {gate_type}({verts}, {channels}, region='{region}', name='{name}')"
+        return format_string.format(**gen_code_kwds)
+
+    #def get_generation_code(self):
+        #""" Gen code for threshold gate. """
+        #orientation = self.orientation
+        #if orientation == 'vertical':
+            #verts = self.vertex.coordinates[0]
+        #elif orientation == 'horizontal':
+            #verts = self.vertex.coordinates[1]
+        #else:
+            #verts = self.vertex.coordinates
+        #return PlottableGate.get_generation_code(self, verts=verts)
+
+
+class PlottableGate(object):
     def __init__(self, toolbar, name):
         self.toolbar = toolbar
         self.name = name
@@ -246,40 +302,10 @@ class BaseGate(object):
     def verts(self):
         return [vertex.coordinates for vertex in to_list(self.vertex)]
 
-    def get_generation_code(self, **gen_code_kwds):
-        """
-        Generates python code that can create the gate.
-        """
-        #if isinstance(self, PolyGate):
-            #region = 'in'
-            #vert_list = ['(' + ', '.join(map(lambda x : '{:.2f}'.format(x), vert)) + ')' for vert in self.vert]
-        #else:
-            #region = "?"
-            #vert_list = ['{:.2f}'.format(vert) for vert in self.vert]
-#
-        #vert_list = '[' + ','.join(vert_list) + ']'
-#
-        #format_string = "{name} = {0}({1}, {2}, region='{region}', name='{name}')"
-        #return format_string.format(self.__class__.__name__, vert_list,
-                                #self.channels, name=self.name, region=region)
-
-        gen_code_kwds.setdefault('name', self.name)
-        gen_code_kwds.setdefault('region', self.region)
-        gen_code_kwds.setdefault('gate_type', self.gate_type)
-        gen_code_kwds.setdefault('verts', self.verts)
-
-        if isinstance(self.channels, str):
-            gen_code_kwds.setdefault('channels', "'{0}'".format(self.channels))
-        else:
-            gen_code_kwds.setdefault('channels', self.channels)
-
-        format_string = "{name} = {gate_type}({verts}, {channels}, region='{region}', name='{name}')"
-        return format_string.format(**gen_code_kwds)
-
-class ThresholdGate(AxesWidget, BaseGate):
+class ThresholdGate(AxesWidget, PlottableGate):
     def __init__(self, verts, orientation, ax, toolbar, name):
         AxesWidget.__init__(self, ax)
-        BaseGate.__init__(self, toolbar, name)
+        PlottableGate.__init__(self, toolbar, name)
 
         ## Set orientation and channels on which the gate is defined
         self.orientation = orientation
@@ -340,21 +366,10 @@ class ThresholdGate(AxesWidget, BaseGate):
         for artist in self.artist_list:
             artist.update(style)
 
-    def get_generation_code(self):
-        orientation = self.orientation
-        if orientation == 'vertical':
-            verts = self.vertex.coordinates[0]
-        elif orientation == 'horizontal':
-            verts = self.vertex.coordinates[1]
-        else:
-            verts = self.vertex.coordinates
-        return BaseGate.get_generation_code(self, verts=verts)
-
-
-class PolyGate(AxesWidget, BaseGate):
+class PolyGate(AxesWidget, PlottableGate):
     def __init__(self, verts, ax, toolbar, name):
         AxesWidget.__init__(self, ax)
-        BaseGate.__init__(self, toolbar, name)
+        PlottableGate.__init__(self, toolbar, name)
         self.region = 'in'
         self.channels = tuple(toolbar.current_channels)
         self.create_artist(verts)
@@ -679,6 +694,6 @@ if __name__ == '__main__':
     verts = (('d1', 0.1), ('d2', 0.2))
     #verts = (0.1, 0.1)
     manager.bv = BaseVertex(verts, x)
-    manager.bv.spawn_vertex(ax, ('d1', 'd2'))
+    manager.bv.spawn(ax, ('d1', 'd2'))
     #manager.v = Vertex(verts, ax, x, True, True)
     show()
