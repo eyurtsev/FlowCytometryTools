@@ -355,7 +355,7 @@ class FCCollection(MeasurementCollection):
             channel_meta  = self.values()[0].channels
             channel_names = self.values()[0].channel_names
             if channels is None:
-                channels = channel_names
+                channels = list(channel_names)
             else:
                 channels = to_list(channels)
             ## create transformer
@@ -374,8 +374,9 @@ class FCCollection(MeasurementCollection):
                         kwargs['d'] = np.log10(ranges[0])
                 transformer = Transformation(transform, direction, args, **kwargs)
                 if use_spln:
-                    xmax = 10**kwargs['d']
-                    transformer.set_spline(-xmax, xmax)
+                    xmax = self.apply(lambda x:x[channels].max().max(), applyto='data').max().max()
+                    xmin = self.apply(lambda x:x[channels].min().min(), applyto='data').min().min()
+                    transformer.set_spline(xmin, xmax)
             ## transform all measurements     
             for k,v in new.iteritems(): 
                 new[k] = v.transform(transformer, channels=channels, return_all=return_all, use_spln=use_spln)
