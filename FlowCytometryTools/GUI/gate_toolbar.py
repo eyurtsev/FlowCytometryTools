@@ -56,13 +56,15 @@ class BaseVertex(object):
             new_coordinates = {k : v for k, v in zip(ch, coordinates)}
             self.update_coordinates(new_coordinates)
 
-        spawned_vertex = Vertex(verts, ax, callback)
+        spawned_vertex = SpawnableVertex(verts, ax, callback)
         spawned_vertex.channels = spawn_channels
 
         if self.spawn_list is None:
             self.spawn_list = []
 
         self.spawn_list.append(spawned_vertex)
+
+        return spawned_vertex
 
     def update_coordinates(self, new_coordinates):
         """
@@ -82,7 +84,7 @@ class BaseVertex(object):
             self.update_notify_callback(self)
 
 
-class Vertex(AxesWidget):
+class SpawnableVertex(AxesWidget):
     """
     Defines a moveable vertex. The vertex must be associated
     wth an axis.
@@ -164,17 +166,13 @@ class Vertex(AxesWidget):
             return False
 
     def pick(self, event):
-        if self.artist != event.artist:
-            return
-        if self.ignore(event):
-            return
+        if self.artist != event.artist: return
+        if self.ignore(event): return
         self.selected = not self.selected
 
     def mouse_button_release(self, event):
-        if self.ignore(event):
-            return
-        if self.selected:
-            self.selected = False
+        if self.ignore(event): return
+        if self.selected: self.selected = False
 
     def motion_notify_event(self, event):
         if self.selected:
@@ -196,11 +194,9 @@ class Vertex(AxesWidget):
 
     def update_looks(self, state):
         if state == 'active':
-            style = {'color' : 'red', 'marker' : 's',
-                        'ms' : 8}
+            style = {'color' : 'red', 'marker' : 's', 'ms' : 8}
         else:
-            style = {'color' : 'black', 'marker' : 's',
-                    'ms' : 5}
+            style = {'color' : 'black', 'marker' : 's', 'ms' : 5}
         self.artist.update(style)
 
     def set_visible(self, visible=True):
@@ -214,18 +210,18 @@ class BaseGate(object):
         verts is a list of tuples each tuple represents a vertex
         """
         self.coordinates = coordinates_list
-        self.verts = [BaseVertex(coordinates, vertex_update_callback) for coordinates in coordinates_list]
+        self.gate_type = gate_type
+        self.verts = [BaseVertex(coordinates, self.vertex_update_callback) for coordinates in coordinates_list]
         self.update_notify = update_notify
         self.spawn_list = []
 
     def spawn(self, ax, spawn_channels):
         """ Spawns a graphical gate that can be used to update the coordinates of the current gate. """
-        self.spawn_list.append(self.gate_type.spawn(self.verts))
-        #for vert in self.verts:
-            #vert.spawn(ax, spawn_channels)
+        self.spawn_list.append(self.gate_type(self.verts, ax, spawn_channels))
 
-    def vertex_update_callback(*args):
-        for sgate in self.spawn_list
+    def vertex_update_callback(self, *args):
+        for sgate in self.spawn_list:
+            sgate.update_position()
 
     def get_generation_code(self, **gen_code_kwds):
         """
@@ -257,60 +253,16 @@ class BaseGate(object):
         format_string = "{name} = {gate_type}({verts}, {channels}, region='{region}', name='{name}')"
         return format_string.format(**gen_code_kwds)
 
-
-class PolyGateRework(AxesWidget, PlottableGate):
-    def __init__(self, verts, ax, toolbar, name):
-        AxesWidget.__init__(self, ax)
-        PlottableGate.__init__(self, toolbar, name)
-        self.region = 'in'
-        self.channels = tuple(toolbar.current_channels)
-        self.create_artist(verts)
-
-    def create_artist(self, verts):
-        self.poly = pl.Polygon(verts, color='k', fill=False)
-        self.artist_list = to_list(self.poly)
-        self.ax.add_artist(self.poly)
-        update_notify_callback = lambda vertex : self.update_position(vertex)
-        self.vertex_list = [Vertex(vert, self.ax, update_notify_callback)
-                for vert in verts]
-        self.activate()
-
-    def update_position(self, vertex):
-        xy = [vertex.coordinates for vertex in self.vertex_list]
-        self.poly.set_xy(xy)
-        self.toolbar.set_active_gate(self)
-
-    def update_looks(self):
-        """ Updates the looks of the gate depending on state. """
-        if self.state == 'active':
-            style = {'color' : 'red', 'linestyle' : 'solid', 'fill' : False}
-        else:
-            style = {'color' : 'black', 'fill' : False}
-        self.poly.update(style)
-
-    @property
-    def vertex(self):
-        """ Short hand for vertex_list """
-        return self.vertex_list
-
-    #def get_generation_code(self):
-        #""" Gen code for threshold gate. """
-        #orientation = self.orientation
-        #if orientation == 'vertical':
-            #verts = self.vertex.coordinates[0]
-        #elif orientation == 'horizontal':
-            #verts = self.vertex.coordinates[1]
-        #else:
-            #verts = self.vertex.coordinates
-        #return PlottableGate.get_generation_code(self, verts=verts)
-
-
 class PlottableGate(object):
-    def __init__(self, toolbar, name):
+    def __init__(self, channels, vertex_list, toolbar, name):
         self.toolbar = toolbar
         self.name = name
         self.region = '?'
         self.gate_type = self.__class__.__name__
+        self.channels = channels
+        self._spawned_vertexes = [vert.spawn(self.ax, channels) for vert in vertex_list]
+        self.create_artist()
+        self.activate()
 
     def _update(self):
         self.canvas.draw()
@@ -350,8 +302,37 @@ class PlottableGate(object):
         self.set_visible(visible)
 
     @property
-    def verts(self):
-        return [vertex.coordinates for vertex in to_list(self.vertex)]
+    def vertex(self):
+        # TODO REFACTOR
+        return self._spawned_vertexes
+
+    @property
+    def coordinates(self):
+        return [vert.coordinates for vert in self._spawned_vertexes]
+
+class PolyGate(AxesWidget, PlottableGate):
+    def __init__(self, vertex_list, ax, spawn_channels, name=None):
+        AxesWidget.__init__(self, ax)
+        toolbar = None
+        PlottableGate.__init__(self, spawn_channels, vertex_list, toolbar, name)
+
+    def create_artist(self):
+        self.poly = pl.Polygon(self.coordinates, color='k', fill=False)
+        self.artist_list = to_list(self.poly)
+        self.ax.add_artist(self.poly)
+
+    def update_position(self):
+        self.poly.set_xy(self.coordinates)
+        self.toolbar.set_active_gate(self)
+
+    def update_looks(self):
+        """ Updates the looks of the gate depending on state. """
+        if self.state == 'active':
+            style = {'color' : 'red', 'linestyle' : 'solid', 'fill' : False}
+        else:
+            style = {'color' : 'black', 'fill' : False}
+        self.poly.update(style)
+
 
 class ThresholdGate(AxesWidget, PlottableGate):
     def __init__(self, verts, orientation, ax, toolbar, name):
@@ -382,7 +363,7 @@ class ThresholdGate(AxesWidget, PlottableGate):
         ## Set up call back events
         update_notify_callback = lambda vertex : self.update_position(vertex)
 
-        self.vertex = Vertex(verts, ax, update_notify_callback=update_notify_callback,
+        self.vertex = SpawnableVertex(verts, ax, update_notify_callback=update_notify_callback,
                     trackx=trackx, tracky=tracky)
         self.create_artist()
 
@@ -416,41 +397,6 @@ class ThresholdGate(AxesWidget, PlottableGate):
 
         for artist in self.artist_list:
             artist.update(style)
-
-class PolyGate(AxesWidget, PlottableGate):
-    def __init__(self, verts, ax, toolbar, name):
-        AxesWidget.__init__(self, ax)
-        PlottableGate.__init__(self, toolbar, name)
-        self.region = 'in'
-        self.channels = tuple(toolbar.current_channels)
-        self.create_artist(verts)
-
-    def create_artist(self, verts):
-        self.poly = pl.Polygon(verts, color='k', fill=False)
-        self.artist_list = to_list(self.poly)
-        self.ax.add_artist(self.poly)
-        update_notify_callback = lambda vertex : self.update_position(vertex)
-        self.vertex_list = [Vertex(vert, self.ax, update_notify_callback)
-                for vert in verts]
-        self.activate()
-
-    def update_position(self, vertex):
-        xy = [vertex.coordinates for vertex in self.vertex_list]
-        self.poly.set_xy(xy)
-        self.toolbar.set_active_gate(self)
-
-    def update_looks(self):
-        """ Updates the looks of the gate depending on state. """
-        if self.state == 'active':
-            style = {'color' : 'red', 'linestyle' : 'solid', 'fill' : False}
-        else:
-            style = {'color' : 'black', 'fill' : False}
-        self.poly.update(style)
-
-    @property
-    def vertex(self):
-        """ Short hand for vertex_list """
-        return self.vertex_list
 
 class PolyDrawer(AxesWidget):
     """
@@ -762,7 +708,8 @@ if __name__ == '__main__':
         show()
     def example2():
         fig = figure()
-        ax = fig.add_subplot(1, 1, 1)
+        ax = fig.add_subplot(1, 2, 1)
+        ax2 = fig.add_subplot(1, 2, 2)
         #xlim(-1, 1)
         #ylim(-1, 1)
         #manager = FCToolBar(ax)
@@ -773,8 +720,14 @@ if __name__ == '__main__':
         verts = ({'d1' : 0.8, 'd2' : 0.2},
                  {'d1' : 0.4, 'd2' : 0.4},
                  {'d1' : 0.7, 'd2' : 0.8})
-        Globals.bv = BaseGate(verts, x)
+        verts2 = ({'d1' : 0.9, 'd2' : 0.4},
+                 {'d1' : 0.6, 'd2' : 0.2},
+                 {'d1' : 0.8, 'd2' : 0.6})
+        Globals.bv = BaseGate(verts, PolyGateRework, x)
+        Globals.bv2 = BaseGate(verts2, PolyGateRework, x)
         Globals.bv.spawn(ax, ('d1', 'd2'))
+        Globals.bv.spawn(ax2, ('d2', 'd1'))
+        Globals.bv2.spawn(ax, ('d1', 'd2'))
         #Globals.bv.spawn(ax, ('d1', 'd2'))
         #Globals.bv.spawn(ax2, ('d2', 'd1'))
         #Globals.bv.spawn(ax3, ('d1', 'd2'))
