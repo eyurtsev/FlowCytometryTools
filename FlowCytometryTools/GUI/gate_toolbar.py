@@ -18,26 +18,15 @@ class MOUSE:
     RIGHT_CLICK = 3
 
 class BaseVertex(object):
-
-    # self._dim holds the number of dimensions on which the vertex is defined.
-    # At the moment, there should be support for only 1 or 2 dimensions.
     def __init__(self, coordinates, update_notify_callback=None):
+        """
+        coordinates : dictionary
+            keys : names of dimensions
+            values : coordinates in each dimension
+        """
         self.spawn_list = None
-
-        if not isinstance(coordinates, tuple):
-            raise TypeError('coordinates must be a tuple')
-        elif isinstance(coordinates[0], tuple):
-            self._dim = len(coordinates)
-
-            if self._dim > 2:
-                raise ValueError('Only 1d and 2d vertexes are supported')
-        else:
-            self._dim = 1
-
-        if self._dim == 1:
-            coordinates = [coordinates]
-
-        self.coordinates = {c[0] : c[1] for c in coordinates}
+        self.coordinates = coordinates
+        self.update_notify_callback = update_notify_callback
 
     def spawn(self, ax, spawn_channels):
         """
@@ -50,28 +39,48 @@ class BaseVertex(object):
         spawn_channels : names of channels on which to spawn
             the vertex
         """
-        print spawn_channels
-        print self.coordinates
-        print self._dim
-
         if len(spawn_channels) != len(set(spawn_channels)):
-            raise Exceptioon('Spawn channels must be unique')
+            raise Exception('Spawn channels must be unique')
 
         if not set(self.coordinates.keys()).issubset(set(spawn_channels)):
-            print 'not a subset'
-            return
+            raise Exception('Check that this is implemented correctly. Exception in the meantime.')
 
-        verts = tuple([self.coordinates.get(ch, None) for ch in spawn_channels])
-        print verts
+        if len(spawn_channels) == 1:
+            verts = self.coordinates.get(spawn_channels[0], None), None
+        else:
+            verts = tuple([self.coordinates.get(ch, None) for ch in spawn_channels])
 
-        def do_nothing(*args): print args
+        def callback(svertex):
+            ch = svertex.channels
+            coordinates = svertex.coordinates
+            new_coordinates = {k : v for k, v in zip(ch, coordinates)}
+            self.update_coordinates(new_coordinates)
 
-        spawned_vertex  = Vertex(verts, ax, do_nothing)
+        spawned_vertex = Vertex(verts, ax, callback)
+        spawned_vertex.channels = spawn_channels
 
         if self.spawn_list is None:
             self.spawn_list = []
 
         self.spawn_list.append(spawned_vertex)
+
+    def update_coordinates(self, new_coordinates):
+        """
+        new_coordinates : dict
+        """
+        self.coordinates.update(new_coordinates)
+
+        for svertex in self.spawn_list:
+            verts = tuple([self.coordinates.get(ch, None) for ch in svertex.channels])
+
+            if len(svertex.channels) == 1: # This means a histogram
+                svertex.update_position(verts[0], None)
+            else:
+                svertex.update_position(verts[0], verts[1])
+
+        if hasattr(self.update_notify_callback, '__call__'):
+            self.update_notify_callback(self)
+
 
 class Vertex(AxesWidget):
     """
@@ -200,17 +209,23 @@ class Vertex(AxesWidget):
 
 class BaseGate(object):
     """ Holds information regarding all the vertexes. """
-    def __init__(self, verts, gate_type, update_notify=None):
+    def __init__(self, coordinates_list, gate_type, update_notify=None):
         """
         verts is a list of tuples each tuple represents a vertex
         """
-        self.coordinates = verts
-        self.verts = [BaseVertex(vert) for vert in verts]
+        self.coordinates = coordinates_list
+        self.verts = [BaseVertex(coordinates, vertex_update_callback) for coordinates in coordinates_list]
         self.update_notify = update_notify
+        self.spawn_list = []
 
-    def spawn(self, ax, current_axis):
+    def spawn(self, ax, spawn_channels):
         """ Spawns a graphical gate that can be used to update the coordinates of the current gate. """
-        pass
+        self.spawn_list.append(self.gate_type.spawn(self.verts))
+        #for vert in self.verts:
+            #vert.spawn(ax, spawn_channels)
+
+    def vertex_update_callback(*args):
+        for sgate in self.spawn_list
 
     def get_generation_code(self, **gen_code_kwds):
         """
@@ -241,6 +256,42 @@ class BaseGate(object):
 
         format_string = "{name} = {gate_type}({verts}, {channels}, region='{region}', name='{name}')"
         return format_string.format(**gen_code_kwds)
+
+
+class PolyGateRework(AxesWidget, PlottableGate):
+    def __init__(self, verts, ax, toolbar, name):
+        AxesWidget.__init__(self, ax)
+        PlottableGate.__init__(self, toolbar, name)
+        self.region = 'in'
+        self.channels = tuple(toolbar.current_channels)
+        self.create_artist(verts)
+
+    def create_artist(self, verts):
+        self.poly = pl.Polygon(verts, color='k', fill=False)
+        self.artist_list = to_list(self.poly)
+        self.ax.add_artist(self.poly)
+        update_notify_callback = lambda vertex : self.update_position(vertex)
+        self.vertex_list = [Vertex(vert, self.ax, update_notify_callback)
+                for vert in verts]
+        self.activate()
+
+    def update_position(self, vertex):
+        xy = [vertex.coordinates for vertex in self.vertex_list]
+        self.poly.set_xy(xy)
+        self.toolbar.set_active_gate(self)
+
+    def update_looks(self):
+        """ Updates the looks of the gate depending on state. """
+        if self.state == 'active':
+            style = {'color' : 'red', 'linestyle' : 'solid', 'fill' : False}
+        else:
+            style = {'color' : 'black', 'fill' : False}
+        self.poly.update(style)
+
+    @property
+    def vertex(self):
+        """ Short hand for vertex_list """
+        return self.vertex_list
 
     #def get_generation_code(self):
         #""" Gen code for threshold gate. """
@@ -682,18 +733,54 @@ def key_press_handler(event, canvas, toolbar=None):
         for gate in toolbar.gates:
             gate.set_visible(True)
 
+class Globals():
+    pass
+
 if __name__ == '__main__':
-    fig = figure()
-    ax = fig.add_subplot(111)
-    xlim(-1, 10)
-    ylim(-1, 10)
-    manager = FCToolBar(ax)
-    def x(*args):
-        pass
-    #verts = (('d1', 0.1))
-    verts = (('d1', 0.1), ('d2', 0.2))
-    #verts = (0.1, 0.1)
-    manager.bv = BaseVertex(verts, x)
-    manager.bv.spawn(ax, ('d1', 'd2'))
-    #manager.v = Vertex(verts, ax, x, True, True)
-    show()
+    def example1():
+        fig = figure()
+        ax = fig.add_subplot(1, 4, 1)
+        ax2 = fig.add_subplot(1, 4, 2)
+        ax3 = fig.add_subplot(1, 4, 3)
+        ax4 = fig.add_subplot(1, 4, 4)
+        #xlim(-1, 1)
+        #ylim(-1, 1)
+        #manager = FCToolBar(ax)
+        def x(*args):
+            pass
+        #verts = (('d1', 0.1))
+        #verts = {'d1' : 0.8}
+        verts = {'d1' : 0.8, 'd2' : 0.2}
+        #verts = (0.1, 0.1)
+        Globals.bv = BaseVertex(verts, x)
+        Globals.bv.spawn(ax, ('d1', 'd2'))
+        Globals.bv.spawn(ax2, ('d2', 'd1'))
+        Globals.bv.spawn(ax3, ('d1', 'd2'))
+        Globals.bv.spawn(ax4, ('d1', 'd2'))
+        #manager.v = Vertex(verts, ax, x, True, True)
+        #Globals.bv.update_coordinates({'d2' : 0.7, 'd1' : 0.9})
+        show()
+    def example2():
+        fig = figure()
+        ax = fig.add_subplot(1, 1, 1)
+        #xlim(-1, 1)
+        #ylim(-1, 1)
+        #manager = FCToolBar(ax)
+        def x(*args):
+            pass
+        #verts = (('d1', 0.1))
+        #verts = {'d1' : 0.8}
+        verts = ({'d1' : 0.8, 'd2' : 0.2},
+                 {'d1' : 0.4, 'd2' : 0.4},
+                 {'d1' : 0.7, 'd2' : 0.8})
+        Globals.bv = BaseGate(verts, x)
+        Globals.bv.spawn(ax, ('d1', 'd2'))
+        #Globals.bv.spawn(ax, ('d1', 'd2'))
+        #Globals.bv.spawn(ax2, ('d2', 'd1'))
+        #Globals.bv.spawn(ax3, ('d1', 'd2'))
+        #Globals.bv.spawn(ax4, ('d1', 'd2'))
+        #manager.v = Vertex(verts, ax, x, True, True)
+        #Globals.bv.update_coordinates({'d2' : 0.7, 'd1' : 0.9})
+        show()
+
+    example2()
