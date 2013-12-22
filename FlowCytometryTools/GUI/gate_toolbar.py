@@ -17,8 +17,36 @@ class MOUSE:
     LEFT_CLICK = 1
     RIGHT_CLICK = 3
 
-class BaseVertex(object):
-    def __init__(self, coordinates, update_notify_callback=None):
+class Event(object):
+    def __init__(self, event_type, event_info=None):
+        self.type = event_type
+        self.info = event_info if event_info is not None else {}
+    def __str__(self):
+        return '{} : {}'.format(self.type, self.info)
+
+class EventGenerator(object):
+    def callback(self, event=None):
+        if event is None:
+            event = Event('NA', {'caller' : self})
+        else:
+            event.info.update({'caller' : self})
+
+        if hasattr(self, 'callback_list'):
+            for func in self.callback_list:
+                func(event)
+
+    def add_callback(self, func):
+        """ Registers a call back function """
+        if func is None: return
+        func_list = to_list(func)
+
+        if not hasattr(self, 'callback_list'):
+            self.callback_list = func_list
+        else:
+            self.callback_list.extend(func_list)
+
+class BaseVertex(EventGenerator):
+    def __init__(self, coordinates, callback_list=None):
         """
         coordinates : dictionary
             keys : names of dimensions
@@ -26,38 +54,40 @@ class BaseVertex(object):
         """
         self.spawn_list = None
         self.coordinates = coordinates
-        self.update_notify_callback = update_notify_callback
+        self.add_callback(callback_list)
 
-    def spawn(self, ax, spawn_channels):
+    def spawn(self, ax, channels):
         """
         'd1' can be shown on ('d1', 'd2') or ('d1')
         'd1', 'd2' can be shown only on ('d1', 'd2') or on ('d2', 'd1')
 
         This means that the channels on which the vertex
-        is defined has to be a subset of the spawn_channels
+        is defined has to be a subset of the channels
 
-        spawn_channels : names of channels on which to spawn
+        channels : names of channels on which to spawn
             the vertex
         """
-        if len(spawn_channels) != len(set(spawn_channels)):
+        if len(channels) != len(set(channels)):
             raise Exception('Spawn channels must be unique')
 
-        if not set(self.coordinates.keys()).issubset(set(spawn_channels)):
+        if not set(self.coordinates.keys()).issubset(set(channels)):
             raise Exception('Check that this is implemented correctly. Exception in the meantime.')
 
-        if len(spawn_channels) == 1:
-            verts = self.coordinates.get(spawn_channels[0], None), None
+        if len(channels) == 1:
+            verts = self.coordinates.get(channels[0], None), None
         else:
-            verts = tuple([self.coordinates.get(ch, None) for ch in spawn_channels])
+            verts = tuple([self.coordinates.get(ch, None) for ch in channels])
 
-        def callback(svertex):
+        def callback(event):
+            print event
+            svertex = event.info['caller']
             ch = svertex.channels
             coordinates = svertex.coordinates
             new_coordinates = {k : v for k, v in zip(ch, coordinates)}
             self.update_coordinates(new_coordinates)
 
         spawned_vertex = SpawnableVertex(verts, ax, callback)
-        spawned_vertex.channels = spawn_channels
+        spawned_vertex.channels = channels
 
         if self.spawn_list is None:
             self.spawn_list = []
@@ -80,16 +110,16 @@ class BaseVertex(object):
             else:
                 svertex.update_position(verts[0], verts[1])
 
-        if hasattr(self.update_notify_callback, '__call__'):
-            self.update_notify_callback(self)
+        vevent = Event('change')
+        self.callback(vevent)
 
 
-class SpawnableVertex(AxesWidget):
+class SpawnableVertex(AxesWidget, EventGenerator):
     """
     Defines a moveable vertex. The vertex must be associated
     wth an axis.
 
-    The update_notify_callback function is called whenever the
+    The callback_list function is called whenever the
     vertex is updated.
 
     coordinates - n 2-tuple
@@ -110,9 +140,9 @@ class SpawnableVertex(AxesWidget):
     (d1, 0.1) would appear in (d1, d2) space as a straight line
     with d1=0.1
     """
-    def __init__(self, coordinates, ax, update_notify_callback=None):
+    def __init__(self, coordinates, ax, callback_list=None):
         AxesWidget.__init__(self, ax)
-        self.update_notify_callback = update_notify_callback
+        self.add_callback(callback_list)
         self.selected = False
 
         self.coordinates = tuple([c if c is not None else 0.5 for c in coordinates]) # Replaces all Nones with 0.5
@@ -177,6 +207,9 @@ class SpawnableVertex(AxesWidget):
     def motion_notify_event(self, event):
         if self.selected:
             self.update_position(event.xdata, event.ydata)
+
+            vevent = Event('change')
+            self.callback(vevent)
             self._update()
 
     def update_position(self, xdata, ydata):
@@ -188,8 +221,6 @@ class SpawnableVertex(AxesWidget):
             self.artist.set_ydata([ydata])
 
     def _update(self):
-        if self.update_notify_callback is not None:
-            self.update_notify_callback(self)
         self.canvas.draw()
 
     def update_looks(self, state):
@@ -203,25 +234,33 @@ class SpawnableVertex(AxesWidget):
         for artist in to_list(self.artist):
             artist.set_visible(visible)
 
-class BaseGate(object):
+class BaseGate(EventGenerator):
     """ Holds information regarding all the vertexes. """
-    def __init__(self, coordinates_list, gate_type, update_notify=None):
+    def __init__(self, coordinates_list, gate_type, callback_list=None):
         """
         verts is a list of tuples each tuple represents a vertex
         """
         self.coordinates = coordinates_list
         self.gate_type = gate_type
         self.verts = [BaseVertex(coordinates, self.vertex_update_callback) for coordinates in coordinates_list]
-        self.update_notify = update_notify
+        self.add_callback(callback_list)
         self.spawn_list = []
 
-    def spawn(self, ax, spawn_channels):
+
+    def spawn(self, ax, channels):
         """ Spawns a graphical gate that can be used to update the coordinates of the current gate. """
-        self.spawn_list.append(self.gate_type(self.verts, ax, spawn_channels))
+        self.spawn_list.append(self.gate_type(self.verts, ax, channels))
 
     def vertex_update_callback(self, *args):
         for sgate in self.spawn_list:
             sgate.update_position()
+
+        gevent = Event('gate change')
+        self.callback(gevent)
+
+    def activate(self):
+        [sgate.activate() for sgate in self.spawn_list]
+    def inactivate(self): [sgate.inactivate() for sgate in self.spawn_list]
 
     def get_generation_code(self, **gen_code_kwds):
         """
@@ -255,11 +294,11 @@ class BaseGate(object):
 
 class PlottableGate(object):
     def __init__(self, channels, vertex_list, toolbar, name):
+        self.channels = channels
         self.toolbar = toolbar
         self.name = name
         self.region = '?'
         self.gate_type = self.__class__.__name__
-        self.channels = channels
         self._spawned_vertexes = [vert.spawn(self.ax, channels) for vert in vertex_list]
         self.create_artist()
         self.activate()
@@ -275,6 +314,7 @@ class PlottableGate(object):
         self._update()
 
     def _change_activation(self, new_state):
+        print 'set active {}'.format(new_state)
         if not hasattr(self, 'state') or self.state != new_state:
             self.state = new_state
             for vertex in to_list(self.vertex):
@@ -311,10 +351,10 @@ class PlottableGate(object):
         return [vert.coordinates for vert in self._spawned_vertexes]
 
 class PolyGate(AxesWidget, PlottableGate):
-    def __init__(self, vertex_list, ax, spawn_channels, name=None):
+    def __init__(self, vertex_list, ax, channels, name=None):
         AxesWidget.__init__(self, ax)
         toolbar = None
-        PlottableGate.__init__(self, spawn_channels, vertex_list, toolbar, name)
+        PlottableGate.__init__(self, channels, vertex_list, toolbar, name)
 
     def create_artist(self):
         self.poly = pl.Polygon(self.coordinates, color='k', fill=False)
@@ -323,7 +363,7 @@ class PolyGate(AxesWidget, PlottableGate):
 
     def update_position(self):
         self.poly.set_xy(self.coordinates)
-        self.toolbar.set_active_gate(self)
+        #self.toolbar.set_active_gate(self)
 
     def update_looks(self):
         """ Updates the looks of the gate depending on state. """
@@ -361,9 +401,9 @@ class ThresholdGate(AxesWidget, PlottableGate):
         tracky = orientation in ('both', 'horizontal')
 
         ## Set up call back events
-        update_notify_callback = lambda vertex : self.update_position(vertex)
+        callback_list = lambda vertex : self.update_position(vertex)
 
-        self.vertex = SpawnableVertex(verts, ax, update_notify_callback=update_notify_callback,
+        self.vertex = SpawnableVertex(verts, ax, callback_list=callback_list,
                     trackx=trackx, tracky=tracky)
         self.create_artist()
 
@@ -544,8 +584,15 @@ class FCToolBar(object):
         """
         def create_polygon(poly_drawer_instance):
             verts = poly_drawer_instance.verts
-            gate = PolyGate(verts, self.ax, self,
-                    self._get_next_gate_name())
+            ch = self.current_channels
+            # Pack coordinates
+            verts = [dict(zip(ch, v)) for v in verts]
+
+            def gate_updated_callback(event):
+                self.set_active_gate(event.info['caller'])
+
+            gate = BaseGate(verts, PolyGate, gate_updated_callback)
+            gate.spawn(self.ax, ch)
             self.add_gate(gate)
             self.pd.disconnect_events()
             del poly_drawer_instance
@@ -708,11 +755,11 @@ if __name__ == '__main__':
         show()
     def example2():
         fig = figure()
-        ax = fig.add_subplot(1, 2, 1)
-        ax2 = fig.add_subplot(1, 2, 2)
+        ax = fig.add_subplot(1, 1, 1)
+        #ax2 = fig.add_subplot(1, 2, 2)
         #xlim(-1, 1)
         #ylim(-1, 1)
-        #manager = FCToolBar(ax)
+        manager = FCToolBar(ax)
         def x(*args):
             pass
         #verts = (('d1', 0.1))
@@ -723,11 +770,10 @@ if __name__ == '__main__':
         verts2 = ({'d1' : 0.9, 'd2' : 0.4},
                  {'d1' : 0.6, 'd2' : 0.2},
                  {'d1' : 0.8, 'd2' : 0.6})
-        Globals.bv = BaseGate(verts, PolyGateRework, x)
-        Globals.bv2 = BaseGate(verts2, PolyGateRework, x)
-        Globals.bv.spawn(ax, ('d1', 'd2'))
-        Globals.bv.spawn(ax2, ('d2', 'd1'))
-        Globals.bv2.spawn(ax, ('d1', 'd2'))
+        #Globals.bv = BaseGate(verts, PolyGate, x)
+        #Globals.bv2 = BaseGate(verts2, PolyGate, x)
+        #Globals.bv.spawn(ax, ('d1', 'd2'))
+        #Globals.bv2.spawn(ax, ('d1', 'd2'))
         #Globals.bv.spawn(ax, ('d1', 'd2'))
         #Globals.bv.spawn(ax2, ('d2', 'd1'))
         #Globals.bv.spawn(ax3, ('d1', 'd2'))
@@ -735,5 +781,9 @@ if __name__ == '__main__':
         #manager.v = Vertex(verts, ax, x, True, True)
         #Globals.bv.update_coordinates({'d2' : 0.7, 'd1' : 0.9})
         show()
+    def example3():
+        fig = figure()
+        ax = fig.add_subplot(1, 1, 1)
+        manager = FCToolBar(ax)
 
     example2()
