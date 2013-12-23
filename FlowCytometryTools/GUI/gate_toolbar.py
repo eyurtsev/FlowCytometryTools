@@ -79,7 +79,6 @@ class BaseVertex(EventGenerator):
             verts = tuple([self.coordinates.get(ch, None) for ch in channels])
 
         def callback(event):
-            print event
             svertex = event.info['caller']
             ch = svertex.channels
             coordinates = svertex.coordinates
@@ -110,8 +109,7 @@ class BaseVertex(EventGenerator):
             else:
                 svertex.update_position(verts[0], verts[1])
 
-        vevent = Event('change')
-        self.callback(vevent)
+        self.callback(Event('base gate changed'))
 
 
 class SpawnableVertex(AxesWidget, EventGenerator):
@@ -291,6 +289,12 @@ class BaseGate(EventGenerator):
 
         format_string = "{name} = {gate_type}({verts}, {channels}, region='{region}', name='{name}')"
         return format_string.format(**gen_code_kwds)
+
+    def set_visibility_based_on_axis(self, channels):
+        # TODO Change this based on axis. Rather than assume there is only one axes
+        for sgate in self.spawn_list:
+            sgate.set_visibility_based_on_axis(channels)
+
 
 class PlottableGate(object):
     def __init__(self, channels, vertex_list, toolbar, name):
@@ -483,7 +487,6 @@ class PolyDrawer(AxesWidget):
             self.line.set_data(zip(*self.verts))
             self._clean()
             self._update()
-
             if self.oncreated is not None:
                 self.oncreated(self)
 
@@ -544,7 +547,7 @@ class FCToolBar(object):
 
     def _get_next_gate_name(self):
         gate_name = 'gate{0}'.format(self.gate_num)
-        self.gate_num +=1
+        self.gate_num += 1
         return gate_name
 
     def create_threshold_gate_widget(self, orientation):
