@@ -6,6 +6,7 @@ from numpy import random
 import numpy
 from FlowCytometryTools import FCMeasurement
 from GoreUtilities.util import to_list
+import itertools
 
 
 ## TODO
@@ -18,6 +19,9 @@ class MOUSE:
     RIGHT_CLICK = 3
 
 class Event(object):
+    """
+    An event class for passing messages between different GUI.
+    """
     def __init__(self, event_type, event_info=None):
         self.type = event_type
         self.info = event_info if event_info is not None else {}
@@ -25,6 +29,10 @@ class Event(object):
         return '{} : {}'.format(self.type, self.info)
 
 class EventGenerator(object):
+    """
+    A mixin class that allows objects to fire events and
+    register callback functions.
+    """
     def callback(self, event=None):
         if event is None:
             event = Event('NA', {'caller' : self})
@@ -45,6 +53,12 @@ class EventGenerator(object):
         else:
             self.callback_list.extend(func_list)
 
+def _check_spawnable(source_channels, target_channels):
+    """ Checks whether gate is spawnable on the target channels. """
+    if len(target_channels) != len(set(target_channels)):
+        raise Exception('Spawn channels must be unique')
+    return source_channels.issubset(set(target_channels)) # Only allow spawn if source channels are subset of target
+
 class BaseVertex(EventGenerator):
     def __init__(self, coordinates, callback_list=None):
         """
@@ -61,17 +75,23 @@ class BaseVertex(EventGenerator):
         'd1' can be shown on ('d1', 'd2') or ('d1')
         'd1', 'd2' can be shown only on ('d1', 'd2') or on ('d2', 'd1')
 
+        Parameters
+        --------------
         This means that the channels on which the vertex
         is defined has to be a subset of the channels
 
         channels : names of channels on which to spawn
             the vertex
-        """
-        if len(channels) != len(set(channels)):
-            raise Exception('Spawn channels must be unique')
 
-        if not set(self.coordinates.keys()).issubset(set(channels)):
-            raise Exception('Check that this is implemented correctly. Exception in the meantime.')
+        Returns
+        -------------
+        spawnedvertex if successful otherwise None
+        """
+        source_channels = set(self.coordinates.keys())
+        is_spawnable = _check_spawnable(source_channels, channels)
+
+        if not is_spawnable:
+            return None
 
         if len(channels) == 1:
             verts = self.coordinates.get(channels[0], None), None
@@ -90,9 +110,7 @@ class BaseVertex(EventGenerator):
 
         if self.spawn_list is None:
             self.spawn_list = []
-
         self.spawn_list.append(spawned_vertex)
-
         return spawned_vertex
 
     def update_coordinates(self, new_coordinates):
@@ -108,7 +126,6 @@ class BaseVertex(EventGenerator):
                 svertex.update_position(verts[0], None)
             else:
                 svertex.update_position(verts[0], verts[1])
-
         self.callback(Event('base gate changed'))
 
 
@@ -175,8 +192,8 @@ class SpawnableVertex(AxesWidget, EventGenerator):
         else:
             trans = self.ax.transData
 
-        self.artist = pl.Line2D([verts[0]], [verts[1]], transform=trans, picker=10)
-        self.update_looks('active')
+        self.artist = pl.Line2D([verts[0]], [verts[1]], transform=trans, picker=15)
+        self.update_looks('inactive')
         self.ax.add_artist(self.artist)
 
     def remove(self):
@@ -184,6 +201,7 @@ class SpawnableVertex(AxesWidget, EventGenerator):
         if self.artist is not None:
             self.artist.remove()
         self.disconnect_events()
+        #self.callback(Event('removed'))
 
     def ignore(self, event):
         """ Ignores events. """
@@ -205,7 +223,6 @@ class SpawnableVertex(AxesWidget, EventGenerator):
     def motion_notify_event(self, event):
         if self.selected:
             self.update_position(event.xdata, event.ydata)
-
             vevent = Event('change')
             self.callback(vevent)
             self._update()
@@ -236,7 +253,8 @@ class BaseGate(EventGenerator):
     """ Holds information regarding all the vertexes. """
     def __init__(self, coordinates_list, gate_type, callback_list=None):
         """
-        verts is a list of tuples each tuple represents a vertex
+        coordinates_list : list of dictionaries
+            each dictionary has dimension names as keys and coordinates (floats) as values
         """
         self.coordinates = coordinates_list
         self.gate_type = gate_type
@@ -244,10 +262,23 @@ class BaseGate(EventGenerator):
         self.add_callback(callback_list)
         self.spawn_list = []
 
-
-    def spawn(self, ax, channels):
+    def spawn(self, channels, ax):
         """ Spawns a graphical gate that can be used to update the coordinates of the current gate. """
-        self.spawn_list.append(self.gate_type(self.verts, ax, channels))
+        if _check_spawnable(self.source_channels, channels):
+            sgate = self.gate_type(self.verts, ax, channels)
+            if sgate is not None:
+                self.spawn_list.append(sgate)
+            return sgate
+
+    def remove_spawn(self, spawn_gate=None):
+        """ Removes all spawned gates. """
+        if spawn_gate is None:
+            for sg in self.spawn_list:
+                sg.delete()
+            self.spawn_list = []
+        else:
+            spawn_gate.delete()
+            self.spawn_list.remove(spawn_gate)
 
     def vertex_update_callback(self, *args):
         for sgate in self.spawn_list:
@@ -256,9 +287,16 @@ class BaseGate(EventGenerator):
         gevent = Event('gate change')
         self.callback(gevent)
 
+    def _refresh_activation(self):
+        [sgate._change_activation(self.state) for sgate in self.spawn_list]
+
     def activate(self):
-        [sgate.activate() for sgate in self.spawn_list]
-    def inactivate(self): [sgate.inactivate() for sgate in self.spawn_list]
+        self.state = 'active'
+        self._refresh_activation()
+
+    def inactivate(self):
+        self.state = 'inactive'
+        self._refresh_activation()
 
     def get_generation_code(self, **gen_code_kwds):
         """
@@ -290,16 +328,21 @@ class BaseGate(EventGenerator):
         format_string = "{name} = {gate_type}({verts}, {channels}, region='{region}', name='{name}')"
         return format_string.format(**gen_code_kwds)
 
-    def set_visibility_based_on_axis(self, channels):
-        # TODO Change this based on axis. Rather than assume there is only one axes
-        for sgate in self.spawn_list:
-            sgate.set_visibility_based_on_axis(channels)
+    def set_axis(self, ch, ax):
+        self.remove_spawn()
+        sgate = self.spawn(ch, ax)
+        self._refresh_activation()
+
+    @property
+    def source_channels(self):
+        """ Returns a set describing the source channels on which the gate is defined. """
+        source_channels = [v.coordinates.keys() for v in self.verts]
+        return set(itertools.chain(*source_channels))
 
 
 class PlottableGate(object):
-    def __init__(self, channels, vertex_list, toolbar, name):
+    def __init__(self, channels, vertex_list, name):
         self.channels = channels
-        self.toolbar = toolbar
         self.name = name
         self.region = '?'
         self.gate_type = self.__class__.__name__
@@ -310,15 +353,7 @@ class PlottableGate(object):
     def _update(self):
         self.canvas.draw()
 
-    def delete(self):
-        for artist in self.artist_list:
-            artist.remove()
-        for vertex in to_list(self.vertex):
-            vertex.remove()
-        self._update()
-
     def _change_activation(self, new_state):
-        print 'set active {}'.format(new_state)
         if not hasattr(self, 'state') or self.state != new_state:
             self.state = new_state
             for vertex in to_list(self.vertex):
@@ -336,15 +371,6 @@ class PlottableGate(object):
             vertex.set_visible(visible)
         self._update()
 
-    def set_visibility_based_on_axis(self, channels):
-        """ Sets the visibility of the gate based
-        on the currently viewed channels """
-        print 'setting visibility'
-        print 'cur channels', channels
-        print 'self', self.channels
-        visible = (channels == self.channels)
-        self.set_visible(visible)
-
     @property
     def vertex(self):
         # TODO REFACTOR
@@ -354,11 +380,18 @@ class PlottableGate(object):
     def coordinates(self):
         return [vert.coordinates for vert in self._spawned_vertexes]
 
+    def delete(self):
+        for artist in self.artist_list:
+            artist.remove()
+        for vertex in to_list(self.vertex):
+            vertex.remove()
+        self._update()
+
+
 class PolyGate(AxesWidget, PlottableGate):
     def __init__(self, vertex_list, ax, channels, name=None):
         AxesWidget.__init__(self, ax)
-        toolbar = None
-        PlottableGate.__init__(self, channels, vertex_list, toolbar, name)
+        PlottableGate.__init__(self, channels, vertex_list, name)
 
     def create_artist(self):
         self.poly = pl.Polygon(self.coordinates, color='k', fill=False)
@@ -367,7 +400,6 @@ class PolyGate(AxesWidget, PlottableGate):
 
     def update_position(self):
         self.poly.set_xy(self.coordinates)
-        #self.toolbar.set_active_gate(self)
 
     def update_looks(self):
         """ Updates the looks of the gate depending on state. """
@@ -595,7 +627,7 @@ class FCToolBar(object):
                 self.set_active_gate(event.info['caller'])
 
             gate = BaseGate(verts, PolyGate, gate_updated_callback)
-            gate.spawn(self.ax, ch)
+            gate.spawn(ch, self.ax)
             self.add_gate(gate)
             self.pd.disconnect_events()
             del poly_drawer_instance
@@ -634,15 +666,15 @@ class FCToolBar(object):
                 # Assigns first two channels by default if none have been specified yet.
                 self.current_channels = list(self.sample.channel_names[0:2])
 
-            self.set_axis(self.current_channels)
+            self.set_axis(self.current_channels, self.ax)
             self.plot_data()
 
-    def set_axis(self, channels):
+    def set_axis(self, channels, ax):
         """ Sets the x and y axis """
         channels = tuple([ch.encode("UTF-8") for ch in channels]) # To get rid of u's
         self.current_channels = channels
         for gate in self.gates:
-            gate.set_visibility_based_on_axis(channels)
+            gate.set_axis(channels, ax)
         self.plot_data()
 
     ####################
@@ -728,6 +760,12 @@ def key_press_handler(event, canvas, toolbar=None):
     elif key in ['7']:
         for gate in toolbar.gates:
             gate.set_visible(True)
+    elif key in ['a']:
+        toolbar.set_axis(('d1', 'd2'), pl.gca())
+    elif key in ['b']:
+        toolbar.set_axis(('d2', 'd1'), pl.gca())
+    elif key in ['c']:
+        toolbar.set_axis(('d1', 'd3'), pl.gca())
 
 class Globals():
     pass
@@ -749,10 +787,10 @@ if __name__ == '__main__':
         verts = {'d1' : 0.8, 'd2' : 0.2}
         #verts = (0.1, 0.1)
         Globals.bv = BaseVertex(verts, x)
-        Globals.bv.spawn(ax, ('d1', 'd2'))
-        Globals.bv.spawn(ax2, ('d2', 'd1'))
-        Globals.bv.spawn(ax3, ('d1', 'd2'))
-        Globals.bv.spawn(ax4, ('d1', 'd2'))
+        Globals.bv.spawn(('d1', 'd2'), ax )
+        Globals.bv.spawn(('d2', 'd1'), ax2)
+        Globals.bv.spawn(('d1', 'd2'), ax3)
+        Globals.bv.spawn(('d1', 'd2'), ax4)
         #manager.v = Vertex(verts, ax, x, True, True)
         #Globals.bv.update_coordinates({'d2' : 0.7, 'd1' : 0.9})
         show()
@@ -773,9 +811,10 @@ if __name__ == '__main__':
         verts2 = ({'d1' : 0.9, 'd2' : 0.4},
                  {'d1' : 0.6, 'd2' : 0.2},
                  {'d1' : 0.8, 'd2' : 0.6})
-        #Globals.bv = BaseGate(verts, PolyGate, x)
+        Globals.bv = BaseGate(verts, PolyGate, x)
         #Globals.bv2 = BaseGate(verts2, PolyGate, x)
-        #Globals.bv.spawn(ax, ('d1', 'd2'))
+        Globals.bv.spawn(('d1', 'd2'), ax)
+        Globals.bv.remove_spawn()
         #Globals.bv2.spawn(ax, ('d1', 'd2'))
         #Globals.bv.spawn(ax, ('d1', 'd2'))
         #Globals.bv.spawn(ax2, ('d2', 'd1'))
