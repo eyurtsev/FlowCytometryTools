@@ -508,7 +508,7 @@ class PolyDrawer(AxesWidget):
             self._clean()
             self._update()
             if self.oncreated is not None:
-                self.oncreated(self)
+                self.oncreated(self.verts, self)
 
     def onmove(self, event):
         if self.ignore(event): return
@@ -570,67 +570,48 @@ class FCToolBar(object):
         self.gate_num += 1
         return gate_name
 
-    def handle_gate_events(self, event):
+    def _handle_gate_events(self, event):
         self.set_active_gate(event.info['caller'])
 
-    def create_threshold_gate_widget(self, orientation):
-        """
-        Call this widget to create a threshold gate.
-        Orientation : 'horizontal' | 'vertical' | 'both'
-        """
-        ax = self.ax
-        fig = self.fig
-
-        def clear_cursor(cs):
-            cs.disconnect_events()
-            cs.clear(None)
-            del cs
-            fig.canvas.draw()
-
-        if hasattr(self, 'cs') and self.cs is not None:
-            clear_cursor(self.cs)
-
-        def create_threshold_gate(event, orientation, ax):
-            verts = [[event.xdata, event.ydata]]
+    def create_gate_widget(self, kind):
+        def create_gate(*args):
+            verts = args[0]
             ch = self.current_channels
-            # Pack coordinates
             verts = [dict(zip(ch, v)) for v in verts]
 
-            if orientation == 'horizontal':
-                [v.pop(ch[0]) for v in verts]
-            if orientation == 'vertical':
+            if kind == 'Poly':
+                gate_type = PolyGate
+            elif 'threshold' in kind or 'quad' in kind:
+                gate_type = ThresholdGate
+
+            if 'vertical' in kind:
                 [v.pop(ch[1]) for v in verts]
+            elif 'horizontal' in kind:
+                [v.pop(ch[0]) for v in verts]
 
-            gate = BaseGate(verts, ThresholdGate,
-                        self._get_next_gate_name(), callback_list=self.handle_gate_events)
+            gate = BaseGate(verts, gate_type, name=self._get_next_gate_name(), callback_list=self._handle_gate_events)
             gate.spawn(ch, self.ax)
             self.add_gate(gate)
-            clear_cursor(self.cs)
+            clean_drawing_tools(kind)
 
-        vertOn  = orientation in ['both', 'vertical']
-        horizOn = orientation in ['both', 'horizontal']
+        def start_drawing(kind):
+            if kind == 'Poly':
+                self._drawing_tool = PolyDrawer(self.ax, oncreated=create_gate, lineprops=dict(color='k', marker='o'))
+            elif kind == 'quad':
+                self._drawing_tool = Cursor(self.ax, vertOn=1, horizOn=1)
+            elif kind == 'horizontal threshold':
+                self._drawing_tool = Cursor(self.ax, vertOn=0, horizOn=1)
+            elif kind == 'vertical threshold':
+                self._drawing_tool = Cursor(self.ax, vertOn=1, horizOn=0)
 
-        self.cs = Cursor(ax, vertOn=vertOn, horizOn=horizOn)
-        self.cs.connect_event('button_press_event',
-                lambda event : create_threshold_gate(event, orientation, ax))
+            if isinstance(self._drawing_tool, Cursor):
+                self._drawing_tool.connect_event('button_press_event', lambda event : create_gate([(event.xdata, event.ydata)]))
 
-    def create_polygon_gate_widget(self):
-        """
-        Call this function to start drawing a polygon on the ax.
-        """
-        def create_polygon(poly_drawer_instance):
-            verts = poly_drawer_instance.verts
-            ch = self.current_channels
-            # Pack coordinates
-            verts = [dict(zip(ch, v)) for v in verts]
+        def clean_drawing_tools(kind):
+            self._drawing_tool.disconnect_events()
+            self._drawing_tool = None
 
-            gate = BaseGate(verts, PolyGate, name=self._get_next_gate_name(), callback_list=self.handle_gate_events)
-            gate.spawn(ch, self.ax)
-            self.add_gate(gate)
-            self.pd.disconnect_events()
-            del poly_drawer_instance
-
-        self.pd = PolyDrawer(self.ax, oncreated=create_polygon, lineprops = dict(color='k', marker='o'))
+        start_drawing(kind)
 
     ####################
     ### Loading Data ###
@@ -751,8 +732,9 @@ def key_press_handler(event, canvas, toolbar=None):
     if key in ['1']:
         toolbar.create_polygon_gate_widget()
     elif key in ['2', '3', '4']:
-        orientation = {'2' : 'both', '3' : 'horizontal', '4' : 'vertical'}[key]
-        toolbar.create_threshold_gate_widget(orientation)
+        kind = {'2' : 'quad', '3' : 'horizontal threshold', '4' : 'vertical threshold'}[key]
+        #toolbar.create_threshold_gate_widget(kind)
+        toolbar.create_gate_widget(kind=kind)
     elif key in ['9']:
         toolbar.remove_active_gate()
     elif key in ['0']:
