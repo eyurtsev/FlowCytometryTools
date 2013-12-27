@@ -399,6 +399,10 @@ class PlottableGate(AxesWidget):
     def coordinates(self):
         return [vert.coordinates for vert in self._spawned_vertex_list]
 
+    @property
+    def vertex(self):
+        return self._spawned_vertex_list
+
     #def set_visible(self, visible):
         #for artist in self.artist_list:
             #artist.set_visible(visible)
@@ -423,63 +427,40 @@ class PolyGate(PlottableGate):
             style = {'color' : 'black', 'fill' : False}
         self.poly.update(style)
 
+class ThresholdGate(PlottableGate):
+    @property
+    def trackxy(self):
+        trackx, tracky = self.vertex[0].trackx, self.vertex[0].tracky
+        return trackx, tracky
 
-#class ThresholdGate(PlottableGate):
-    #def __init__(self, vertex_list, ax, channels, name=None):
-        #AxesWidget.__init__(self, ax)
-        #PlottableGate.__init__(self, channels, vertex_list, name)
-#
-        ### Set orientation and channels on which the gate is defined
-        #self.orientation = orientation
-#
-        #if orientation in ('vertical', 'horizontal'):
-            #self.gate_type = 'ThresholdGate'
-        #else:
-            #self.gate_type = 'QuadGate'
-#
-        #trackx = orientation in ('both', 'vertical')
-        #tracky = orientation in ('both', 'horizontal')
-#
-        ### Set up call back events
-        #callback_list = lambda vertex : self.update_position(vertex)
-#
-        #self.create_artist()
-#
-    #def create_artist(self):
-        #vert = self.vertex.coordinates
-        #self.artist_list = []
-        #if self.orientation in ('both', 'horizontal'):
-            #self.hline = self.ax.axhline(y=vert[1], color='k')
-            #self.artist_list.append(self.hline)
-        #if self.orientation in ('both', 'vertical'):
-            #self.vline = self.ax.axvline(x=vert[0], color='k')
-            #self.artist_list.append(self.vline)
-        #self.activate()
-#
-    #def update_position(self, vertex):
-        #xdata, ydata = vertex.coordinates
-        #if hasattr(self, 'vline'):
-            #self.vline.set_xdata((xdata, xdata))
-        #if hasattr(self, 'hline'):
-            #self.hline.set_ydata((ydata, ydata))
-        #self.toolbar.set_active_gate(self)
-#
-    #def create_artist(self):
-        #self.poly = pl.Polygon(self.coordinates, color='k', fill=False)
-        #self.artist_list = to_list(self.poly)
-        #self.ax.add_artist(self.poly)
-#
-    #def update_position(self):
-        #self.poly.set_xy(self.coordinates)
-#
-    #def update_looks(self):
-        #""" Updates the looks of the gate depending on state. """
-        #if self.state == 'active':
-            #style = {'color' : 'red', 'linestyle' : 'solid', 'fill' : False}
-        #else:
-            #style = {'color' : 'black', 'fill' : False}
-        #for artist in self.artist_list:
-            #artist.update(style)
+    def create_artist(self):
+        trackx, tracky = self.trackxy
+        coord = self.coordinates[0]
+        self.artist_list = []
+
+        if tracky:
+            self.hline = self.ax.axhline(y=coord[1], color='k')
+            self.artist_list.append(self.hline)
+        if trackx:
+            self.vline = self.ax.axvline(x=coord[0], color='k')
+            self.artist_list.append(self.vline)
+        self.activate()
+
+    def update_position(self):
+        xdata, ydata = self.coordinates[0]
+        if hasattr(self, 'vline'):
+            self.vline.set_xdata((xdata, xdata))
+        if hasattr(self, 'hline'):
+            self.hline.set_ydata((ydata, ydata))
+
+    def update_looks(self):
+        """ Updates the looks of the gate depending on state. """
+        if self.state == 'active':
+            style = {'color' : 'red', 'linestyle' : 'solid'}
+        else:
+            style = {'color' : 'black'}
+        for artist in self.artist_list:
+            artist.update(style)
 
 class PolyDrawer(AxesWidget):
     """
@@ -620,9 +601,6 @@ class FCToolBar(object):
         self.cs.connect_event('button_press_event',
                 lambda event : create_threshold_gate(event, orientation, ax))
 
-    #def create_gate_widget(self, gate_type):
-    #
-
     def create_polygon_gate_widget(self):
         """
         Call this function to start drawing a polygon on the ax.
@@ -634,6 +612,7 @@ class FCToolBar(object):
             verts = [dict(zip(ch, v)) for v in verts]
 
             def gate_updated_callback(event):
+                print event
                 self.set_active_gate(event.info['caller'])
 
             gate = BaseGate(verts, PolyGate, name=self._get_next_gate_name(), callback_list=gate_updated_callback)
@@ -813,16 +792,18 @@ if __name__ == '__main__':
         #ylim(-1, 1)
         manager = FCToolBar(ax)
         def x(*args):
-            pass
+            print "This gate might not behave properly."
         #verts = (('d1', 0.1))
-        #verts = {'d1' : 0.8}
-        verts = ({'d1' : 0.8, 'd2' : 0.2},
-                 {'d1' : 0.4, 'd2' : 0.4},
-                 {'d1' : 0.7, 'd2' : 0.8})
-        verts2 = ({'d1' : 0.9, 'd2' : 0.4},
-                 {'d1' : 0.6, 'd2' : 0.2},
-                 {'d1' : 0.8, 'd2' : 0.6})
-        gate = BaseGate(verts, PolyGate, 'gate1', x)
+        #verts = ({'d1' : 0.8}, )#, 'd1' : 0.3}, )
+        verts = ({'d2' : 0.8, 'd1' : 0.3}, )
+        #verts = ({'d1' : 0.8, 'd2' : 0.2},
+                 #{'d1' : 0.4, 'd2' : 0.4},
+                 #{'d1' : 0.7, 'd2' : 0.8})
+        #verts2 = ({'d1' : 0.9, 'd2' : 0.4},
+                 #{'d1' : 0.6, 'd2' : 0.2},
+                 #{'d1' : 0.8, 'd2' : 0.6})
+        #gate = BaseGate(verts, PolyGate, 'gate1', x)
+        gate = BaseGate(verts, ThresholdGate, 'gate1', x)
         manager.add_gate(gate)
         #Globals.bv2 = BaseGate(verts2, PolyGate, x)
         gate.spawn(('d1', 'd2'), ax)
