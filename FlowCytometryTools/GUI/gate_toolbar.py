@@ -329,7 +329,6 @@ class BaseGate(EventGenerator):
         gencode.setdefault('gate_type', self.gate_type.__name__)
         gencode.setdefault('verts',     verts)
         gencode.setdefault('channels',  channels)
-
         format_string = "{name} = {gate_type}({verts}, ({channels}), region='{region}', name='{name}')"
         return format_string.format(**gencode)
 
@@ -428,11 +427,6 @@ class PolyGate(PlottableGate):
         self.poly.update(style)
 
 class ThresholdGate(PlottableGate):
-    @property
-    def trackxy(self):
-        trackx, tracky = self.vertex[0].trackx, self.vertex[0].tracky
-        return trackx, tracky
-
     def create_artist(self):
         trackx, tracky = self.trackxy
         coord = self.coordinates[0]
@@ -461,6 +455,12 @@ class ThresholdGate(PlottableGate):
             style = {'color' : 'black'}
         for artist in self.artist_list:
             artist.update(style)
+
+    @property
+    def trackxy(self):
+        trackx, tracky = self.vertex[0].trackx, self.vertex[0].tracky
+        return trackx, tracky
+
 
 class PolyDrawer(AxesWidget):
     """
@@ -570,6 +570,9 @@ class FCToolBar(object):
         self.gate_num += 1
         return gate_name
 
+    def handle_gate_events(self, event):
+        self.set_active_gate(event.info['caller'])
+
     def create_threshold_gate_widget(self, orientation):
         """
         Call this widget to create a threshold gate.
@@ -588,9 +591,19 @@ class FCToolBar(object):
             clear_cursor(self.cs)
 
         def create_threshold_gate(event, orientation, ax):
-            gate = ThresholdGate((event.xdata, event.ydata),
-                        orientation, ax, self,
-                        self._get_next_gate_name())
+            verts = [[event.xdata, event.ydata]]
+            ch = self.current_channels
+            # Pack coordinates
+            verts = [dict(zip(ch, v)) for v in verts]
+
+            if orientation == 'horizontal':
+                [v.pop(ch[0]) for v in verts]
+            if orientation == 'vertical':
+                [v.pop(ch[1]) for v in verts]
+
+            gate = BaseGate(verts, ThresholdGate,
+                        self._get_next_gate_name(), callback_list=self.handle_gate_events)
+            gate.spawn(ch, self.ax)
             self.add_gate(gate)
             clear_cursor(self.cs)
 
@@ -611,11 +624,7 @@ class FCToolBar(object):
             # Pack coordinates
             verts = [dict(zip(ch, v)) for v in verts]
 
-            def gate_updated_callback(event):
-                print event
-                self.set_active_gate(event.info['caller'])
-
-            gate = BaseGate(verts, PolyGate, name=self._get_next_gate_name(), callback_list=gate_updated_callback)
+            gate = BaseGate(verts, PolyGate, name=self._get_next_gate_name(), callback_list=self.handle_gate_events)
             gate.spawn(ch, self.ax)
             self.add_gate(gate)
             self.pd.disconnect_events()
