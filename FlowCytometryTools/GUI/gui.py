@@ -55,24 +55,21 @@ class GUIEmbedded(GeneratedWireframe):
         self.load_fcs()
 
     def btnQuitApp(self, event):
-        print 'Application Exiting'
-        for gate in self.fc_toolbar.gates:
-            gate.disconnect_events()
-        self.fc_toolbar.disconnect_events()
+        self.fc_toolbar.close()
         self.Close(1)
 
     def btn_choose_x_channel(self, event):
         if event.GetExtraLong(): # Quick hack
             new_channel = event.GetString()
             current_channels = self.fc_toolbar.current_channels
-            self.fc_toolbar.set_axis((new_channel, current_channels[1]))
+            self.fc_toolbar.set_axis((new_channel, current_channels[1]), self.ax)
 
     def btn_choose_y_channel(self, event):
         if event.GetExtraLong(): # Quick hack
             new_channel = event.GetString()
             new_channel = event.GetString()
             current_channels = self.fc_toolbar.current_channels
-            self.fc_toolbar.set_axis((current_channels[0], new_channel))
+            self.fc_toolbar.set_axis((current_channels[0], new_channel), self.ax)
 
     def btn_create_poly_gate(self, event):
         self.fc_toolbar.create_polygon_gate_widget()
@@ -84,7 +81,7 @@ class GUIEmbedded(GeneratedWireframe):
         self.fc_toolbar.create_threshold_gate_widget('horizontal')
 
     def btn_delete_gate(self, event):
-        self.fc_toolbar.delete_active_gate()
+        self.fc_toolbar.remove_active_gate()
 
     def btn_create_vertical_threshold_gate(self, event):
         self.fc_toolbar.create_threshold_gate_widget('vertical')
@@ -108,7 +105,7 @@ class GUIEmbedded(GeneratedWireframe):
             self.x_axis_list.InsertItems(options, 0)
             self.y_axis_list.Clear()
             self.y_axis_list.InsertItems(options, 0)
-            self.fc_toolbar.current_channels = options[0], options[0]
+            self.fc_toolbar.current_channels = options[0], options[1]
 
 if __name__ == "__main__":
     app = wx.PySimpleApp(0)

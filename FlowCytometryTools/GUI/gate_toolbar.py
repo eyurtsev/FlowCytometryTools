@@ -22,6 +22,9 @@ class Event(object):
     """
     An event class for passing messages between different GUI.
     """
+    CHANGE = 1
+    VERTEX_REMOVED = 2
+    BASE_GATE_CHANGED = 3
     def __init__(self, event_type, event_info=None):
         self.type = event_type
         self.info = event_info if event_info is not None else {}
@@ -98,20 +101,30 @@ class BaseVertex(EventGenerator):
         else:
             verts = tuple([self.coordinates.get(ch, None) for ch in channels])
 
-        def callback(event):
-            svertex = event.info['caller']
-            ch = svertex.channels
-            coordinates = svertex.coordinates
-            new_coordinates = {k : v for k, v in zip(ch, coordinates)}
-            self.update_coordinates(new_coordinates)
+        def _callback(event):
+            if event.type == Event.CHANGE:
+                svertex = event.info['caller']
+                ch = svertex.channels
+                coordinates = svertex.coordinates
+                new_coordinates = {k : v for k, v in zip(ch, coordinates)}
+                self.update_coordinates(new_coordinates)
+            elif event.type == Event.VERTEX_REMOVED:
+                svertex = event.info['caller']
+                self.spawn_list.remove(svertex)
+            else:
+                raise ValueError('Unrecognized event {}'.format(event))
 
-        spawned_vertex = SpawnableVertex(verts, ax, callback)
+        spawned_vertex = SpawnableVertex(verts, ax, _callback)
         spawned_vertex.channels = channels
 
         if self.spawn_list is None:
             self.spawn_list = []
         self.spawn_list.append(spawned_vertex)
         return spawned_vertex
+
+    def remove(self):
+        for s in list(self.spawn_list): # IMPORTANT: Create a new list, because original list is modified by remove()
+            s.remove()
 
     def update_coordinates(self, new_coordinates):
         """
@@ -126,7 +139,7 @@ class BaseVertex(EventGenerator):
                 svertex.update_position(verts[0], None)
             else:
                 svertex.update_position(verts[0], verts[1])
-        self.callback(Event('base gate changed'))
+        self.callback(Event(Event.BASE_GATE_CHANGED))
 
 
 class SpawnableVertex(AxesWidget, EventGenerator):
@@ -197,11 +210,10 @@ class SpawnableVertex(AxesWidget, EventGenerator):
         self.ax.add_artist(self.artist)
 
     def remove(self):
-        """ Removes the vertex & disconnects events """
-        if self.artist is not None:
-            self.artist.remove()
+        print 'removing ', self
+        self.artist.remove()
         self.disconnect_events()
-        #self.callback(Event('removed'))
+        self.callback(Event(Event.VERTEX_REMOVED))
 
     def ignore(self, event):
         """ Ignores events. """
@@ -223,7 +235,7 @@ class SpawnableVertex(AxesWidget, EventGenerator):
     def motion_notify_event(self, event):
         if self.selected:
             self.update_position(event.xdata, event.ydata)
-            vevent = Event('change')
+            vevent = Event(Event.CHANGE)
             self.callback(vevent)
             self._update()
 
@@ -251,14 +263,15 @@ class SpawnableVertex(AxesWidget, EventGenerator):
 
 class BaseGate(EventGenerator):
     """ Holds information regarding all the vertexes. """
-    def __init__(self, coordinates_list, gate_type, callback_list=None):
+    def __init__(self, coordinates_list, gate_type, name=None, callback_list=None):
         """
         coordinates_list : list of dictionaries
             each dictionary has dimension names as keys and coordinates (floats) as values
         """
-        self.coordinates = coordinates_list
-        self.gate_type = gate_type
         self.verts = [BaseVertex(coordinates, self.vertex_update_callback) for coordinates in coordinates_list]
+        self.gate_type = gate_type
+        self.name = name
+        self.region = '?'
         self.add_callback(callback_list)
         self.spawn_list = []
 
@@ -266,25 +279,31 @@ class BaseGate(EventGenerator):
         """ Spawns a graphical gate that can be used to update the coordinates of the current gate. """
         if _check_spawnable(self.source_channels, channels):
             sgate = self.gate_type(self.verts, ax, channels)
-            if sgate is not None:
-                self.spawn_list.append(sgate)
+            self.spawn_list.append(sgate)
             return sgate
+        else:
+            return None
 
-    def remove_spawn(self, spawn_gate=None):
+    def remove_spawned_gates(self, spawn_gate=None):
         """ Removes all spawned gates. """
         if spawn_gate is None:
-            for sg in self.spawn_list:
-                sg.delete()
-            self.spawn_list = []
+            for sg in list(self.spawn_list):
+                self.spawn_list.remove(sg)
+                sg.remove()
         else:
-            spawn_gate.delete()
+            spawn_gate.remove()
             self.spawn_list.remove(spawn_gate)
+
+    def remove(self):
+        """ Removes all spawn and the base vertexes. """
+        for v in self.verts:
+            v.remove()
+        self.remove_spawned_gates()
 
     def vertex_update_callback(self, *args):
         for sgate in self.spawn_list:
             sgate.update_position()
-
-        gevent = Event('gate change')
+        gevent = Event(Event.CHANGE)
         self.callback(gevent)
 
     def _refresh_activation(self):
@@ -298,38 +317,24 @@ class BaseGate(EventGenerator):
         self.state = 'inactive'
         self._refresh_activation()
 
-    def get_generation_code(self, **gen_code_kwds):
+    def get_generation_code(self, **gencode):
         """
         Generates python code that can create the gate.
         """
-        #if isinstance(self, PolyGate):
-            #region = 'in'
-            #vert_list = ['(' + ', '.join(map(lambda x : '{:.2f}'.format(x), vert)) + ')' for vert in self.vert]
-        #else:
-            #region = "?"
-            #vert_list = ['{:.2f}'.format(vert) for vert in self.vert]
-#
-        #vert_list = '[' + ','.join(vert_list) + ']'
-#
-        #format_string = "{name} = {0}({1}, {2}, region='{region}', name='{name}')"
-        #return format_string.format(self.__class__.__name__, vert_list,
-                                #self.channels, name=self.name, region=region)
+        channels, verts = self.coordinates
+        channels = ', '.join(["'{}'".format(ch) for ch in channels])
 
-        gen_code_kwds.setdefault('name', self.name)
-        gen_code_kwds.setdefault('region', self.region)
-        gen_code_kwds.setdefault('gate_type', self.gate_type)
-        gen_code_kwds.setdefault('verts', self.verts)
+        gencode.setdefault('name',      self.name)
+        gencode.setdefault('region',    self.region)
+        gencode.setdefault('gate_type', self.gate_type.__name__)
+        gencode.setdefault('verts',     verts)
+        gencode.setdefault('channels',  channels)
 
-        if isinstance(self.channels, str):
-            gen_code_kwds.setdefault('channels', "'{0}'".format(self.channels))
-        else:
-            gen_code_kwds.setdefault('channels', self.channels)
-
-        format_string = "{name} = {gate_type}({verts}, {channels}, region='{region}', name='{name}')"
-        return format_string.format(**gen_code_kwds)
+        format_string = "{name} = {gate_type}({verts}, ({channels}), region='{region}', name='{name}')"
+        return format_string.format(**gencode)
 
     def set_axis(self, ch, ax):
-        self.remove_spawn()
+        self.remove_spawned_gates()
         sgate = self.spawn(ch, ax)
         self._refresh_activation()
 
@@ -339,6 +344,13 @@ class BaseGate(EventGenerator):
         source_channels = [v.coordinates.keys() for v in self.verts]
         return set(itertools.chain(*source_channels))
 
+    @property
+    def coordinates(self):
+        source_channels = list(self.source_channels)
+        source_channels.sort()
+        coordinates = [[v.coordinates.get(ch) for v in self.verts] for ch in source_channels]
+        coordinates = zip(*coordinates)
+        return source_channels, coordinates
 
 class PlottableGate(object):
     def __init__(self, channels, vertex_list, name):
@@ -346,47 +358,52 @@ class PlottableGate(object):
         self.name = name
         self.region = '?'
         self.gate_type = self.__class__.__name__
-        self._spawned_vertexes = [vert.spawn(self.ax, channels) for vert in vertex_list]
+
+        self._spawned_vertex_list = [vert.spawn(self.ax, channels) for vert in vertex_list]
+        [svertex.add_callback(self.handle_vertex_event) for svertex in self._spawned_vertex_list]
         self.create_artist()
         self.activate()
+
+    def handle_vertex_event(self, event):
+        if event.type == Event.VERTEX_REMOVED:
+            self._spawned_vertex_list.remove(event.info['caller'])
 
     def _update(self):
         self.canvas.draw()
 
+    def remove(self):
+        # IMPORTANT Do not remove spawned vertexes from the _list directly. Use 
+        # svertex.remove() method it will automatically udpate the list using the vertex_handler
+        for artist in self.artist_list:
+            artist.remove()
+        for svertex in list(self._spawned_vertex_list):
+            svertex.remove()
+        self._update()
+
     def _change_activation(self, new_state):
         if not hasattr(self, 'state') or self.state != new_state:
             self.state = new_state
-            for vertex in to_list(self.vertex):
-                vertex.update_looks(self.state)
+            for svertex in list(self._spawned_vertex_list):
+                svertex.update_looks(self.state)
             self.update_looks()
             self._update()
 
-    def activate(self): self._change_activation('active')
-    def inactivate(self): self._change_activation('inactive')
+    def activate(self):
+        self._change_activation('active')
 
-    def set_visible(self, visible):
-        for artist in self.artist_list:
-            artist.set_visible(visible)
-        for vertex in to_list(self.vertex):
-            vertex.set_visible(visible)
-        self._update()
-
-    @property
-    def vertex(self):
-        # TODO REFACTOR
-        return self._spawned_vertexes
+    def inactivate(self):
+        self._change_activation('inactive')
 
     @property
     def coordinates(self):
-        return [vert.coordinates for vert in self._spawned_vertexes]
+        return [vert.coordinates for vert in self._spawned_vertex_list]
 
-    def delete(self):
-        for artist in self.artist_list:
-            artist.remove()
-        for vertex in to_list(self.vertex):
-            vertex.remove()
-        self._update()
-
+    #def set_visible(self, visible):
+        #for artist in self.artist_list:
+            #artist.set_visible(visible)
+        #for vertex in to_list(self.vertex):
+            #vertex.set_visible(visible)
+        #self._update()
 
 class PolyGate(AxesWidget, PlottableGate):
     def __init__(self, vertex_list, ax, channels, name=None):
@@ -562,10 +579,10 @@ class FCToolBar(object):
         self.gates.append(gate)
         self.set_active_gate(gate)
 
-    def delete_active_gate(self):
+    def remove_active_gate(self):
         if self.active_gate is not None:
             self.gates.remove(self.active_gate)
-            self.active_gate.delete()
+            self.active_gate.remove()
             self.active_gate = None
 
     def set_active_gate(self, gate):
@@ -626,7 +643,7 @@ class FCToolBar(object):
             def gate_updated_callback(event):
                 self.set_active_gate(event.info['caller'])
 
-            gate = BaseGate(verts, PolyGate, gate_updated_callback)
+            gate = BaseGate(verts, PolyGate, name=self._get_next_gate_name(), callback_list=gate_updated_callback)
             gate.spawn(ch, self.ax)
             self.add_gate(gate)
             self.pd.disconnect_events()
@@ -676,6 +693,11 @@ class FCToolBar(object):
         for gate in self.gates:
             gate.set_axis(channels, ax)
         self.plot_data()
+
+    def close(self):
+        for gate in self.gates:
+            gate.remove()
+        self.disconnect_events()
 
     ####################
     ### Plotting Data ##
@@ -751,21 +773,17 @@ def key_press_handler(event, canvas, toolbar=None):
         orientation = {'2' : 'both', '3' : 'horizontal', '4' : 'vertical'}[key]
         toolbar.create_threshold_gate_widget(orientation)
     elif key in ['9']:
-        toolbar.delete_active_gate()
+        toolbar.remove_active_gate()
     elif key in ['0']:
         toolbar.load_fcs()
-    elif key in ['8']:
-        for gate in toolbar.gates:
-            gate.set_visible(False)
-    elif key in ['7']:
-        for gate in toolbar.gates:
-            gate.set_visible(True)
     elif key in ['a']:
         toolbar.set_axis(('d1', 'd2'), pl.gca())
     elif key in ['b']:
         toolbar.set_axis(('d2', 'd1'), pl.gca())
     elif key in ['c']:
         toolbar.set_axis(('d1', 'd3'), pl.gca())
+    elif key in ['8']:
+        print toolbar.get_generation_code()
 
 class Globals():
     pass
@@ -811,10 +829,11 @@ if __name__ == '__main__':
         verts2 = ({'d1' : 0.9, 'd2' : 0.4},
                  {'d1' : 0.6, 'd2' : 0.2},
                  {'d1' : 0.8, 'd2' : 0.6})
-        Globals.bv = BaseGate(verts, PolyGate, x)
+        gate = BaseGate(verts, PolyGate, 'gate1', x)
+        manager.add_gate(gate)
         #Globals.bv2 = BaseGate(verts2, PolyGate, x)
-        Globals.bv.spawn(('d1', 'd2'), ax)
-        Globals.bv.remove_spawn()
+        gate.spawn(('d1', 'd2'), ax)
+        #Globals.bv.remove_spawn()
         #Globals.bv2.spawn(ax, ('d1', 'd2'))
         #Globals.bv.spawn(ax, ('d1', 'd2'))
         #Globals.bv.spawn(ax2, ('d2', 'd1'))
