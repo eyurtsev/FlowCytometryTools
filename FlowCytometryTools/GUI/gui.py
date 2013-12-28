@@ -72,19 +72,19 @@ class GUIEmbedded(GeneratedWireframe):
             self.fc_toolbar.set_axis((current_channels[0], new_channel), self.ax)
 
     def btn_create_poly_gate(self, event):
-        self.fc_toolbar.create_polygon_gate_widget()
+        self.fc_toolbar.create_gate_widget('poly')
 
     def btn_create_quad_gate(self, event):
-        self.fc_toolbar.create_threshold_gate_widget('both')
+        self.fc_toolbar.create_gate_widget('quad')
 
     def btn_create_horizontal_threshold_gate(self, event):
-        self.fc_toolbar.create_threshold_gate_widget('horizontal')
+        self.fc_toolbar.create_gate_widget('horizontal threshold')
+
+    def btn_create_vertical_threshold_gate(self, event):
+        self.fc_toolbar.create_gate_widget('vertical threshold')
 
     def btn_delete_gate(self, event):
         self.fc_toolbar.remove_active_gate()
-
-    def btn_create_vertical_threshold_gate(self, event):
-        self.fc_toolbar.create_threshold_gate_widget('vertical')
 
     def btn_gen_code(self, event):
         generated_code = self.fc_toolbar.get_generation_code()
