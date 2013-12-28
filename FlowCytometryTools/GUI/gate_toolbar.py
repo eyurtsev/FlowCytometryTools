@@ -73,7 +73,7 @@ class BaseVertex(EventGenerator):
         self.coordinates = coordinates
         self.add_callback(callback_list)
 
-    def spawn(self, ax, channels):
+    def spawn(self, ax, target_channels):
         """
         'd1' can be shown on ('d1', 'd2') or ('d1')
         'd1', 'd2' can be shown only on ('d1', 'd2') or on ('d2', 'd1')
@@ -91,15 +91,15 @@ class BaseVertex(EventGenerator):
         spawnedvertex if successful otherwise None
         """
         source_channels = set(self.coordinates.keys())
-        is_spawnable = _check_spawnable(source_channels, channels)
+        is_spawnable = _check_spawnable(source_channels, target_channels)
 
         if not is_spawnable:
             return None
 
-        if len(channels) == 1:
-            verts = self.coordinates.get(channels[0], None), None
+        if len(target_channels) == 1:
+            verts = self.coordinates.get(target_channels[0], None), None
         else:
-            verts = tuple([self.coordinates.get(ch, None) for ch in channels])
+            verts = tuple([self.coordinates.get(ch, None) for ch in target_channels])
 
         def _callback(event):
             if event.type == Event.CHANGE:
@@ -115,7 +115,7 @@ class BaseVertex(EventGenerator):
                 raise ValueError('Unrecognized event {}'.format(event))
 
         spawned_vertex = SpawnableVertex(verts, ax, _callback)
-        spawned_vertex.channels = channels
+        spawned_vertex.channels = target_channels
 
         if self.spawn_list is None:
             self.spawn_list = []
@@ -130,7 +130,10 @@ class BaseVertex(EventGenerator):
         """
         new_coordinates : dict
         """
-        self.coordinates.update(new_coordinates)
+        #self.coordinates.update(new_coordinates)
+        for k, v in new_coordinates.items():
+            if k in self.coordinates:
+                self.coordinates[k] = v
 
         for svertex in self.spawn_list:
             verts = tuple([self.coordinates.get(ch, None) for ch in svertex.channels])
@@ -210,7 +213,6 @@ class SpawnableVertex(AxesWidget, EventGenerator):
         self.ax.add_artist(self.artist)
 
     def remove(self):
-        print 'removing ', self
         self.artist.remove()
         self.disconnect_events()
         self.callback(Event(Event.VERTEX_REMOVED))
@@ -443,9 +445,9 @@ class ThresholdGate(PlottableGate):
     def update_position(self):
         xdata, ydata = self.coordinates[0]
         if hasattr(self, 'vline'):
-            self.vline.set_xdata((xdata, xdata))
+            self.vline.set_xdata(xdata)
         if hasattr(self, 'hline'):
-            self.hline.set_ydata((ydata, ydata))
+            self.hline.set_ydata(ydata)
 
     def update_looks(self):
         """ Updates the looks of the gate depending on state. """
@@ -579,7 +581,7 @@ class FCToolBar(object):
             ch = self.current_channels
             verts = [dict(zip(ch, v)) for v in verts]
 
-            if kind == 'Poly':
+            if kind == 'poly':
                 gate_type = PolyGate
             elif 'threshold' in kind or 'quad' in kind:
                 gate_type = ThresholdGate
@@ -595,7 +597,7 @@ class FCToolBar(object):
             clean_drawing_tools(kind)
 
         def start_drawing(kind):
-            if kind == 'Poly':
+            if kind == 'poly':
                 self._drawing_tool = PolyDrawer(self.ax, oncreated=create_gate, lineprops=dict(color='k', marker='o'))
             elif kind == 'quad':
                 self._drawing_tool = Cursor(self.ax, vertOn=1, horizOn=1)
@@ -730,7 +732,8 @@ def key_press_handler(event, canvas, toolbar=None):
     key = event.key.encode('ascii', 'ignore')
 
     if key in ['1']:
-        toolbar.create_polygon_gate_widget()
+        #toolbar.create_polygon_gate_widget()
+        toolbar.create_gate_widget(kind='poly')
     elif key in ['2', '3', '4']:
         kind = {'2' : 'quad', '3' : 'horizontal threshold', '4' : 'vertical threshold'}[key]
         #toolbar.create_threshold_gate_widget(kind)
@@ -794,10 +797,10 @@ if __name__ == '__main__':
                  #{'d1' : 0.6, 'd2' : 0.2},
                  #{'d1' : 0.8, 'd2' : 0.6})
         #gate = BaseGate(verts, PolyGate, 'gate1', x)
-        gate = BaseGate(verts, ThresholdGate, 'gate1', x)
-        manager.add_gate(gate)
+        #gate = BaseGate(verts, ThresholdGate, 'gate1', x)
+        #manager.add_gate(gate)
         #Globals.bv2 = BaseGate(verts2, PolyGate, x)
-        gate.spawn(('d1', 'd2'), ax)
+        #gate.spawn(('d1', 'd2'), ax)
         #Globals.bv.remove_spawn()
         #Globals.bv2.spawn(ax, ('d1', 'd2'))
         #Globals.bv.spawn(ax, ('d1', 'd2'))
