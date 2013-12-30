@@ -1,6 +1,5 @@
 import matplotlib
 from matplotlib.widgets import  RectangleSelector, Cursor, AxesWidget
-from pylab import *
 import pylab as pl
 from numpy import random
 import numpy
@@ -11,8 +10,6 @@ import itertools
 
 ## TODO
 # 1. Make it impossible to pick multiple vertexes at once. (right now if vertex are too close they will be selected.)
-# 2. Make verties live in 1d and 2d (not just 2d). This will simplify
-# some of the code for gates that use only 1d.
 
 class MOUSE:
     LEFT_CLICK = 1
@@ -482,7 +479,7 @@ class PolyDrawer(AxesWidget):
 
         if lineprops is None:
             lineprops = dict()
-        self.line = Line2D([], [], **lineprops)
+        self.line = pl.Line2D([], [], **lineprops)
         self.line.set_visible(False)
         self.ax.add_line(self.line)
 
@@ -625,9 +622,8 @@ class FCToolBar(object):
         if parent is None:
             parent = self.fig.canvas
 
-        from GoreUtilities import dialogs
-
         if filepath is None:
+            from GoreUtilities import dialogs
             filepath = dialogs.open_file_dialog('Select an FCS file to load',
                         'FCS files (*.fcs)|*.fcs', parent=parent)
 
@@ -635,7 +631,6 @@ class FCToolBar(object):
             self.sample = FCMeasurement('temp', datafile=filepath).transform('hlog')
             print 'WARNING: hlog transforming all data.'
             self._sample_loaded_event()
-            self.plot_data()
 
     def load_measurement(self, measurement):
         self.sample = measurement.copy()
@@ -643,10 +638,7 @@ class FCToolBar(object):
 
     def _sample_loaded_event(self):
         if self.sample is not None:
-            if self.current_channels == None:
-                # Assigns first two channels by default if none have been specified yet.
-                self.current_channels = list(self.sample.channel_names[0:2])
-
+            self.current_channels = list(self.sample.channel_names[0:2])
             self.set_axis(self.current_channels, self.ax)
             self.plot_data()
 
@@ -732,11 +724,9 @@ def key_press_handler(event, canvas, toolbar=None):
     key = event.key.encode('ascii', 'ignore')
 
     if key in ['1']:
-        #toolbar.create_polygon_gate_widget()
         toolbar.create_gate_widget(kind='poly')
     elif key in ['2', '3', '4']:
         kind = {'2' : 'quad', '3' : 'horizontal threshold', '4' : 'vertical threshold'}[key]
-        #toolbar.create_threshold_gate_widget(kind)
         toolbar.create_gate_widget(kind=kind)
     elif key in ['9']:
         toolbar.remove_active_gate()
@@ -752,6 +742,7 @@ def key_press_handler(event, canvas, toolbar=None):
         print toolbar.get_generation_code()
 
 class Globals():
+    """ Used for testing only """
     pass
 
 if __name__ == '__main__':
@@ -811,8 +802,9 @@ if __name__ == '__main__':
         #Globals.bv.update_coordinates({'d2' : 0.7, 'd1' : 0.9})
         show()
     def example3():
-        fig = figure()
+        fig = pl.figure()
         ax = fig.add_subplot(1, 1, 1)
         manager = FCToolBar(ax)
+        pl.show()
 
-    example2()
+    example3()
