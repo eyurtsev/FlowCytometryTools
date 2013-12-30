@@ -14,7 +14,7 @@ class GUIEmbedded(GeneratedWireframe):
         self.fc_toolbar = fc_widget.FCToolBar(self.ax)
         self._update_axes()
 
-    def load_fc_measurement(self, measurement):
+    def load_measurement(self, measurement):
         self.fc_toolbar.load_measurement(measurement)
         self._update_axes()
 
@@ -105,15 +105,13 @@ class FCGUI(object):
         self.app.SetTopWindow(self.main)
         if filepath is not None:
             self.main.load_fcs(filepath)
+        if measurement is not None:
+            self.main.load_measurement(measurement)
         self.run()
 
     def run(self):
         self.main.Show()
         self.app.MainLoop()
-
-    @classmethod
-    def from_measurement(cls, measurement):
-        return cls(measurement=measurement)
 
 if __name__ == "__main__":
     app = FCGUI('../tests/data/FlowCytometers/FACSCaliburHTS/Sample_Well_A02.fcs')
