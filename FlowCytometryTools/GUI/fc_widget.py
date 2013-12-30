@@ -636,8 +636,8 @@ class FCToolBar(object):
                         'FCS files (*.fcs)|*.fcs', parent=parent)
 
         if filepath is not None:
-            self.sample = FCMeasurement('temp', datafile=filepath).transform('hlog')
-            print 'WARNING: hlog transforming all data.'
+            self.sample = FCMeasurement('temp', datafile=filepath)
+            print 'WARNING: Data is raw (not transformation).'
             self._sample_loaded_event()
 
     def load_measurement(self, measurement):
