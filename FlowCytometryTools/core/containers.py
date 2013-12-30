@@ -173,7 +173,7 @@ class FCMeasurement(Measurement):
             #call(["python", script_path, self.datafile])
         #else:
         from FlowCytometryTools.GUI import gui
-        return gui.launch_from_fc_measurement(self)
+        return gui.FCGUI(measurement=self)
 
     def transform(self, transform, direction='forward',  
                   channels=None, return_all=True, auto_range=True,
