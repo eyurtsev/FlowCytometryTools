@@ -266,6 +266,14 @@ class FCS_Parser(object):
             dtype = par_numeric_type_list[0]
             data = numpy.fromfile(file_handle, dtype=dtype, count=num_events * num_pars)
             data = data.reshape((num_events, num_pars))
+        ##
+        # Convert to native byte order 
+        # This is needed for working with pandas datastructures
+        sys_is_le = sys.byteorder == 'little'
+        native_code = sys_is_le and '<' or '>'
+        if endian != native_code:
+            # swaps the actual bytes and also the endianness
+            data = data.byteswap().newbyteorder()
 
         self._data = data
 
