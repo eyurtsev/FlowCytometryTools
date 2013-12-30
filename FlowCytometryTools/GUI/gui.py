@@ -13,11 +13,10 @@ class GUIEmbedded(GeneratedWireframe):
         self.ax = self.fig.add_subplot(111)
         self.fc_toolbar = gate_toolbar.FCToolBar(self.ax)
         self._update_axes()
-        #self.add_toolbar()
 
-    #def load_fc_measurement(self, measurement):
-        #self.fc_widget_ref.gate_manager.load_measurement(measurement)
-        #self._update_axes()
+    def load_fc_measurement(self, measurement):
+        self.fc_toolbar.load_measurement(measurement)
+        self._update_axes()
 
     def load_fcs(self, filepath=None):
         self.fc_toolbar.load_fcs(filepath=filepath, parent=self)
@@ -38,7 +37,6 @@ class GUIEmbedded(GeneratedWireframe):
 
     def btn_choose_y_channel(self, event):
         if event.GetExtraLong(): # Quick hack
-            new_channel = event.GetString()
             new_channel = event.GetString()
             current_channels = self.fc_toolbar.current_channels
             self.fc_toolbar.set_axis((current_channels[0], new_channel), self.ax)
@@ -65,75 +63,28 @@ class GUIEmbedded(GeneratedWireframe):
     def _update_axes(self):
         if self.fc_toolbar.sample is not None:
             options = list(self.fc_toolbar.sample.channel_names)
-            options.sort() # May not be necessary
-            self.x_axis_list.Clear()
-            self.x_axis_list.InsertItems(options, 0)
-            self.y_axis_list.Clear()
-            self.y_axis_list.InsertItems(options, 0)
         else:
-            options = list(['d1', 'd2', 'd3'])
-            options.sort() # May not be necessary
-            self.x_axis_list.Clear()
-            self.x_axis_list.InsertItems(options, 0)
-            self.y_axis_list.Clear()
-            self.y_axis_list.InsertItems(options, 0)
-            self.fc_toolbar.current_channels = options[0], options[1]
+            options = list(['d1', 'd2', 'd3']) # Just a seed
+        self.x_axis_list.Clear()
+        self.x_axis_list.InsertItems(options, 0)
+        self.y_axis_list.Clear()
+        self.y_axis_list.InsertItems(options, 0)
+        self.fc_toolbar.current_channels = options[0], options[1]
+
+class FCGUI(object):
+    """ Use this to launch the wx-based fdlow cytometry app """
+    def __init__(self, filepath=None):
+        self.app = wx.PySimpleApp(0)
+        wx.InitAllImageHandlers()
+        self.main = GUIEmbedded(None, -1, "")
+        self.app.SetTopWindow(self.main)
+        if filepath is not None:
+            self.main.load_fcs(filepath)
+        self.run()
+
+    def run(self):
+        self.main.Show()
+        self.app.MainLoop()
 
 if __name__ == "__main__":
-    app = wx.PySimpleApp(0)
-    wx.InitAllImageHandlers()
-    generated_wireframe = GUIEmbedded(None, -1, "")
-    app.SetTopWindow(generated_wireframe)
-    generated_wireframe.Show()
-    app.MainLoop()
-
-#class FC_GUI(wx.App):
-    #def OnInit(self):
-        #wx.InitAllImageHandlers()
-        #self.sample_viewer = GUIEmbedded(None, -1, "")
-        #self.SetTopWindow(self.sample_viewer)
-        #self.sample_viewer.Show()
-        #return 1
-#
-    #def load_fcs(self, filepath):
-        #self.sample_viewer.load_fcs(filepath)
-#
-    #def load_fc_measurement(self, measurement):
-        #self.sample_viewer.load_fc_measurement(measurement)
-#
-#def parse_input():
-    #"""
-    #OLD DO NOT USE
-    #Examples of use:
-        #Opens up the specified FCS file with channels showing B1-A and Y2-A
-        #python flowGUI.py ../tests/data/Plate01/CFP_Well_A4.fcs -c B1-A Y2-A
-    #"""
-    #import argparse
-    #epilog = parse_input.__doc__
-    #parser = argparse.ArgumentParser(epilog=epilog, formatter_class=argparse.RawTextHelpFormatter)
-    #parser.add_argument(metavar="FILE", dest="filename", help='fcs file to open', nargs='?', default=None)
-    #parser.add_argument("-c", "--channel-names", dest="channel_names", nargs='+', help="channel names to plot on the x and y axis")
-    #return parser.parse_args()
-
-#def launch_from_fc_measurement(measurement):
-    #"""
-    #Launches the GUI from an FCmeasurement.
-    #"""
-    #app = FC_GUI()
-    #app.load_fc_measurement(measurement)
-    #app.MainLoop()
-
-
-#if __name__ == "__main2__":
-    #import glob
-    #import os
-    #import FlowCytometryTools
-    #datadir = os.path.join(FlowCytometryTools.__path__[0], 'tests', 'data', 'Plate01', '*.fcs')
-    #files = glob.glob(datadir)[0]
-#
-    ##files = glob.glob('./*.fcs')[0]
-    ##files = glob.glob('datadir/')[0]
-    #print files
-    #app = FC_GUI()
-    ##app.load_fcs(files)
-    #app.MainLoop()
+    app = FCGUI('../tests/data/FlowCytometers/FACSCaliburHTS/Sample_Well_A02.fcs')
