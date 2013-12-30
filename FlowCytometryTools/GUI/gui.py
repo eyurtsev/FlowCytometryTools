@@ -29,17 +29,39 @@ class GUIEmbedded(GeneratedWireframe):
         self.fc_toolbar.close()
         self.Close(1)
 
-    def btn_choose_x_channel(self, event):
+    def _change_channel(self, event, axis):
+        """
+        Parameters
+        -------------
+        axis : 'x' or 'y'
+        event : pick of list text
+        """
         if event.GetExtraLong(): # Quick hack
-            new_channel = event.GetString()
+            sel = event.GetString().encode("UTF-8")
             current_channels = self.fc_toolbar.current_channels
-            self.fc_toolbar.set_axis((new_channel, current_channels[1]), self.ax)
+
+            if len(current_channels) == 1:
+                ch = current_channels[0] # Current channel
+            else:
+                if axis == 'x':
+                    ch = current_channels[1]
+                elif axis == 'y':
+                    ch = current_channels[0]
+
+            if sel == ch:
+                new_channels = ch,
+            elif axis == 'x':
+                new_channels = sel, ch
+            else:
+                new_channels = ch, sel
+
+            self.fc_toolbar.set_axis(new_channels, self.ax)
+
+    def btn_choose_x_channel(self, event):
+        self._change_channel(event, 'x')
 
     def btn_choose_y_channel(self, event):
-        if event.GetExtraLong(): # Quick hack
-            new_channel = event.GetString()
-            current_channels = self.fc_toolbar.current_channels
-            self.fc_toolbar.set_axis((current_channels[0], new_channel), self.ax)
+        self._change_channel(event, 'y')
 
     def btn_create_poly_gate(self, event):
         self.fc_toolbar.create_gate_widget('poly')
@@ -73,7 +95,10 @@ class GUIEmbedded(GeneratedWireframe):
 
 class FCGUI(object):
     """ Use this to launch the wx-based fdlow cytometry app """
-    def __init__(self, filepath=None):
+    def __init__(self, filepath=None, measurement=None):
+        if filepath is not None and measurement is not None:
+            raise ValueError('You can only specify either filepath or measurement, but not both.')
+
         self.app = wx.PySimpleApp(0)
         wx.InitAllImageHandlers()
         self.main = GUIEmbedded(None, -1, "")
@@ -85,6 +110,10 @@ class FCGUI(object):
     def run(self):
         self.main.Show()
         self.app.MainLoop()
+
+    @classmethod
+    def from_measurement(cls, measurement):
+        return cls(measurement=measurement)
 
 if __name__ == "__main__":
     app = FCGUI('../tests/data/FlowCytometers/FACSCaliburHTS/Sample_Well_A02.fcs')

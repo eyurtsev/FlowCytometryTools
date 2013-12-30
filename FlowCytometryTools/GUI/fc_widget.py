@@ -574,6 +574,7 @@ class FCToolBar(object):
 
     def create_gate_widget(self, kind):
         def create_gate(*args):
+            canceled = False # TODO allow drawing tool to cancel
             verts = args[0]
             ch = self.current_channels
             verts = [dict(zip(ch, v)) for v in verts]
@@ -583,14 +584,20 @@ class FCToolBar(object):
             elif 'threshold' in kind or 'quad' in kind:
                 gate_type = ThresholdGate
 
+            # FIXME: This is very specific implementation
             if 'vertical' in kind:
-                [v.pop(ch[1]) for v in verts]
+                verts = [{ch[0] : v[ch[0]]} for v in verts]
             elif 'horizontal' in kind:
-                [v.pop(ch[0]) for v in verts]
+                if len(ch) == 1:
+                    canceled = True
+                else:
+                    verts = [{ch[1] : v[ch[1]]} for v in verts]
 
-            gate = BaseGate(verts, gate_type, name=self._get_next_gate_name(), callback_list=self._handle_gate_events)
-            gate.spawn(ch, self.ax)
-            self.add_gate(gate)
+            if not canceled:
+                gate = BaseGate(verts, gate_type, name=self._get_next_gate_name(), callback_list=self._handle_gate_events)
+                gate.spawn(ch, self.ax)
+                self.add_gate(gate)
+
             clean_drawing_tools(kind)
 
         def start_drawing(kind):
@@ -609,6 +616,7 @@ class FCToolBar(object):
         def clean_drawing_tools(kind):
             self._drawing_tool.disconnect_events()
             self._drawing_tool = None
+            self.canvas.draw()
 
         start_drawing(kind)
 
@@ -643,9 +651,13 @@ class FCToolBar(object):
             self.plot_data()
 
     def set_axis(self, channels, ax):
-        """ Sets the x and y axis """
-        channels = tuple([ch.encode("UTF-8") for ch in channels]) # To get rid of u's
+        """
+        channels : iterable of string
+            each value corresponds to a channel names
+            names must be unique
+        """
         self.current_channels = channels
+
         for gate in self.gates:
             gate.set_axis(channels, ax)
         self.plot_data()
@@ -681,7 +693,7 @@ class FCToolBar(object):
 
         channels = self.current_channels
 
-        if channels[0] == channels[1]:
+        if len(channels) == 1: # Then histogram
             self._plt_data = sample.plot(channels[0], ax=ax)
             xlabel = self.current_channels[0]
             ylabel = 'Counts'
