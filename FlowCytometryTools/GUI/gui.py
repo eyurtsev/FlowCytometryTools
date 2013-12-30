@@ -4,14 +4,14 @@ import wx
 import matplotlib
 matplotlib.use('wxagg')
 from wireframe import GeneratedWireframe
-import gate_toolbar
+import fc_widget
 
 class GUIEmbedded(GeneratedWireframe):
     def __init__(self, *args, **kwargs):
         GeneratedWireframe.__init__(self, *args, **kwargs)
         self.fig = self.canvas.figure
         self.ax = self.fig.add_subplot(111)
-        self.fc_toolbar = gate_toolbar.FCToolBar(self.ax)
+        self.fc_toolbar = fc_widget.FCToolBar(self.ax)
         self._update_axes()
 
     def load_fc_measurement(self, measurement):
