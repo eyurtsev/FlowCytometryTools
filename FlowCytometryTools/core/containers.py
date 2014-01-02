@@ -255,12 +255,11 @@ class FCMeasurement(Measurement):
         else: 
             if auto_range: #determine transformation range
                 if 'd' in kwargs:
-                    warnings.warn('Encountered both auto_range=True and user-specified range value in parameter d.\n Range value specified in parameter d is used.') 
+                    warnings.warn('Encountered both auto_range=True and user-specified range value in parameter d.\n Range value specified in parameter d is used.')
                 else:
-                    channel_meta = self.get_meta()['_channels_']
-                    ranges = []
-                    for i,r in channel_meta.iterrows():
-                        if r['$PnN'] in channels: ranges.append(float(r['$PnR']))
+                    channel_meta = self.channels
+                    # the -1 below because the channel numbers begin from 1 instead of 0 (this is fragile code)
+                    ranges = [float(r['$PnR']) for i, r in channel_meta.iterrows() if self.channel_names[i-1] in channels]
                     if not np.allclose(ranges, ranges[0]):
                         raise Exception, 'Not all specified channels have the same data range, therefore they cannot be transformed together.'
                     kwargs['d'] = np.log10(ranges[0])
@@ -366,29 +365,31 @@ class FCCollection(MeasurementCollection):
         '''
         new = self.copy()
         if share_transform:
-            meta = self.values()[0].get_meta()
-            channels = to_list(channels)
+            channel_meta  = self.values()[0].channels
+            channel_names = self.values()[0].channel_names
             if channels is None:
-                channels = meta['_channels_']['$PnN'].values
+                channels = list(channel_names)
+            else:
+                channels = to_list(channels)
             ## create transformer
             if isinstance(transform, Transformation):
                 transformer = transform
-            else: 
+            else:
                 if auto_range: #determine transformation range
                     if 'd' in kwargs:
-                        warnings.warn('Encountered both auto_range=True and user-specified range value in parameter d.\n Range value specified in parameter d is used.') 
+                        warnings.warn('Encountered both auto_range=True and user-specified range value in parameter d.\n Range value specified in parameter d is used.')
                     else:
-                        channel_meta = meta['_channels_']
-                        ranges = []
-                        for i,r in channel_meta.iterrows():
-                            if r['$PnN'] in channels: ranges.append(float(r['$PnR']))
+                        # the -1 below because the channel numbers begin from 1 instead of 0 (this is fragile code)
+                        ranges = [float(r['$PnR']) for i, r in channel_meta.iterrows() if channel_names[i-1] in channels]
+
                         if not np.allclose(ranges, ranges[0]):
                             raise Exception, 'Not all specified channels have the same data range, therefore they cannot be transformed together.'
                         kwargs['d'] = np.log10(ranges[0])
                 transformer = Transformation(transform, direction, args, **kwargs)
                 if use_spln:
-                    xmax = 10**kwargs['d']
-                    transformer.set_spline(-xmax, xmax)
+                    xmax = self.apply(lambda x:x[channels].max().max(), applyto='data').max().max()
+                    xmin = self.apply(lambda x:x[channels].min().min(), applyto='data').min().min()
+                    transformer.set_spline(xmin, xmax)
             ## transform all measurements     
             for k,v in new.iteritems(): 
                 new[k] = v.transform(transformer, channels=channels, return_all=return_all, use_spln=use_spln)
