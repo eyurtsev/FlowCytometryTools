@@ -17,16 +17,50 @@ from matplotlib import docstring
 
 
 docstring.interpd.update(_FCMeasurement_plot_pars=
-"""
-transform : [valid transform | tuple of valid transforms | None]
+"""transform : [valid transform | tuple of valid transforms | None]
     Transform to be applied to corresponding channels using the
     FCMeasurement.transform function.
     If a single transform is given, it will be applied to all plotted channels.
 gates : [None | Gate | iterable of Gate]
     When supplied, the gates are drawn on the plot. The gates are applied by default.
 transform_first : bool
-    Apply transforms before gating.
-""")
+    Apply transforms before gating.""")
+
+
+docstring.interpd.update(_FCMeasurement_transform_pars=
+"""transform : callable | str
+    Callable that does a transformation (should accept a number or array),
+    or one of the supported named transformations.
+    Supported transformation are: {}.
+direction : 'forward' | 'inverse'
+    Direction of transformation.
+channels : str | list of str | None
+    Names of channels to transform.
+    If None is given, all channels will be transformed.
+    .. warning:: Time channels will also be transformed if all channels are transformed.
+return_all : bool
+    True -  return all columns, with specified ones transformed.
+    False - return only specified columns.
+auto_range : bool
+    If True data range (machine range) is automatically extracted from $PnR field of metadata.
+    .. warning:: If the data has been previously transformed its range may not match the $PnR value.
+        In these cases auto_range should be set to False.
+use_spln : bool
+    If True th transform is done using a spline.
+    See Transformation.transform for more details.
+get_transformer : bool
+    If True the transformer is returned in addition to the new Measurement.
+args :
+    Additional positional arguments to be passed to the Transformation.
+kwargs :
+    Additional keyword arguments to be passed to the Transformation.""")
+
+docstring.interpd.update(_FCMeasurement_transform_examples=
+""">>> trans = original.transform('hlog')
+>>> trans = original.transform('tlog', th=2)
+>>> trans = original.transform('hlog', d=log10(2**18), auto_range=False)
+>>> trans = original.transform('hlog', r=1000, use_spln=True, get_transformer=True)
+>>> trans = original.transform('hlog', channels=['FSC-A', 'SSC-A'], b=500).transform('hlog', channels='B1-A', b=100)""")
 
 class FCMeasurement(Measurement):
     """
@@ -43,7 +77,6 @@ class FCMeasurement(Measurement):
         """
         if self.meta is not None:
             return self.meta['_channels_']
-        
     @property
     def channel_names(self):
         '''
@@ -188,46 +221,22 @@ class FCMeasurement(Measurement):
         from FlowCytometryTools.GUI import gui
         return gui.FCGUI(measurement=self)
 
-    def transform(self, transform, direction='forward',  
+    @docstring.dedent_interpd
+    def transform(self, transform, direction='forward',
                   channels=None, return_all=True, auto_range=True,
-                  use_spln=True, get_transformer=False, ID = None, 
+                  use_spln=True, get_transformer=False, ID = None,
                   args=(), **kwargs):
-        '''
-        Apply transform to specified channels. 
+        """
+        Applies a transformation to the specified channels.
+
         The transformation parameters are shared between all transformed channels.
         If different parameters need to be applied to different channels, use several calls to `transform`.
-        
         Parameters
-        ----------
-        transform : callable | str
-            Callable that does a transformation (should accept a number or array),
-            or one of the supported named transformations.
-            Supported transformation are: {}. 
-        direction : 'forward' | 'inverse'
-            Direction of transformation.
-        channels : str | list of str | None
-            Names of channels to transform.
-            If None is given, all channels will be transformed.
-            .. warning:: Time channels will also be transformed if all channels are transformed.
-        return_all : bool
-            True -  return all columns, with specified ones transformed.
-            False - return only specified columns.
-        auto_range : bool 
-            If True data range (machine range) is automatically extracted from $PnR field of metadata.
-            .. warning:: If the data has been previously transformed its range may not match the $PnR value.
-                In these cases auto_range should be set to False.
-        use_spln : bool
-            If True th transform is done using a spline. 
-            See Transformation.transform for more details.
-        get_transformer : bool
-            If True the transformer is returned in addition to the new Measurement. 
+        ------------
+        %(_FCMeasurement_transform_pars)s
         ID : hashable | None
             ID for the resulting collection. If None is passed, the original ID is used.
-        args : 
-            Additional positional arguments to be passed to the Transformation.
-        kwargs :
-            Additional keyword arguments to be passed to the Transformation.
-            
+
         Returns
         -------
         new : FCMeasurement
@@ -235,15 +244,11 @@ class FCMeasurement(Measurement):
         transformer : Transformation
             The Transformation applied to the input measurement.
             Only returned if get_transformer=True.
-        
+
         Examples
         --------
-        >>> trans = original.transform('hlog')
-        >>> trans = original.transform('tlog', th=2)
-        >>> trans = original.transform('hlog', d=log10(2**18), auto_range=False)
-        >>> trans = original.transform('hlog', r=1000, use_spln=True, get_transformer=True)
-        >>> trans = original.transform('hlog', channels=['FSC-A', 'SSC-A'], b=500).transform('hlog', channels='B1-A', b=100)
-        '''
+        %(_FCMeasurement_transform_examples)s
+        """
         data = self.get_data()
 
         channels = to_list(channels)
@@ -292,61 +297,35 @@ class FCMeasurement(Measurement):
         newsample = self.copy()
         newsample.set_data(data=newdata)
         return newsample
-    
+
     @property
     def counts(self):
         data = self.get_data()
-        return data.shape[0]       
+        return data.shape[0]
 
 class FCCollection(MeasurementCollection):
     '''
     A dict-like class for holding flow cytometry samples.
     '''
     _measurement_class = FCMeasurement
-    
-    def transform(self, transform, direction='forward', share_transform=True, 
+
+    @docstring.dedent_interpd
+    def transform(self, transform, direction='forward', share_transform=True,
                   channels=None, return_all=True, auto_range=True,
-                  use_spln=True, get_transformer=False, ID = None, 
+                  use_spln=True, get_transformer=False, ID = None,
                   args=(), **kwargs):
         '''
-        Apply transform to each Measurement in the Collection. 
+        Apply transform to each Measurement in the Collection.
+
         Return a new Collection with transformed data.
         .. warning : The new Collection will hold the data for **ALL** Measurements in memory!
-        
+
         Parameters
         ----------
-        transform : callable | str
-            Callable that does a transformation (should accept a number or array),
-            or one of the supported named transformations.
-            Supported transformation are: {}. 
-        share_transform : bool
-            True - same transformer will be used for all measurements in the collection.
-            False - a new transformer will be created for each measurement, allowing for varying data ranges. 
-        direction : 'forward' | 'inverse'
-            Direction of transformation.
-        channels : str | list of str | None
-            Names of channels to transform.
-            If None is given, all channels will be transformed.
-            .. warning:: Time channels will also be transformed if all channels are transformed.
-        return_all : bool
-            True -  return all columns, with specified ones transformed.
-            False - return only specified columns.
-        auto_range : bool 
-            If True data range (machine range) is automatically extracted from $PnR field of metadata.
-            .. warning:: If the data has been previously transformed its range may not match the $PnR value.
-                In these cases auto_range should be set to False.
-        use_spln : bool
-            If True th transform is done using a spline. 
-            See Transformation.transform for more details.
-        get_transformer : bool
-            If True the transformer is returned in addition to the new Measurement.
+        %(_FCMeasurement_transform_pars)s
         ID : hashable | None
             ID for the resulting collection. If None is passed, the original ID is used.
-        args : 
-            Additional positional arguments to be passed to the Transformation.
-        kwargs :
-            Additional keyword arguments to be passed to the Transformation.
-            
+
         Returns
         -------
         new : FCCollection
@@ -354,14 +333,10 @@ class FCCollection(MeasurementCollection):
         transformer : Transformation
             The Transformation applied to the measurements.
             Only returned if get_transformer=True & share_transform=True.
-        
+
         Examples
         --------
-        >>> trans = original.transform('hlog')share_transform
-        >>> trans = original.transform('tlog', th=2)
-        >>> trans = original.transform('hlog', d=log10(2**18), auto_range=False)
-        >>> trans = original.transform('hlog', r=1000, use_spln=True, get_transformer=True)
-        >>> trans = original.transform('hlog', channels=['FSC-A', 'SSC-A'], b=500).transform('hlog', channels='B1-A', b=100)
+        %(_FCMeasurement_transform_examples)s
         '''
         new = self.copy()
         if share_transform:
@@ -479,11 +454,9 @@ class FCOrderedCollection(OrderedCollection, FCCollection):
         ------------
         Below, plate is an instance of the FCOrderedCollection
 
-        plate.plot(['SSC-A', 'FSC-A'], kind='histogram', transform='hlog', autolabel=True)
-
-        plate.plot(['SSC-A', 'FSC-A'], transform='hlog', xlim=(0, 10000))
-
-        plate.plot(['B1-A', 'Y2-A'], transform='hlog', kind='scatter', color='red', s=1, alpha=0.3)
+        >>> plate.plot(['SSC-A', 'FSC-A'], kind='histogram', transform='hlog', autolabel=True)
+        >>> plate.plot(['SSC-A', 'FSC-A'], transform='hlog', xlim=(0, 10000))
+        >>> plate.plot(['B1-A', 'Y2-A'], transform='hlog', kind='scatter', color='red', s=1, alpha=0.3)
         """
         ###
         # Automatically figure out which of the kwargs should
@@ -532,6 +505,8 @@ FCPlate = FCOrderedCollection
 if __name__ == '__main__':
     print FCMeasurement.plot.__doc__
     print FCOrderedCollection.plot.__doc__
+    print FCMeasurement.transform.__doc__
+    print FCOrderedCollection.transform.__doc__
 
     #import glob
     #datadir = '../tests/data/Plate01/'
