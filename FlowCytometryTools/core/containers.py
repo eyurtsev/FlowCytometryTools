@@ -13,18 +13,34 @@ import graph
 import inspect
 import numpy as np
 from FlowCytometryTools.core.transforms import Transformation
+from matplotlib import docstring
+
+
+docstring.interpd.update(_FCMeasurement_plot_pars=
+"""
+transform : [valid transform | tuple of valid transforms | None]
+    Transform to be applied to corresponding channels using the
+    FCMeasurement.transform function.
+    If a single transform is given, it will be applied to all plotted channels.
+gates : [None | Gate | iterable of Gate]
+    When supplied, the gates are drawn on the plot. The gates are applied by default.
+transform_first : bool
+    Apply transforms before gating.
+""")
 
 class FCMeasurement(Measurement):
-    '''
+    """
     A class for holding flow cytometry data from
     a single well or a single tube.
-    '''
+
+
+    """
 
     @property
     def channels(self):
-        '''
+        """
         Channel information organized as a DataFrame
-        '''
+        """
         if self.meta is not None:
             return self.meta['_channels_']
         
@@ -72,35 +88,32 @@ class FCMeasurement(Measurement):
         except:
             raise Exception("The keyword '{}' does not exist in the following FCS file: {}".format(ID_field, self.datafile))
 
-    def plot(self, channel_names, transform=(None, None), kind='histogram', 
+    @docstring.dedent_interpd
+    def plot(self, channel_names, transform=(None, None), kind='histogram',
              gates=None, transform_first=True, apply_gates=True, plot_gates=True,
              gate_colors=None, **kwargs):
-        '''
+        """
         Plots the flow cytometry data associated with the sample on the current axis.
-        Follow with a call to matplotlibs show() in order to see the plot.
+
+        To produce the plot, follow up with a call to matplotlib's show() function.
 
         Parameters
         ----------
-        channel_names : str| iterable of str | None
-            name (names) channels to plot.
-            given a single channel plots a histogram
-            given two channels produces a 2d plot
-        transform : valid transform | tuple of valid transforms | None
-            Transform to be applied to corresponding channels using the FCMeasurement.transform function.
-            If a single transform is given, it will be applied to all plotted channels.
-        kind : 'scatter', 'histogram'
-        gates: Gate| iterable of Gate | None
-            Gates to be applied before plotting
-        transform_first : bool
-            Apply transforms before gating.
+        %(_plotFCM_pars)s
+        %(_FCMeasurement_plot_pars)s
         kwargs : dict
             Additional keyword arguments to be passed to graph.plotFCM
 
         Returns
         -------
-        None: if no data is loaded
-        gHandle: reference to axis
-        '''
+        None : if no data is present
+        plot_output : output of plot command used to draw (e.g., output of hist)
+
+        Examples
+        ----------
+        >>> sample.plot('Y2-A', bins=100, alpha=0.7, color='green', normed=1) # 1d histogram
+        >>> sample.plot(['B1-A', 'Y2-A'], cmap=cm.Oranges, colorbar=False) # 2d histogram
+        """
 #         data = self.get_data() # The index is to keep only the data part (removing the meta data)
         # Transform sample
 
@@ -140,7 +153,7 @@ class FCMeasurement(Measurement):
             sample_tmp = _trans(sample_tmp, channel_names, transformList)
             
         data = sample_tmp.get_data()
-        out  = graph.plotFCM(data, channel_names, kind=kind, **kwargs)
+        plot_output  = graph.plotFCM(data, channel_names, kind=kind, **kwargs)
         
         if plot_gates and gates is not None:
             if gate_colors is None:
@@ -148,7 +161,7 @@ class FCMeasurement(Measurement):
             for (g,c) in zip(gates, gate_colors):
                 g.plot(ax=ax, ax_channels=channel_names, color=c)
         
-        return out
+        return plot_output
 
     def view(self):
         '''
@@ -431,6 +444,8 @@ class FCOrderedCollection(OrderedCollection, FCCollection):
     '''
     A dict-like class for holding flow cytometry samples that are arranged in a matrix.
     '''
+
+    @docstring.dedent_interpd
     def plot(self, channel_names,  kind='histogram', transform=(None, None),
              gates=None, transform_first=True, apply_gates=True, plot_gates=True, gate_colors=None,
              ids=None, row_labels=None, col_labels=None,
@@ -441,6 +456,12 @@ class FCOrderedCollection(OrderedCollection, FCCollection):
         For details see documentation for FCMeasurement.plot
         **kwargs passes arguments to both grid_plot and to FCMeasurement.plot.
 
+        Parameters
+        ---------------
+
+        %(_FCMeasurement_plot_pars)s
+        %(_plotFCM_pars)s
+
         Note
         -------
         The function assumes that grid_plot and FCMeasurement.plot use unique key words.
@@ -448,10 +469,10 @@ class FCOrderedCollection(OrderedCollection, FCCollection):
 
         Returns
         -------
-        gHandleList: list
-            gHandleList[0] -> reference to main axis
-            gHandleList[1] -> a list of lists
-                example: gHandleList[1][0][2] returns the subplot in row 0 and column 2
+        An interable of len 2.
+        First element is a reference to the main axis (e.g., output[0])
+        Second element is a matrix of references to the subplots (e.g., output[1][0, 3] references
+            the subplot in row 0 and column 3.)
 
         Examples
         ------------
@@ -508,30 +529,33 @@ class FCOrderedCollection(OrderedCollection, FCCollection):
 FCPlate = FCOrderedCollection
 
 if __name__ == '__main__':
-    import glob
-    datadir = '../tests/data/Plate01/'
-    fname = glob.glob(datadir + '*.fcs')[0]
-    sample = FCMeasurement(1, datafile=fname)
-    #print sample.channels
-    #print sample.channel_names
-#     hs = sample.transform('hlog', use_spln=True)
-#     hs.plot(('FSC-A','SSC-A'))
-#     import pylab
-#     pylab.show()
+    print FCMeasurement.plot.__doc__
+    print FCOrderedCollection.plot.__doc__
 
-    plate = FCPlate.from_dir('p', datadir).dropna()
-    print plate.counts()
-    print plate
-
-    import time
-    s = time.clock()
-    hplate = plate.transform('hlog', channels=['FSC-A', 'SSC-A'], use_spln=False)
-    e = time.clock()
-    
-    ss = time.clock()
-    hplate = plate.transform('hlog', channels=['FSC-A', 'SSC-A'])
-    es = time.clock()
-    print e-s, es-ss
+    #import glob
+    #datadir = '../tests/data/Plate01/'
+    #fname = glob.glob(datadir + '*.fcs')[0]
+    #sample = FCMeasurement(1, datafile=fname)
+    ##print sample.channels
+    ##print sample.channel_names
+##     hs = sample.transform('hlog', use_spln=True)
+##     hs.plot(('FSC-A','SSC-A'))
+##     import pylab
+##     pylab.show()
+#
+    #plate = FCPlate.from_dir('p', datadir).dropna()
+    #print plate.counts()
+    #print plate
+#
+    #import time
+    #s = time.clock()
+    #hplate = plate.transform('hlog', channels=['FSC-A', 'SSC-A'], use_spln=False)
+    #e = time.clock()
+    #
+    #ss = time.clock()
+    #hplate = plate.transform('hlog', channels=['FSC-A', 'SSC-A'])
+    #es = time.clock()
+    #print e-s, es-ss
     #print plate.wells 
     #print plate.well_IDS
     
