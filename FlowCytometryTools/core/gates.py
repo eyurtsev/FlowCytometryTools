@@ -39,21 +39,22 @@ from GoreUtilities.util import to_list
 import pylab as pl
 import numpy
 from matplotlib import docstring
+from common_doc import doc_replacer
 
-docstring.interpd.update(_gate_pars_name=
-"""name : 'str'
+doc_replacer.update(_gate_pars_name="""\
+name : str
     The gate's name.""")
-
-docstring.interpd.update(_gate_pars_1_channel=
-"""channel : 'str'
+doc_replacer.update(_gate_pars_1_channel="""\
+channel : str
     Defines the channel name.""")
 
-docstring.interpd.update(_gate_pars_2_channels=
+doc_replacer.update(_gate_pars_2_channels=
 """channels : ['channel 1 name', 'channel 2 name']
     Defines the names of the channels""")
 
-docstring.interpd.update(_gate_plot_doc=
+doc_replacer.update(_gate_plot_doc=
 """Plots the gate.
+
 .. warning:
     The plot function does not check that your
     axis correspond to the correct channels.
@@ -62,7 +63,7 @@ Parameters
 ----------
 ax : axes to use for plotting the gate on
 flip : boolean
-    If true assumes draws the interval
+    If True, draws the interval
     along the y-axis instead of along the x-axis
 
 Returns
@@ -174,17 +175,19 @@ class Gate(_ComposableMixin):
             raise ValueError("region must be one of the following: {0}".format(self._region_options))
 
 class ThresholdGate(Gate):
-    @docstring.dedent_interpd
+    @doc_replacer
     def __init__(self, threshold, channel, region, name=None):
         """
-        Use to gate events based on a threshold for a single channel.
+        Passes all events above or below a given threshold.
 
         Parameters
         ----------
-        threshold : a float
-            The location of the gate.
-        %(_gate_pars_1_channel)s
-        %(_gate_pars_name)s
+        threshold : float
+            Location of the gate
+        {_gate_pars_1_channel}
+        region : ['above', 'below']
+            If 'above', the gate only passes through data that lies above the threshold.
+        {_gate_pars_name}
         """
 
         #: Possible regions
@@ -201,10 +204,10 @@ class ThresholdGate(Gate):
 
         return idx
 
-    @docstring.dedent_interpd
+    @doc_replacer
     def plot(self, flip=False, ax_channels=None, ax=None, *args, **kwargs):
         """
-        %(_gate_plot_doc)s
+        {_gate_plot_doc}
         """
         if ax == None:
             ax = pl.gca()
@@ -219,16 +222,19 @@ class ThresholdGate(Gate):
 
 
 class IntervalGate(Gate):
-    @docstring.dedent_interpd
+    @doc_replacer
     def __init__(self, vert, channel, region, name=None):
         """
-        Defines an interval gate
+        Passes all events either inside or outside the given interval.
 
         Parameters
         ----------
-        vert : a 2-tuple (x_min, x_max)
-        %(_gate_pars_1_channel)s
-        %(_gate_pars_name)s
+        vert : tuple
+            Tuple describes the interval (xmin, xmax)
+        {_gate_pars_1_channel}
+        region : ['in', 'out']
+            If 'in', the gate only passes through data that lies inside the interval.
+        {_gate_pars_name}
         """
         self._region_options = ('in', 'out')
         super(IntervalGate, self).__init__(vert, channel, region, name)
@@ -253,10 +259,10 @@ class IntervalGate(Gate):
 
         return idx
 
-    @docstring.dedent_interpd
+    @doc_replacer
     def plot(self, flip=False, ax_channels=None, ax=None, *args, **kwargs):
         """
-        %(_gate_plot_doc)s
+        {_gate_plot_doc}
         """
         if ax == None:
             ax = pl.gca()
@@ -274,16 +280,20 @@ class IntervalGate(Gate):
 
 
 class QuadGate(Gate):
-    @docstring.dedent_interpd
+    @doc_replacer
     def __init__(self, vert, channels, region, name=None):
         """
-        Defines a quad gate.
+        Passes events in a given quadrant of a 2d-plot.
 
         Parameters
         ----------
-        vert : a 2-tuple (x_center, y_center)
-        %(_gate_pars_2_channels)s
-        %(_gate_pars_name)s
+        vert : tuple
+            A tuple of length 2: (x_center, y_center)
+            Specifies the center of the quad gate.
+        {_gate_pars_2_channels}
+        region : ['top left', 'top right', 'bottom left', 'bottom right']
+            For example, if 'top left', the gate only passes through data that lies in the top left region.
+        {_gate_pars_name}
         """
         self._region_options = ('top left', 'top right', 'bottom left', 'bottom right')
         super(QuadGate, self).__init__(vert, channels, region, name)
@@ -295,7 +305,6 @@ class QuadGate(Gate):
         Parameters
         ----------
         dataframe: DataFrame
-
         region : 'top left' | 'top right' | 'bottom left' | 'bottom right'
             The first channel passed to the gate constructor is assumed to be the x-axis.
             The second channel is the y-axis.
@@ -319,10 +328,10 @@ class QuadGate(Gate):
         return idx
 
 
-    @docstring.dedent_interpd
+    @doc_replacer
     def plot(self, flip=False, ax_channels=None, ax=None, *args, **kwargs):
         """
-        %(_gate_plot_doc)s
+        {_gate_plot_doc}
         """
         if ax == None:
             ax = pl.gca()
@@ -343,16 +352,20 @@ class QuadGate(Gate):
 
 
 class PolyGate(Gate):
-    @docstring.dedent_interpd
+    @doc_replacer
     def __init__(self, vert, channels, region='in', name=None):
         """
-        Defines a PolyGate.
+        Passes all events that are either inside or outside the polygon.
 
         Parameters
         ----------
-        vert : a list of 2-tuples [(x1, y1), (x2, y2), (x3, y3)]
-        %(_gate_pars_2_channels)s
-        %(_gate_pars_name)s
+        vert : list of 2-tuples
+            [(x1, y1), (x2, y2), (x3, y3)]
+            Each 2-tuple describes the location of a vertex.
+        {_gate_pars_2_channels}
+        region : ['in', 'out']
+            If 'in', the gate only passes through data that lies inside the interval.
+        {_gate_pars_name}
         """
         self.path = Path(vert)
         self._region_options = ('in', 'out')
@@ -377,10 +390,10 @@ class PolyGate(Gate):
 
         return idx
 
-    @docstring.dedent_interpd
+    @doc_replacer
     def plot(self, flip=False, ax_channels=None, ax=None, *args, **kwargs):
         """
-        %(_gate_plot_doc)s
+        {_gate_plot_doc}
         """
         if ax == None:
             ax = pl.gca()
@@ -398,7 +411,7 @@ class PolyGate(Gate):
 
 class CompositeGate(_ComposableMixin):
     """
-    Defines a composite gate that is generated by the logical addition of one or two gates.
+    Defines a composite gate that is generated by the logical addition of one or more gates.
     """
     def __init__(self, gate1, how, gate2=None):
         self.gates = [gate1]
@@ -438,10 +451,10 @@ class CompositeGate(_ComposableMixin):
         idx = self._identify(dataframe)
         return dataframe[idx]
 
-    @docstring.dedent_interpd
+    @doc_replacer
     def plot(self, flip=False, ax_channels=None, ax=None, *args, **kwargs):
         """
-        %(_gate_plot_doc)s
+        {_gate_plot_doc}
         """
         for gate in self.gates:
             gate.plot(flip=flip, ax_channels=ax_channels, ax=ax, *args, **kwargs)

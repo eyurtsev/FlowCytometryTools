@@ -6,7 +6,7 @@ from GoreUtilities.util import to_list
 import numpy
 import pylab as pl
 import matplotlib
-from matplotlib import docstring
+from common_doc import doc_replacer
 
 def plot_histogram2d(x, y, bins=200, ax=None, colorbar=True, **kwargs):
     """
@@ -56,25 +56,7 @@ def plot_histogram2d(x, y, bins=200, ax=None, colorbar=True, **kwargs):
     return p
 
 
-docstring.interpd.update(_plotFCM_pars =
-"""channel_names : [str | iterable of str]
-    The name (or names) of the channels to plot.
-    When one channel is specified, then a 1d histogram is plotted.
-kind : ['scatter' | 'histogram']
-    Specifies the kind of plot to use for plotting the data (only applies to 2D plots).
-autolabel : [False | True]
-    If True the x and y axes are labeled automatically.
-colorbar : [False | True]
-    Adds a colorbar. Only relevant when plotting a 2d histogram.
-xlabel_kwargs : dict
-    kwargs to be passed to the xlabel() command
-ylabel_kwargs : dict
-    kwargs to be passed to the ylabel() command
-ax : [None | ax]
-    Specifies which axis to plot on. If None, will plot
-    on the current axis. """ )
-
-@docstring.dedent_interpd
+@doc_replacer
 def plotFCM(data, channel_names, kind='histogram', ax=None,
                 autolabel=True, xlabel_kwargs={}, ylabel_kwargs={},
                 colorbar=False,
@@ -87,7 +69,7 @@ def plotFCM(data, channel_names, kind='histogram', ax=None,
     Parameters
     ----------
     data : DataFrame
-    %(_plotFCM_pars)s
+    {graph_plotFCM_pars}
 
     Returns
     -------
