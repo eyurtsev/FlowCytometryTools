@@ -13,61 +13,13 @@ import graph
 import inspect
 import numpy as np
 from FlowCytometryTools.core.transforms import Transformation
-from matplotlib import docstring
+from common_doc import doc_replacer
 
-
-docstring.interpd.update(_FCMeasurement_plot_pars=
-"""transform : [valid transform | tuple of valid transforms | None]
-    Transform to be applied to corresponding channels using the
-    FCMeasurement.transform function.
-    If a single transform is given, it will be applied to all plotted channels.
-gates : [None | Gate | iterable of Gate]
-    When supplied, the gates are drawn on the plot. The gates are applied by default.
-transform_first : bool
-    Apply transforms before gating.""")
-
-
-docstring.interpd.update(_FCMeasurement_transform_pars=
-"""transform : callable | str
-    Callable that does a transformation (should accept a number or array),
-    or one of the supported named transformations.
-    Supported transformation are: {}.
-direction : 'forward' | 'inverse'
-    Direction of transformation.
-channels : str | list of str | None
-    Names of channels to transform.
-    If None is given, all channels will be transformed.
-    .. warning:: Time channels will also be transformed if all channels are transformed.
-return_all : bool
-    True -  return all columns, with specified ones transformed.
-    False - return only specified columns.
-auto_range : bool
-    If True data range (machine range) is automatically extracted from $PnR field of metadata.
-    .. warning:: If the data has been previously transformed its range may not match the $PnR value.
-        In these cases auto_range should be set to False.
-use_spln : bool
-    If True th transform is done using a spline.
-    See Transformation.transform for more details.
-get_transformer : bool
-    If True the transformer is returned in addition to the new Measurement.
-args :
-    Additional positional arguments to be passed to the Transformation.
-kwargs :
-    Additional keyword arguments to be passed to the Transformation.""")
-
-docstring.interpd.update(_FCMeasurement_transform_examples=
-""">>> trans = original.transform('hlog')
->>> trans = original.transform('tlog', th=2)
->>> trans = original.transform('hlog', d=log10(2**18), auto_range=False)
->>> trans = original.transform('hlog', r=1000, use_spln=True, get_transformer=True)
->>> trans = original.transform('hlog', channels=['FSC-A', 'SSC-A'], b=500).transform('hlog', channels='B1-A', b=100)""")
 
 class FCMeasurement(Measurement):
     """
     A class for holding flow cytometry data from
     a single well or a single tube.
-
-
     """
 
     @property
@@ -121,7 +73,7 @@ class FCMeasurement(Measurement):
         except:
             raise Exception("The keyword '{}' does not exist in the following FCS file: {}".format(ID_field, self.datafile))
 
-    @docstring.dedent_interpd
+    @doc_replacer
     def plot(self, channel_names, transform=(None, None), kind='histogram',
              gates=None, transform_first=True, apply_gates=True, plot_gates=True,
              gate_colors=None, **kwargs):
@@ -132,8 +84,8 @@ class FCMeasurement(Measurement):
 
         Parameters
         ----------
-        %(_plotFCM_pars)s
-        %(_FCMeasurement_plot_pars)s
+        {graph_plotFCM_pars}
+        {FCMeasurement_plot_pars}
         kwargs : dict
             Additional keyword arguments to be passed to graph.plotFCM
 
@@ -221,7 +173,7 @@ class FCMeasurement(Measurement):
         from FlowCytometryTools.GUI import gui
         return gui.FCGUI(measurement=self)
 
-    @docstring.dedent_interpd
+    @doc_replacer
     def transform(self, transform, direction='forward',
                   channels=None, return_all=True, auto_range=True,
                   use_spln=True, get_transformer=False, ID = None,
@@ -231,9 +183,10 @@ class FCMeasurement(Measurement):
 
         The transformation parameters are shared between all transformed channels.
         If different parameters need to be applied to different channels, use several calls to `transform`.
+
         Parameters
         ------------
-        %(_FCMeasurement_transform_pars)s
+        {FCMeasurement_transform_pars}
         ID : hashable | None
             ID for the resulting collection. If None is passed, the original ID is used.
 
@@ -247,7 +200,7 @@ class FCMeasurement(Measurement):
 
         Examples
         --------
-        %(_FCMeasurement_transform_examples)s
+        {FCMeasurement_transform_examples}
         """
         data = self.get_data()
 
@@ -291,6 +244,11 @@ class FCMeasurement(Measurement):
         '''
         Apply given gate and return new gated sample (with assigned data).
         Note that no transformation is done by this funciton.
+
+        Parameters
+        ---------------
+
+        gate : Threshold Gate
         '''
         data = self.get_data()
         newdata = gate(data)
@@ -309,7 +267,7 @@ class FCCollection(MeasurementCollection):
     '''
     _measurement_class = FCMeasurement
 
-    @docstring.dedent_interpd
+    @doc_replacer
     def transform(self, transform, direction='forward', share_transform=True,
                   channels=None, return_all=True, auto_range=True,
                   use_spln=True, get_transformer=False, ID = None,
@@ -322,7 +280,7 @@ class FCCollection(MeasurementCollection):
 
         Parameters
         ----------
-        %(_FCMeasurement_transform_pars)s
+        {FCMeasurement_transform_pars}
         ID : hashable | None
             ID for the resulting collection. If None is passed, the original ID is used.
 
@@ -336,7 +294,7 @@ class FCCollection(MeasurementCollection):
 
         Examples
         --------
-        %(_FCMeasurement_transform_examples)s
+        {FCMeasurement_transform_examples}
         '''
         new = self.copy()
         if share_transform:
@@ -380,13 +338,22 @@ class FCCollection(MeasurementCollection):
         else:
             return new
 
+    @doc_replacer
     def gate(self, gate, ID=None):
         '''
-        Apply gate to each Measurement in the Collection. 
-        Return a new Collection with gated data.
-        Note that the new Collection will hold the data for ALL Measurements in memory!
-        
-        see FCMeasurement.gate for more details.
+        Applies the gate to each Measurement in the Collection, returning a new Collection with gated data.
+
+        .. warning::
+            that the new Collection will hold the data for ALL Measurements in memory!
+
+        Parameters
+        ------------------
+
+        {gate_available_classes}
+
+
+        ID : [ str, numeric, None]
+            New ID to be given to the output. If None, the ID of the current collection will be used.
         '''
         new = self.copy()
         for k,v in new.iteritems(): 
@@ -421,7 +388,7 @@ class FCOrderedCollection(OrderedCollection, FCCollection):
     A dict-like class for holding flow cytometry samples that are arranged in a matrix.
     '''
 
-    @docstring.dedent_interpd
+    @doc_replacer
     def plot(self, channel_names,  kind='histogram', transform=(None, None),
              gates=None, transform_first=True, apply_gates=True, plot_gates=True, gate_colors=None,
              ids=None, row_labels=None, col_labels=None,
@@ -435,8 +402,8 @@ class FCOrderedCollection(OrderedCollection, FCCollection):
         Parameters
         ---------------
 
-        %(_FCMeasurement_plot_pars)s
-        %(_plotFCM_pars)s
+        {FCMeasurement_plot_pars}
+        {graph_plotFCM_pars}
 
         Note
         -------
@@ -445,9 +412,10 @@ class FCOrderedCollection(OrderedCollection, FCCollection):
 
         Returns
         -------
-        An interable of len 2.
-        First element is a reference to the main axis (e.g., output[0])
-        Second element is a matrix of references to the subplots (e.g., output[1][0, 3] references
+        (ax_main, ax_subplots)
+            ax_main : reference to the main axes
+
+            ax_subplots : matrix of references to the subplots (e.g., ax_subplots[0, 3] references
             the subplot in row 0 and column 3.)
 
         Examples
