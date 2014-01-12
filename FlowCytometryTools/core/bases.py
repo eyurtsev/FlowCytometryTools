@@ -94,18 +94,20 @@ class BaseObject(object):
     '''
 
     def __repr__(self): return repr(self.ID)
-    
+
     def save(self, path):
+        """ Saves objec to a pickled file. """
         save(self, path)
-    
+
     @classmethod
     def load(cls, path):
+        """ Loads object from a pickled file. """
         return load(path)
 
     @property
     def _constructor(self):
         return self.__class__
-    
+
     def copy(self, deep=True):
         """
         Make a copy of this object
@@ -271,25 +273,25 @@ class Measurement(BaseObject):
         pass
 
     def apply(self, func, applyto='measurement', noneval=nan, setdata=False):
-        '''
+        """
         Apply func either to self or to associated data.
         If data is not already parsed, try and read it.
-        
+
         Parameters
         ----------
-        func : callable 
-            Each func value is a callable that accepts a measurement 
-            object or an FCS object.
-        applyto : 'data' | 'measurement'
-            'data'    : apply to associated data
-            'measurement' : apply to measurement object itself. 
+        func : callable
+            The function either accepts a measurement object or an FCS object.
+            Does some calculation and returns the result.
+        applyto : ['data' | 'measurement']
+            * 'data' : apply to associated data
+            * 'measurement' : apply to measurement object itself.
         noneval : obj
-            Value returned if applyto is 'data' but no data is available.
+            Value to return if `applyto` is 'data', but no data is available.
         setdata : bool
             Used only if data is not already set.
             If true parsed data will be assigned to self.data
             Otherwise data will be discarded at end of apply.
-        '''
+        """
         applyto = applyto.lower()
         if applyto == 'data':
             if self.data is not None:
@@ -418,8 +420,8 @@ class MeasurementCollection(collections.MutableMapping, BaseObject):
             Keys of measurements to which func will be applied.
             If None is given apply to all measurements. 
         applyto :  'measurement' | 'data'
-            'measurement' : apply to measurements objects themselves.
-            'data'        : apply to measurement associated data
+            * 'measurement' : apply to measurements objects themselves.
+            * 'data'        : apply to measurement associated data
         noneval : obj
             Value returned if applyto is 'data' but no data is available.
         setdata : bool
@@ -836,7 +838,7 @@ class OrderedCollection(MeasurementCollection):
         new.row_labels = list(tmp.index)
         new.col_labels = list(tmp.columns)
         return new
-        
+
     @property
     def layout(self):
         return self._dict2DF(self, nan)
@@ -845,19 +847,19 @@ class OrderedCollection(MeasurementCollection):
     def shape(self):
         return (len(self.row_labels), len(self.col_labels))
 
-    def apply(self, func, ids=None, applyto='measurement', 
-              output_format='DataFrame', noneval=nan, 
+    def apply(self, func, ids=None, applyto='measurement',
+              output_format='DataFrame', noneval=nan,
               setdata=False, dropna=False):
-        '''
+        """
         Apply func to each of the specified measurements.
-        
+
         Parameters
         ----------
-        func : callable 
-            Accepts a Measurement object or a DataFrame. 
+        func : callable
+            Accepts a Measurement object or a DataFrame.
         ids : hashable| iterable of hashables | None
             Keys of measurements to which func will be applied.
-            If None is given apply to all measurements. 
+            If None is given apply to all measurements.
         applyto :  'measurement' | 'data'
             'measurement' : apply to measurements objects themselves.
             'data'        : apply to measurement associated data
@@ -869,11 +871,11 @@ class OrderedCollection(MeasurementCollection):
             Used only if data is not already set.
         dropna : bool
             whether to remove rows/cols that contain no measurements.
-        
+
         Returns
         -------
         DataFrame/Dictionary containing the output of func for each Measurement. 
-        ''' 
+        """
         result = super(OrderedCollection, self).apply(func, ids, applyto, 
                                                        noneval, setdata)
         if output_format is 'dict':
@@ -885,60 +887,49 @@ class OrderedCollection(MeasurementCollection):
                    "Encounterd unsupported value %s." %repr(output_format))
             raise Exception(msg)
 
-    def grid_plot(self, func, applyto='measurement', ids=None, row_labels=None, col_labels=None,
+    @doc_replacer
+    def grid_plot(self, func, applyto='measurement', ids=None,
+                row_labels=None, col_labels=None,
                 xlim=None, ylim=None,
                 xlabel=None, ylabel=None,
                 colorbar=True,
                 row_label_xoffset=None, col_label_yoffset=None,
                 hide_tick_labels=True, hide_tick_lines=True,
-                hspace=0, wspace=0, row_labels_kwargs={}, col_labels_kwargs={}):
-        '''
+                hspace=0, wspace=0,
+                row_labels_kwargs={}, col_labels_kwargs={}):
+        """
         Creates subplots for each well in the plate. Uses func to plot on each axis.
         Follow with a call to matplotlibs show() in order to see the plot.
 
-        TODO: Finish documentation, document plot function also in utilities.graph
-        fix col_label, row_label offsets to use figure coordinates
-
-        @author: Eugene Yurtsev
-
         Parameters
         ----------
-        func : dict
-            Each func is a callable that accepts a measurement
+        func : callable
+            func is a callable that accepts a measurement
             object (with an optional axis reference) and plots on the current axis.
-            return values from func are ignored
-            NOTE: if using applyto='measurement', the function
+            Return values from func are ignored.
+            .. note: if using applyto='measurement', the function
             when querying for data should make sure that the data
             actually exists
         applyto : 'measurement' | 'data'
-        ids : None
-        col_labels : str
-            labels for the columns if None default labels are used
-        row_labels : str
-            labels for the rows if None default labels are used
-        xlim : 2-tuple
-            min and max x value for each subplot
-            if None, the limits are automatically determined for each subplot
+        {_graph_grid_layout}
+        {bases_OrderedCollection_grid_plot_pars}
 
         Returns
         -------
-        gHandleList: list
-            gHandleList[0] -> reference to main axis
-            gHandleList[1] -> a list of lists
-                example: gHandleList[1][0][2] returns the subplot in row 0 and column 2
+        {_graph_grid_layout_returns}
 
         Examples
         ---------
-        def y(well, ax):
-            data = well.get_data()
-            if data is None:
-                return None
-            graph.plotFCM(data, 'Y2-A')
-        def z(data, ax):
-            plot(data[0:100, 1], data[0:100, 2])
-        plate.plot(y, applyto='measurement');
-        plate.plot(z, applyto='data');
-        '''
+        >>> def y(well, ax):
+        >>>     data = well.get_data()
+        >>>     if data is None:
+        >>>         return None
+        >>>     graph.plotFCM(data, 'Y2-A')
+        >>> def z(data, ax):
+        >>>     plot(data[0:100, 1], data[0:100, 2])
+        >>> plate.plot(y, applyto='measurement');
+        >>> plate.plot(z, applyto='data');
+        """
         # Acquire call arguments to be passed to create plate layout
         callArgs = locals().copy() # This statement must remain first. The copy is just defensive.
         [callArgs.pop(varname) for varname in  ['self', 'func', 'applyto', 'ids', 'colorbar']] # pop args
@@ -954,8 +945,8 @@ class OrderedCollection(MeasurementCollection):
         if row_labels == None: callArgs['row_labels'] = self.row_labels
         if col_labels == None: callArgs['col_labels'] = self.col_labels
 
-        gHandleList = graph.create_grid_layout(**callArgs)
-        subplots_ax = DF(gHandleList[1], index=self.row_labels, columns=self.col_labels)
+        ax_main, ax_subplots = graph.create_grid_layout(**callArgs)
+        subplots_ax = DF(ax_subplots, index=self.row_labels, columns=self.col_labels)
 
         if ids is None:
             ids = self.keys()
@@ -991,7 +982,7 @@ class OrderedCollection(MeasurementCollection):
             axis = 'y'
         else:
             axis = 'none'
-        graph.autoscale_subplots(gHandleList[1], axis)
+        graph.autoscale_subplots(ax_subplots, axis)
 
         ###
         # Test code for adding colorbars
@@ -1016,7 +1007,7 @@ class OrderedCollection(MeasurementCollection):
 
         #####
         # Placing ticks on the top left subplot
-        ax_label = gHandleList[1][0, -1]
+        ax_label = ax_subplots[0, -1]
         pl.sca(ax_label)
 
         if xlabel:
@@ -1027,14 +1018,15 @@ class OrderedCollection(MeasurementCollection):
             ylim = ax_label.get_ylim()
             pl.yticks([ylim[0], ylim[1]], rotation=0)
 
-        pl.sca(gHandleList[0]) # sets to the main axis -- more intuitive
+        pl.sca(ax_main) # sets to the main axis -- more intuitive
 
-        return gHandleList
+        return ax_main, ax_subplots
 
 if __name__ == '__main__':
-    print OrderedCollection.__doc__
-    print OrderedCollection.__init__.__doc__
-    print OrderedCollection.from_files.__doc__
-    print OrderedCollection.from_dir.__doc__
-    print MeasurementCollection.from_files.__doc__
+    print OrderedCollection.grid_plot.__doc__
+    #print OrderedCollection.__doc__
+    #print OrderedCollection.__init__.__doc__
+    #print OrderedCollection.from_files.__doc__
+    #print OrderedCollection.from_dir.__doc__
+    #print MeasurementCollection.from_files.__doc__
     pass
