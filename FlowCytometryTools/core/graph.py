@@ -70,6 +70,7 @@ def plotFCM(data, channel_names, kind='histogram', ax=None,
     ----------
     data : DataFrame
     {graph_plotFCM_pars}
+    {common_plot_ax}
 
     Returns
     -------
