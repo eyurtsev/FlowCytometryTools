@@ -1,6 +1,4 @@
-""""
-@author: Eugene Yurtsev
-@date 2013-07-25
+"""" @author: Eugene Yurtsev @date 2013-07-25
 
 Defines gates that operate on DataFrames.
 
@@ -118,8 +116,7 @@ class Gate(_ComposableMixin):
 
         Parameters
         --------------
-        dataframe: DataFrame
-
+        dataframe : DataFrame
         region : None, optional
             If specified, the gate region is updated to the given region.
         """
@@ -164,7 +161,7 @@ class Gate(_ComposableMixin):
 
     @property
     def region(self):
-        """ Defines the region of the gate that is used for filtering. """
+        """ The region of the gate that passes events. """
         return self._region
 
     @region.setter
@@ -219,7 +216,6 @@ class ThresholdGate(Gate):
 
         kwargs.setdefault('color', 'black')
         return plot_func(self.vert, *args, **kwargs)
-
 
 class IntervalGate(Gate):
     @doc_replacer
@@ -278,7 +274,6 @@ class IntervalGate(Gate):
 
         return (a1, a2)
 
-
 class QuadGate(Gate):
     @doc_replacer
     def __init__(self, vert, channels, region, name=None):
@@ -304,16 +299,12 @@ class QuadGate(Gate):
 
         Parameters
         ----------
-        dataframe: DataFrame
-        region : 'top left' | 'top right' | 'bottom left' | 'bottom right'
-            The first channel passed to the gate constructor is assumed to be the x-axis.
-            The second channel is the y-axis.
-            Add optional 'out' to have the cells that are outside of the specified region.
-
+        dataframe : DataFrame
+        """
+        ##
         # TODO Fix this implementation. (i.e., why not support just 'left')
         # At the moment this implementation won't work at all.
-        The logic here can be simplified.
-        """
+        # The logic here can be simplified.
         id1 = dataframe[self.channels[0]] >= self.vert[0]
         id2 = dataframe[self.channels[1]] >= self.vert[1]
 
@@ -350,7 +341,6 @@ class QuadGate(Gate):
 
         return (a1, a2)
 
-
 class PolyGate(Gate):
     @doc_replacer
     def __init__(self, vert, channels, region='in', name=None):
@@ -377,11 +367,7 @@ class PolyGate(Gate):
 
         Parameters
         ----------
-        dataframe: DataFrame
-
-        region : 'in' | 'out'
-            Determines whether to return the points
-            inside ('in') or outside ('out') of the polygon
+        dataframe : DataFrame
         """
         idx = self.path.contains_points(dataframe.filter(self.channels))
 
