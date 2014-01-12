@@ -24,16 +24,12 @@ class FCMeasurement(Measurement):
 
     @property
     def channels(self):
-        """
-        Channel information organized as a DataFrame
-        """
+        """ A DataFrame containing complete channel information """
         if self.meta is not None:
             return self.meta['_channels_']
     @property
     def channel_names(self):
-        '''
-        A tuple containing the channel names
-        '''
+        """ A tuple containing the channel names. """
         if self.meta is not None:
             return self.meta['_channel_names_']
 
@@ -53,7 +49,7 @@ class FCMeasurement(Measurement):
         kwargs['reformat_meta'] = True
         meta = parse_fcs(self.datafile, **kwargs)
         return meta
-    
+
     def get_meta_fields(self, fields, kwargs={}):
         '''
         Return a dictionary of metadata fields
@@ -86,6 +82,9 @@ class FCMeasurement(Measurement):
         ----------
         {graph_plotFCM_pars}
         {FCMeasurement_plot_pars}
+        {common_plot_ax}
+        gates : [None, Gate, list of Gate]
+            Gate must be of type {_gate_available_classes}.
         kwargs : dict
             Additional keyword arguments to be passed to graph.plotFCM
 
@@ -109,23 +108,23 @@ class FCMeasurement(Measurement):
                 else:
                     pass
             return sample
-        
+
         def _gates(sample, gates):
             if gates is None:
                 return sample
             for gate in gates:
                 sample = sample.gate(gate)
             return sample
-        
+
         ax = kwargs.get('ax')
-        
+
         channel_names = to_list(channel_names)
         transformList = to_list(transform)
         gates         = to_list(gates)
-        
+
         if len(transformList) == 1:
              transformList *= len(channel_names)
-        
+
         sample_tmp = self.copy()
         if apply_gates:
             if transform_first:
@@ -136,16 +135,16 @@ class FCMeasurement(Measurement):
                 sample_tmp = _trans(sample_tmp, channel_names, transformList)
         else:
             sample_tmp = _trans(sample_tmp, channel_names, transformList)
-            
+
         data = sample_tmp.get_data()
         plot_output  = graph.plotFCM(data, channel_names, kind=kind, **kwargs)
-        
+
         if plot_gates and gates is not None:
             if gate_colors is None:
                 gate_colors = cycle(('b', 'g', 'r', 'm', 'c', 'y'))
             for (g,c) in zip(gates, gate_colors):
                 g.plot(ax=ax, ax_channels=channel_names, color=c)
-        
+
         return plot_output
 
     def view(self):
@@ -240,6 +239,7 @@ class FCMeasurement(Measurement):
         else:
             return new       
 
+    @doc_replacer
     def gate(self, gate):
         '''
         Apply given gate and return new gated sample (with assigned data).
@@ -248,7 +248,7 @@ class FCMeasurement(Measurement):
         Parameters
         ---------------
 
-        gate : Threshold Gate
+        gate : {_gate_available_classes}
         '''
         data = self.get_data()
         newdata = gate(data)
@@ -258,6 +258,7 @@ class FCMeasurement(Measurement):
 
     @property
     def counts(self):
+        """ Returns total number of events. """
         data = self.get_data()
         return data.shape[0]
 
@@ -349,38 +350,38 @@ class FCCollection(MeasurementCollection):
         Parameters
         ------------------
 
-        {gate_available_classes}
-
+        gate : {_gate_available_classes}
 
         ID : [ str, numeric, None]
             New ID to be given to the output. If None, the ID of the current collection will be used.
         '''
         new = self.copy()
-        for k,v in new.iteritems(): 
+        for k,v in new.iteritems():
             new[k] = v.gate(gate)
         if ID is not None:
             new.ID = ID
         return new
-    
+
     def counts(self, ids=None, setdata=False, output_format='DataFrame'):
-        '''
+        """
         Return the counts in each of the specified measurements.
-        
+
         Parameters
         ----------
-        ids : hashable| iterable of hashables | None
+        ids : [hashable | iterable of hashables | None]
             Keys of measurements to get counts of.
-            If None is given get counts of all measurements. 
+            If None is given get counts of all measurements.
         setdata : bool
             Whether to set the data in the Measurement object.
             Used only if data is not already set.
-        output_format: 'DataFrame' | 'dict
-                
+        output_format : DataFrame | dict
+            Specifies the output format for that data.
+
         Returns
         -------
         DataFrame/Dictionary keyed by measurement keys containing the corresponding counts.
-        ''' 
-        return self.apply(lambda x:x.counts, ids=ids, setdata=setdata, output_format=output_format)   
+        """
+        return self.apply(lambda x:x.counts, ids=ids, setdata=setdata, output_format=output_format)
 
 
 class FCOrderedCollection(OrderedCollection, FCCollection):
@@ -396,27 +397,20 @@ class FCOrderedCollection(OrderedCollection, FCCollection):
              autolabel=True,
              **kwargs):
         """
-        For details see documentation for FCMeasurement.plot
-        **kwargs passes arguments to both grid_plot and to FCMeasurement.plot.
+        Produces a grid plot with each subplot corresponding to the data at the given position.
 
         Parameters
         ---------------
-
         {FCMeasurement_plot_pars}
         {graph_plotFCM_pars}
 
-        Note
-        -------
-        The function assumes that grid_plot and FCMeasurement.plot use unique key words.
-        Any key word arguments that appear in both functions are passed only to grid_plot in the end.
+        Layout
+        ========================
+        {_graph_grid_layout}
 
         Returns
         -------
-        (ax_main, ax_subplots)
-            ax_main : reference to the main axes
-
-            ax_subplots : matrix of references to the subplots (e.g., ax_subplots[0, 3] references
-            the subplot in row 0 and column 3.)
+        {_graph_grid_layout_returns}
 
         Examples
         ------------
@@ -425,11 +419,23 @@ class FCOrderedCollection(OrderedCollection, FCCollection):
         >>> plate.plot(['SSC-A', 'FSC-A'], kind='histogram', transform='hlog', autolabel=True)
         >>> plate.plot(['SSC-A', 'FSC-A'], transform='hlog', xlim=(0, 10000))
         >>> plate.plot(['B1-A', 'Y2-A'], transform='hlog', kind='scatter', color='red', s=1, alpha=0.3)
+
+        .. note:
+
+            For more details see documentation for FCMeasurement.plot
+            **kwargs passes arguments to both grid_plot and to FCMeasurement.plot.
         """
-        ###
+        ##
+        # Note
+        # -------
+        # The function assumes that grid_plot and FCMeasurement.plot use unique key words.
+        # Any key word arguments that appear in both functions are passed only to grid_plot in the end.
+
+        ##
         # Automatically figure out which of the kwargs should
         # be sent to grid_plot instead of two sample.plot
         # (May not be a robust solution, we'll see as the code evolves
+
         grid_arg_list = inspect.getargspec(OrderedCollection.grid_plot).args
 
         grid_plot_kwargs = { 'ids' :  ids,
@@ -458,23 +464,21 @@ class FCOrderedCollection(OrderedCollection, FCCollection):
 
         if autolabel:
             cnames = to_list(channel_names)
-            xlabel=cnames[0]
-
+            xlabel = cnames[0]
             if len(cnames) == 2:
-                ylabel=cnames[1]
+                ylabel = cnames[1]
 
         return self.grid_plot(plot_sample, xlim=xlim, ylim=ylim,
                     xlabel=xlabel, ylabel=ylabel,
                     **grid_plot_kwargs)
-            
 
 FCPlate = FCOrderedCollection
 
 if __name__ == '__main__':
-    print FCMeasurement.plot.__doc__
+    #print FCMeasurement.plot.__doc__
     print FCOrderedCollection.plot.__doc__
-    print FCMeasurement.transform.__doc__
-    print FCOrderedCollection.transform.__doc__
+    #print FCMeasurement.transform.__doc__
+    #print FCOrderedCollection.transform.__doc__
 
     #import glob
     #datadir = '../tests/data/Plate01/'
@@ -502,13 +506,11 @@ if __name__ == '__main__':
     #print e-s, es-ss
     #print plate.wells 
     #print plate.well_IDS
-    
     #plate.apply(lambda x:x.ID, 'ID', applyto='sample', well_ids=['A1','B1'])
     #plate.apply(lambda x:x.datafile, 'file', applyto='sample')
     #plate.apply(lambda x:x.shape[0], 'counts', keepdata=True)
     #plate.get_well_metadata(['date', 'etim'])
     #print plate.extracted['file'].values
-    
 #     plate.wells['1']['A'].get_metadata()
 #     
 #     well_ids = ['A2' , 'B3']
@@ -516,5 +518,3 @@ if __name__ == '__main__':
 #     
 #     plate.clear_well_data()  
 #     plate.clear_well_data(well_ids)             
-            
-        
