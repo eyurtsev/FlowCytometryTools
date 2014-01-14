@@ -269,7 +269,7 @@ def transform_frame(frame, transform, columns=None, direction='forward',
         True -  return all columns, with specified ones transformed.
         False - return only specified columns.
     
-    ..warning: deprecated
+    .. warning:: deprecated
     '''
     tfun, tname = parse_transform(transform, direction)
     columns = to_list(columns)
