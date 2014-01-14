@@ -48,3 +48,20 @@ Gates
     IntervalGate
     QuadGate
     PolyGate 
+
+
+Transformations
+----------------------------
+
+.. autosummary::
+    :toctree: API
+
+    FlowCytometryTools.core.transforms.linear
+    FlowCytometryTools.core.transforms.hlog
+    FlowCytometryTools.core.transforms.tlog
+
+
+    
+
+
+
