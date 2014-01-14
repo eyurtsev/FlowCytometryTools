@@ -277,7 +277,8 @@ class FCCollection(MeasurementCollection):
         Apply transform to each Measurement in the Collection.
 
         Return a new Collection with transformed data.
-        .. warning : The new Collection will hold the data for **ALL** Measurements in memory!
+
+        {_containers_held_in_memory_warning}
 
         Parameters
         ----------
@@ -344,8 +345,7 @@ class FCCollection(MeasurementCollection):
         '''
         Applies the gate to each Measurement in the Collection, returning a new Collection with gated data.
 
-        .. warning::
-            that the new Collection will hold the data for ALL Measurements in memory!
+        {_containers_held_in_memory_warning}
 
         Parameters
         ------------------
