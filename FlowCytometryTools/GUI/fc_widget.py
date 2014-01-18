@@ -326,18 +326,23 @@ class BaseGate(EventGenerator):
 
         gencode.setdefault('name',      self.name)
         gencode.setdefault('region',    self.region)
-
-        ## TODO REFACTOR. TEMP FIX for quadgate.
-        gate_type_name = self.gate_type.__name__
-
-        if gate_type_name == 'ThresholdGate' and num_channels == 2:
-            gate_type_name = 'QuadGate'
-
-        gencode.setdefault('gate_type', gate_type_name)
+        gencode.setdefault('gate_type', self._gencode_gate_class)
         gencode.setdefault('verts',     verts)
         gencode.setdefault('channels',  channels)
         format_string = "{name} = {gate_type}({verts}, ({channels}), region='{region}', name='{name}')"
         return format_string.format(**gencode)
+
+    @property
+    def _gencode_gate_class(self):
+        """ Returns the class name that generates this gate. """
+        channels, verts = self.coordinates
+        num_channels = len(channels)
+        gate_type_name = self.gate_type.__name__
+        if gate_type_name == 'ThresholdGate' and num_channels == 2:
+            gate_type_name = 'QuadGate'
+        return gate_type_name
+
+
 
     def set_axis(self, ch, ax):
         self.remove_spawned_gates()
@@ -730,10 +735,14 @@ class FCToolBar(object):
         """
         Returns python code that generates all drawn gates.
         """
+        if len(self.gates) < 1:
+            return ''
+        import_list = set([gate._gencode_gate_class for gate in self.gates])
+        import_list = 'from FlowCytometryTools import ' + ', '.join(import_list)
         code_list = [gate.get_generation_code() for gate in self.gates]
         code_list.sort()
         code_list = '\n'.join(code_list)
-        return code_list
+        return import_list + '\n' + code_list
 
 def key_press_handler(event, canvas, toolbar=None):
     """
