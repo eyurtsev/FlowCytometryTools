@@ -18,17 +18,19 @@ import pylab as pl
 from GoreUtilities.util import get_files, save, load, to_list, get_tag_value
 from GoreUtilities import graph
 import os
+from common_doc import doc_replacer
 
+@doc_replacer
 def _assign_IDS_to_datafiles(datafiles, parser, measurement_class=None, **kwargs):
     """
     Assign measurement IDS to datafiles using specified parser.
-    
+
     Parameters
     ----------
     datafiles : iterable of str
         Path to datafiles. An ID will be assigned to each.
         Note that this function does not check for uniqueness of IDs!
-    parser : mapping | callable | 'name' | 'number' | 'read'
+    {_bases_filename_parser}
     measurement_class: object
         Used to create a temporary object when reading the ID from the datafile.
         The measurement class needs to have an `ID_from_data` method.
@@ -36,7 +38,7 @@ def _assign_IDS_to_datafiles(datafiles, parser, measurement_class=None, **kwargs
     kwargs: dict
         Additional parametes to be passed to parser is it is a callable, or 'read'.
         If parser is 'read', kwargs are passed to the measurement class's `ID_from_data` method.
-    
+
     Returns
     -------
     Dict of ID:datafile
@@ -92,18 +94,20 @@ class BaseObject(object):
     '''
 
     def __repr__(self): return repr(self.ID)
-    
+
     def save(self, path):
+        """ Saves objec to a pickled file. """
         save(self, path)
-    
+
     @classmethod
     def load(cls, path):
+        """ Loads object from a pickled file. """
         return load(path)
 
     @property
     def _constructor(self):
         return self.__class__
-    
+
     def copy(self, deep=True):
         """
         Make a copy of this object
@@ -269,25 +273,25 @@ class Measurement(BaseObject):
         pass
 
     def apply(self, func, applyto='measurement', noneval=nan, setdata=False):
-        '''
+        """
         Apply func either to self or to associated data.
         If data is not already parsed, try and read it.
-        
+
         Parameters
         ----------
-        func : callable 
-            Each func value is a callable that accepts a measurement 
-            object or an FCS object.
-        applyto : 'data' | 'measurement'
-            'data'    : apply to associated data
-            'measurement' : apply to measurement object itself. 
+        func : callable
+            The function either accepts a measurement object or an FCS object.
+            Does some calculation and returns the result.
+        applyto : ['data' | 'measurement']
+            * 'data' : apply to associated data
+            * 'measurement' : apply to measurement object itself.
         noneval : obj
-            Value returned if applyto is 'data' but no data is available.
+            Value to return if `applyto` is 'data', but no data is available.
         setdata : bool
             Used only if data is not already set.
             If true parsed data will be assigned to self.data
             Otherwise data will be discarded at end of apply.
-        '''
+        """
         applyto = applyto.lower()
         if applyto == 'data':
             if self.data is not None:
@@ -316,10 +320,10 @@ class MeasurementCollection(collections.MutableMapping, BaseObject):
     def __init__(self, ID, measurements):
         '''
         A dictionary-like container for holding multiple Measurements.
-        
+
         Note that the collection keys are not necessarily identical to the Measurements IDs.
         Additionally, like a dict, measurement keys must be unique.
-        
+
         Parameters
         ----------
         ID : hashable
@@ -333,31 +337,20 @@ class MeasurementCollection(collections.MutableMapping, BaseObject):
             self.update(measurements)
         else:
             for m in measurements:
-                self[m.ID] = m 
+                self[m.ID] = m
 
     @classmethod
+    @doc_replacer
     def from_files(cls, ID, datafiles, parser, **ID_kwargs):
         """
         Create a Collection of measurements from a set of data files.
-        
+
         Parameters
         ----------
-        ID : hashable
-            Collection ID
-        datafiles : str | iterable
-            A set of data files containing the measurements.
-        parser : 'name' \ 'number' | 'read' | mapping \ callable
-            Determines key under which each measurement will be stored in the collection.
-            'name' : Use the measurement name given in the file name.
-                     For example, 'blah_blah_blah_Well_C9.001.fcs' will get key 'C9'.
-            'number' : Use the number given in the file name.
-                       For example, 'blah_blah_blah.024.fcs' will get key 24.
-            'read' : Use the measurement ID sspecified in the metadata. 
-            mapping : mapping (dict-like) from datafiles to keys.
-            callable : takes datafile name and returns key.
-        ID_kwargs: dict
-            Additional parameters to be used when assigning IDs.
-            Passed to '_assign_IDS_to_datafiles' method. 
+        {_bases_ID}
+        {_bases_data_files}
+        {_bases_filename_parser}
+        {_bases_ID_kwargs}
         """
         d = _assign_IDS_to_datafiles(datafiles, parser, cls._measurement_class, **ID_kwargs)
         measurements = []
@@ -366,10 +359,11 @@ class MeasurementCollection(collections.MutableMapping, BaseObject):
         return cls(ID, measurements)
 
     @classmethod
+    @doc_replacer
     def from_dir(cls, ID, datadir, parser, pattern='*.fcs', recursive=False, **ID_kwargs):
         """
         Create a Collection of measurements from data files contained in a directory.
-        
+
         Parameters
         ----------
         ID : hashable
@@ -380,20 +374,8 @@ class MeasurementCollection(collections.MutableMapping, BaseObject):
             Only files matching the pattern will be used to create measurements.
         recursive : bool
             Recursively look for files matching pattern in subdirectories.
-        parser : 'name' \ 'number' | 'read' | mapping \ callable
-            Determines key under which each measurement will be stored in the collection.
-            'name' : Extracts a key from the filename.
-                     For example, '[whatever]_Well_C9_[blah].fcs' will get key 'C9'.
-                     The filename must look like the template above.
-            'number' : Uses the number given in the file name.
-                     For example, '[some name].001.fcs' will get key 001.
-                     The filename must look like the template above.
-            'read' : Use the measurement ID specified in the metadata.
-            mapping : mapping (dict-like) from datafiles to keys.
-            callable : takes datafile name and returns key.
-        ID_kwargs: dict
-            Additional parameters to be used when assigning IDs.
-            Passed to '_assign_IDS_to_datafiles' method. 
+        {_bases_filename_parser}
+        {_bases_ID_kwargs}
         """
         datafiles = get_files(datadir, pattern, recursive)
         return cls.from_files(ID, datafiles, parser, **ID_kwargs)
@@ -438,8 +420,8 @@ class MeasurementCollection(collections.MutableMapping, BaseObject):
             Keys of measurements to which func will be applied.
             If None is given apply to all measurements. 
         applyto :  'measurement' | 'data'
-            'measurement' : apply to measurements objects themselves.
-            'data'        : apply to measurement associated data
+            * 'measurement' : apply to measurements objects themselves.
+            * 'data'        : apply to measurement associated data
         noneval : obj
             Value returned if applyto is 'data' but no data is available.
         setdata : bool
@@ -613,36 +595,32 @@ class MeasurementCollection(collections.MutableMapping, BaseObject):
 
 class OrderedCollection(MeasurementCollection):
     """
-    Collection of Measurements that have an order, e.g. a 96-well Plate. 
-    
-    TODO: 
-        - add reshape?         
-    """ 
+    Collection of Measurements that have an order, e.g. a 96-well Plate.
+
+    TODO:
+        - add reshape?
+    """
+    @doc_replacer
     def __init__(self, ID, measurements, position_parser, shape=(8,12),
                  positions=None, row_labels=None, col_labels=None):
         """
         A dictionary-like container for holding multiple Measurements in a 2D array.
-        
+
         Note that the collection keys are not necessarily identical to the Measurements IDs.
         Additionally, like a dict, measurement keys must be unique.
-        
+
         Parameters
         ----------
         ID : hashable
             Collection ID
         measurements : mappable | iterable
             values are measurements of appropriate type (type is explicitly checked for).
-        position_parser :
-            Determines the positions under which Measurements will be located.
-            callable - gets key and returns position
-            mapping  - key:pos
-            'name'   - parses things like 'A1', 'G12'
-            'number' - converts number to positions, going over rows first.
+        {_bases_position_parser}
         shape : 2-tuple
             Shape of the 2D array of measurements (rows, cols).
         positions : dict | None
-                Mapping of measurement_key:(row,col)
-                If None is given set positions as specified by the position_parser arg. 
+            Mapping of measurement_key:(row,col)
+            If None is given set positions as specified by the position_parser arg. 
         row_labels : iterable of str
             If None is given, rows will be labeled 'A','B','C', ...
         col_labels : iterable of str
@@ -673,37 +651,18 @@ class OrderedCollection(MeasurementCollection):
         return 'ID:\n%s\n\nData:\n%s' %(self.ID, repr(print_layout))
 
     @classmethod
+    @doc_replacer
     def from_files(cls, ID, datafiles, parser='name', position_parser=None, ID_kwargs={}, **kwargs):
         """
         Create an OrderedCollection of measurements from a set of data files.
-        
+
         Parameters
         ----------
-        ID : hashable
-            Collection ID
-        datafiles : str | iterable
-            A set of data files containing the measurements.
-        parser : 'name' \ 'number' | 'read' | mapping \ callable
-            Determines key under which each measurement will be stored in the collection.
-            'name' : Extracts a key from the filename.
-                     For example, '[whatever]_Well_C9_[blah].fcs' will get key 'C9'.
-                     The filename must look like the template above.
-            'number' : Uses the number given in the file name.
-                     For example, '[some name].001.fcs' will get key 001.
-                     The filename must look like the template above.
-            'read' : Use the measurement ID specified in the metadata.
-            mapping : mapping (dict-like) from datafiles to keys.
-            callable : takes datafile name and returns key.
-        position_parser :
-            The position_parser uses the keys generated by the parser to place the measurements in the correct place on the plate.
-            None     - use the parser value, if it is a string.
-            callable - gets key and returns position
-            mapping  - key:pos
-            'name'   - parses things like 'A1', 'G12'
-            'number' - converts number to positions, going over rows first.
-        ID_kwargs: dict
-            Additional parameters to be used when assigning IDs.
-            Passed to '_assign_IDS_to_datafiles' method.
+        {_bases_ID}
+        {_bases_data_files}
+        {_bases_filename_parser}
+        {_bases_position_parser}
+        {_bases_ID_kwargs}
         kwargs : dict
             Additional key word arguments to be passed to constructor.
         """
@@ -720,6 +679,7 @@ class OrderedCollection(MeasurementCollection):
         return cls(ID, measurements, position_parser, **kwargs)
 
     @classmethod
+    @doc_replacer
     def from_dir(cls, ID, path, parser='name', position_parser=None, pattern='*.fcs', recursive=False, 
                  ID_kwargs={}, **kwargs):
         """
@@ -727,35 +687,16 @@ class OrderedCollection(MeasurementCollection):
         
         Parameters
         ----------
-        ID : hashable
-            Collection ID
+        {_bases_ID}
         datadir : str
             Path of directory containing the data files.
         pattern : str
             Only files matching the pattern will be used to create measurements.
         recursive : bool
             Recursively look for files matching pattern in subdirectories.
-        parser : 'name' \ 'number' | 'read' | mapping \ callable
-            Determines key under which each measurement will be stored in the collection.
-            'name' : Extracts a key from the filename.
-                     For example, '[whatever]_Well_C9_[blah].fcs' will get key 'C9'.
-                     The filename must look like the template above.
-            'number' : Uses the number given in the file name.
-                     For example, '[some name].001.fcs' will get key 001.
-                     The filename must look like the template above.
-            'read' : Use the measurement ID specified in the metadata.
-            mapping : mapping (dict-like) from datafiles to keys.
-            callable : takes datafile name and returns key.
-        position_parser :
-            The position_parser uses the keys generated by the parser to place the measurements in the correct place on the plate.
-            None     - use the parser value, if it is a string.
-            callable - gets key and returns position
-            mapping  - key:pos
-            'name'   - parses things like 'A1', 'G12'
-            'number' - converts number to positions, going over rows first.
-        ID_kwargs: dict
-            Additional parameters to be used when assigning IDs.
-            Passed to '_assign_IDS_to_datafiles' method. 
+        {_bases_filename_parser}
+        {_bases_position_parser}
+        {_bases_ID_kwargs}
         kwargs : dict
             Additional key word arguments to be passed to constructor.
         """
@@ -797,8 +738,18 @@ class OrderedCollection(MeasurementCollection):
         valid_c = col in self.col_labels
         return valid_r and valid_c
 
+    @doc_replacer
     def _get_ID2position_parser(self, parser):
         '''
+        Defines a position parser that is used
+        to map between sample IDs and positions.
+
+        Parameters
+        --------------
+        {_bases_position_parser}
+
+        TODO: Fix the name to work with more than 26 letters
+        of the alphabet.
         '''
         if hasattr(parser, '__call__'):
             pass
@@ -817,9 +768,9 @@ class OrderedCollection(MeasurementCollection):
 
     def set_positions(self, positions=None, parser='name', ids=None):
         '''
-        checks for position validity & collisions, 
+        checks for position validity & collisions,
         but not that all measurements are assigned.
-        
+
         pos is dict-like of measurement_key:(row,col)
         parser :
             callable - gets key and returns position
@@ -887,7 +838,7 @@ class OrderedCollection(MeasurementCollection):
         new.row_labels = list(tmp.index)
         new.col_labels = list(tmp.columns)
         return new
-        
+
     @property
     def layout(self):
         return self._dict2DF(self, nan)
@@ -896,19 +847,19 @@ class OrderedCollection(MeasurementCollection):
     def shape(self):
         return (len(self.row_labels), len(self.col_labels))
 
-    def apply(self, func, ids=None, applyto='measurement', 
-              output_format='DataFrame', noneval=nan, 
+    def apply(self, func, ids=None, applyto='measurement',
+              output_format='DataFrame', noneval=nan,
               setdata=False, dropna=False):
-        '''
+        """
         Apply func to each of the specified measurements.
-        
+
         Parameters
         ----------
-        func : callable 
-            Accepts a Measurement object or a DataFrame. 
+        func : callable
+            Accepts a Measurement object or a DataFrame.
         ids : hashable| iterable of hashables | None
             Keys of measurements to which func will be applied.
-            If None is given apply to all measurements. 
+            If None is given apply to all measurements.
         applyto :  'measurement' | 'data'
             'measurement' : apply to measurements objects themselves.
             'data'        : apply to measurement associated data
@@ -920,11 +871,11 @@ class OrderedCollection(MeasurementCollection):
             Used only if data is not already set.
         dropna : bool
             whether to remove rows/cols that contain no measurements.
-        
+
         Returns
         -------
         DataFrame/Dictionary containing the output of func for each Measurement. 
-        ''' 
+        """
         result = super(OrderedCollection, self).apply(func, ids, applyto, 
                                                        noneval, setdata)
         if output_format is 'dict':
@@ -936,60 +887,49 @@ class OrderedCollection(MeasurementCollection):
                    "Encounterd unsupported value %s." %repr(output_format))
             raise Exception(msg)
 
-    def grid_plot(self, func, applyto='measurement', ids=None, row_labels=None, col_labels=None,
+    @doc_replacer
+    def grid_plot(self, func, applyto='measurement', ids=None,
+                row_labels=None, col_labels=None,
                 xlim=None, ylim=None,
                 xlabel=None, ylabel=None,
                 colorbar=True,
                 row_label_xoffset=None, col_label_yoffset=None,
                 hide_tick_labels=True, hide_tick_lines=True,
-                hspace=0, wspace=0, row_labels_kwargs={}, col_labels_kwargs={}):
-        '''
+                hspace=0, wspace=0,
+                row_labels_kwargs={}, col_labels_kwargs={}):
+        """
         Creates subplots for each well in the plate. Uses func to plot on each axis.
         Follow with a call to matplotlibs show() in order to see the plot.
 
-        TODO: Finish documentation, document plot function also in utilities.graph
-        fix col_label, row_label offsets to use figure coordinates
-
-        @author: Eugene Yurtsev
-
         Parameters
         ----------
-        func : dict
-            Each func is a callable that accepts a measurement
+        func : callable
+            func is a callable that accepts a measurement
             object (with an optional axis reference) and plots on the current axis.
-            return values from func are ignored
-            NOTE: if using applyto='measurement', the function
+            Return values from func are ignored.
+            .. note: if using applyto='measurement', the function
             when querying for data should make sure that the data
             actually exists
         applyto : 'measurement' | 'data'
-        ids : None
-        col_labels : str
-            labels for the columns if None default labels are used
-        row_labels : str
-            labels for the rows if None default labels are used
-        xlim : 2-tuple
-            min and max x value for each subplot
-            if None, the limits are automatically determined for each subplot
+        {_graph_grid_layout}
+        {bases_OrderedCollection_grid_plot_pars}
 
         Returns
         -------
-        gHandleList: list
-            gHandleList[0] -> reference to main axis
-            gHandleList[1] -> a list of lists
-                example: gHandleList[1][0][2] returns the subplot in row 0 and column 2
+        {_graph_grid_layout_returns}
 
         Examples
         ---------
-        def y(well, ax):
-            data = well.get_data()
-            if data is None:
-                return None
-            graph.plotFCM(data, 'Y2-A')
-        def z(data, ax):
-            plot(data[0:100, 1], data[0:100, 2])
-        plate.plot(y, applyto='measurement');
-        plate.plot(z, applyto='data');
-        '''
+        >>> def y(well, ax):
+        >>>     data = well.get_data()
+        >>>     if data is None:
+        >>>         return None
+        >>>     graph.plotFCM(data, 'Y2-A')
+        >>> def z(data, ax):
+        >>>     plot(data[0:100, 1], data[0:100, 2])
+        >>> plate.plot(y, applyto='measurement');
+        >>> plate.plot(z, applyto='data');
+        """
         # Acquire call arguments to be passed to create plate layout
         callArgs = locals().copy() # This statement must remain first. The copy is just defensive.
         [callArgs.pop(varname) for varname in  ['self', 'func', 'applyto', 'ids', 'colorbar']] # pop args
@@ -1005,8 +945,8 @@ class OrderedCollection(MeasurementCollection):
         if row_labels == None: callArgs['row_labels'] = self.row_labels
         if col_labels == None: callArgs['col_labels'] = self.col_labels
 
-        gHandleList = graph.create_grid_layout(**callArgs)
-        subplots_ax = DF(gHandleList[1], index=self.row_labels, columns=self.col_labels)
+        ax_main, ax_subplots = graph.create_grid_layout(**callArgs)
+        subplots_ax = DF(ax_subplots, index=self.row_labels, columns=self.col_labels)
 
         if ids is None:
             ids = self.keys()
@@ -1042,7 +982,7 @@ class OrderedCollection(MeasurementCollection):
             axis = 'y'
         else:
             axis = 'none'
-        graph.autoscale_subplots(gHandleList[1], axis)
+        graph.autoscale_subplots(ax_subplots, axis)
 
         ###
         # Test code for adding colorbars
@@ -1067,22 +1007,26 @@ class OrderedCollection(MeasurementCollection):
 
         #####
         # Placing ticks on the top left subplot
-        ax_label = gHandleList[1][0, -1]
+        ax_label = ax_subplots[0, -1]
         pl.sca(ax_label)
 
         if xlabel:
             xlim = ax_label.get_xlim()
-
             pl.xticks([xlim[0], xlim[1]], rotation=90)
 
         if ylabel:
             ylim = ax_label.get_ylim()
-
             pl.yticks([ylim[0], ylim[1]], rotation=0)
 
-        pl.sca(gHandleList[0]) # sets to the main axis -- more intuitive
+        pl.sca(ax_main) # sets to the main axis -- more intuitive
 
-        return gHandleList
+        return ax_main, ax_subplots
 
 if __name__ == '__main__':
+    print OrderedCollection.grid_plot.__doc__
+    #print OrderedCollection.__doc__
+    #print OrderedCollection.__init__.__doc__
+    #print OrderedCollection.from_files.__doc__
+    #print OrderedCollection.from_dir.__doc__
+    #print MeasurementCollection.from_files.__doc__
     pass

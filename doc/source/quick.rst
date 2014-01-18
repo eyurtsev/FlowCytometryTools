@@ -7,45 +7,47 @@
     :suppress:
 
     import numpy as np
-    from numpy import shape, log, where, nan
-    from pylab import figure, cm, title, ylim, xlim, xlabel, ylabel, subplot
-
     np.set_printoptions(precision=4, suppress=True)
-
-    import os, FlowCytometryTools # This import is only needed to locate the FlowCytometryTools directory
-    datadir = os.path.join(FlowCytometryTools.__path__[0], 'tests', 'data', 'Plate01')
-    print 'Loading files from directory path: {0}'.format(datadir)
-
-    datafile = os.path.join(datadir, 'RFP_Well_A3.fcs')
-    print 'Loading file from path: {0}'.format(datafile)
 
 Loading a single FCS file
 --------------------------
 
 To get cracking, we need some flow cytometry data (i.e., .fcs files).  
-We'll use the sample fcs files provided with this package.  
-To analyze your own data, simply set the ``datafile`` variable to the path of your .fcs file.
-(e.g., ``datafile=r'C:\data\my_very_awesome_data.fcs'``)
 
+A few sample flow cytometry data files have been bundled with this python package.
+
+To locate these FCS files, enter the following:
 
 .. ipython:: python
 
+    import os, FlowCytometryTools;
+    datadir = os.path.join(FlowCytometryTools.__path__[0], 'tests', 'data', 'Plate01');
+    datafile = os.path.join(datadir, 'RFP_Well_A3.fcs');
+
+Alternatively, to analyze your own data, simply set the ``datafile`` variable to the path of your .fcs file.
+(e.g., ``datafile=r'C:\data\my_very_awesome_data.fcs'``).
+
+If ``datadir`` and ``datafile`` have been defined, we can proceed to load the data:
+
+.. ipython:: python
+
+    from pylab import * # Loads functions used for plotting
+
+    # Loading the FCS data
 	from FlowCytometryTools import FCMeasurement
     sample = FCMeasurement(ID='Test Plate', datafile=datafile)
 
-.. note::
-    **Windows Users**
+**Windows Users**
 
-    Windows uses a backslash (``\``) for indicating paths.  The backslash character is a special character in python.  
-    In order to specify paths correctly, you must precede the path with the character ``r``.
+Windows uses the backslash character (``\``) for paths. However, the backslash character is a special character in python
+that is used for formatting strings. In order to specify paths correctly, you must precede the path with the character ``r``.
 
-    Good: ``datafile=r'C:\data\my_very_awesome_data.fcs'``
+    * Good: ``datafile=r'C:\data\my_very_awesome_data.fcs'``
+    * Bad: ``datafile='C:\data\my_very_awesome_data.fcs'``
 
-    Bad: ``datafile='C:\data\my_very_awesome_data.fcs'``
+**MacOS/Linux Users**
 
-    **Everyone else**
-
-    Your system uses the forward slash (``/``), which is a regular character, so there won't be any problems.
+Your system uses the forward slash (``/``), which is a regular character, so there won't be any problems.
 
 
 Channel Names
@@ -64,7 +66,7 @@ Want to know which channels were measured? No problem.
 Meta data
 ++++++++++++++++++++++++++++
 
-There's loads of useful information in FCS files. If you're curious 
+There's loads of useful information inside FCS files. If you're curious 
 take a look at ``sample.meta``. 
 
 .. ipython:: python
@@ -77,17 +79,30 @@ The meaning of the fields in ``sample.meta`` is explained in the FCS format spec
 Transformations
 --------------------------
 
-If you'd like to see your data (and be able to make sense of it), you'll *likely* need to transform it. 
+The presence of both very dim and very bright cell populations in flow
+cytometry data can make it difficult to simultaneously visualize both
+populations on the same plot. To address this problem, flow cytometry
+analysis programs typically apply a transformation to the
+data to make it easy to visualize and interpret properly.
 
-Let's apply an 'hlog' transformation to the ``Y2-A``, ``B1-A`` and ``V2-A`` channels, 
-and save the transformed sample in ``tsample``.
+Rather than having this transformation applied automatically and without your
+knowledge, this package provides a few of the common transformations (e.g.,
+hlog, tlog), but ultimately leaves it up to you to decide how to manipulate
+your data.
+
+As an example, let's apply the 'hlog' transformation to the ``Y2-A``, ``B1-A`` and
+``V2-A`` channels, and save the transformed sample in ``tsample``.
 
 .. ipython:: python
 
-    tsample = sample.transform('hlog', ('Y2-A', 'B1-A', 'V2-A'))
+    tsample = sample.transform('hlog', channels=['Y2-A', 'B1-A', 'V2-A'])
+
+Note that throughout the rest of the tutorial we'll always be working with hlog-transformed data.
 
 .. note::
-    You can read more about transformations here:
+    For more details see the API documentation section.
+
+    Also, you can read more about transformations here:
         * Bagwell. Cytometry Part A, 2005.
         * Parks, Roederer, and Moore. Cytometry Part A, 2006.
         * Trotter, Joseph. In Current Protocols in Cytometry. John Wiley & Sons, Inc., 2001.
@@ -304,11 +319,11 @@ For the analysis below, we'll be using the 'name' parser since our files match t
 .. ipython:: python
 
 	from FlowCytometryTools import FCPlate
-    plate = FCPlate.from_dir(ID='Demo Plate', path=datadir, parser='name').transform('hlog', channels=('Y2-A', 'B1-A'))
+    plate = FCPlate.from_dir(ID='Demo Plate', path=datadir, parser='name').transform('hlog', channels=['Y2-A', 'B1-A'])
 
     # The line above is equivalent to the two steps below:
     # plate = FCPlate.from_dir(ID='Demo Plate', path=datadir, parser='name')
-    # plate = plate.transform('hlog', channels=('Y2-A', 'B1-A'))                                                                 
+    # plate = plate.transform('hlog', channels=['Y2-A', 'B1-A'])                                                                 
 
 
 Let's see what data got loaded...

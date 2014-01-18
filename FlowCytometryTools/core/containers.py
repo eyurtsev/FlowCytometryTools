@@ -13,26 +13,23 @@ import graph
 import inspect
 import numpy as np
 from FlowCytometryTools.core.transforms import Transformation
+from common_doc import doc_replacer
+
 
 class FCMeasurement(Measurement):
-    '''
+    """
     A class for holding flow cytometry data from
     a single well or a single tube.
-    '''
+    """
 
     @property
     def channels(self):
-        '''
-        Channel information organized as a DataFrame
-        '''
+        """ A DataFrame containing complete channel information """
         if self.meta is not None:
             return self.meta['_channels_']
-        
     @property
     def channel_names(self):
-        '''
-        A tuple containing the channel names
-        '''
+        """ A tuple containing the channel names. """
         if self.meta is not None:
             return self.meta['_channel_names_']
 
@@ -52,7 +49,7 @@ class FCMeasurement(Measurement):
         kwargs['reformat_meta'] = True
         meta = parse_fcs(self.datafile, **kwargs)
         return meta
-    
+
     def get_meta_fields(self, fields, kwargs={}):
         '''
         Return a dictionary of metadata fields
@@ -72,35 +69,35 @@ class FCMeasurement(Measurement):
         except:
             raise Exception("The keyword '{}' does not exist in the following FCS file: {}".format(ID_field, self.datafile))
 
-    def plot(self, channel_names, transform=(None, None), kind='histogram', 
+    @doc_replacer
+    def plot(self, channel_names, transform=(None, None), kind='histogram',
              gates=None, transform_first=True, apply_gates=True, plot_gates=True,
              gate_colors=None, **kwargs):
-        '''
+        """
         Plots the flow cytometry data associated with the sample on the current axis.
-        Follow with a call to matplotlibs show() in order to see the plot.
+
+        To produce the plot, follow up with a call to matplotlib's show() function.
 
         Parameters
         ----------
-        channel_names : str| iterable of str | None
-            name (names) channels to plot.
-            given a single channel plots a histogram
-            given two channels produces a 2d plot
-        transform : valid transform | tuple of valid transforms | None
-            Transform to be applied to corresponding channels using the FCMeasurement.transform function.
-            If a single transform is given, it will be applied to all plotted channels.
-        kind : 'scatter', 'histogram'
-        gates: Gate| iterable of Gate | None
-            Gates to be applied before plotting
-        transform_first : bool
-            Apply transforms before gating.
+        {graph_plotFCM_pars}
+        {FCMeasurement_plot_pars}
+        {common_plot_ax}
+        gates : [None, Gate, list of Gate]
+            Gate must be of type {_gate_available_classes}.
         kwargs : dict
             Additional keyword arguments to be passed to graph.plotFCM
 
         Returns
         -------
-        None: if no data is loaded
-        gHandle: reference to axis
-        '''
+        None : if no data is present
+        plot_output : output of plot command used to draw (e.g., output of hist)
+
+        Examples
+        ----------
+        >>> sample.plot('Y2-A', bins=100, alpha=0.7, color='green', normed=1) # 1d histogram
+        >>> sample.plot(['B1-A', 'Y2-A'], cmap=cm.Oranges, colorbar=False) # 2d histogram
+        """
 #         data = self.get_data() # The index is to keep only the data part (removing the meta data)
         # Transform sample
 
@@ -111,23 +108,23 @@ class FCMeasurement(Measurement):
                 else:
                     pass
             return sample
-        
+
         def _gates(sample, gates):
             if gates is None:
                 return sample
             for gate in gates:
                 sample = sample.gate(gate)
             return sample
-        
+
         ax = kwargs.get('ax')
-        
+
         channel_names = to_list(channel_names)
         transformList = to_list(transform)
         gates         = to_list(gates)
-        
+
         if len(transformList) == 1:
              transformList *= len(channel_names)
-        
+
         sample_tmp = self.copy()
         if apply_gates:
             if transform_first:
@@ -138,17 +135,17 @@ class FCMeasurement(Measurement):
                 sample_tmp = _trans(sample_tmp, channel_names, transformList)
         else:
             sample_tmp = _trans(sample_tmp, channel_names, transformList)
-            
+
         data = sample_tmp.get_data()
-        out  = graph.plotFCM(data, channel_names, kind=kind, **kwargs)
-        
+        plot_output  = graph.plotFCM(data, channel_names, kind=kind, **kwargs)
+
         if plot_gates and gates is not None:
             if gate_colors is None:
                 gate_colors = cycle(('b', 'g', 'r', 'm', 'c', 'y'))
             for (g,c) in zip(gates, gate_colors):
                 g.plot(ax=ax, ax_channels=channel_names, color=c)
-        
-        return out
+
+        return plot_output
 
     def view(self):
         '''
@@ -175,46 +172,23 @@ class FCMeasurement(Measurement):
         from FlowCytometryTools.GUI import gui
         return gui.FCGUI(measurement=self)
 
-    def transform(self, transform, direction='forward',  
+    @doc_replacer
+    def transform(self, transform, direction='forward',
                   channels=None, return_all=True, auto_range=True,
-                  use_spln=True, get_transformer=False, ID = None, 
+                  use_spln=True, get_transformer=False, ID = None,
                   args=(), **kwargs):
-        '''
-        Apply transform to specified channels. 
+        """
+        Applies a transformation to the specified channels.
+
         The transformation parameters are shared between all transformed channels.
         If different parameters need to be applied to different channels, use several calls to `transform`.
-        
+
         Parameters
-        ----------
-        transform : callable | str
-            Callable that does a transformation (should accept a number or array),
-            or one of the supported named transformations.
-            Supported transformation are: {}. 
-        direction : 'forward' | 'inverse'
-            Direction of transformation.
-        channels : str | list of str | None
-            Names of channels to transform.
-            If None is given, all channels will be transformed.
-            .. warning:: Time channels will also be transformed if all channels are transformed.
-        return_all : bool
-            True -  return all columns, with specified ones transformed.
-            False - return only specified columns.
-        auto_range : bool 
-            If True data range (machine range) is automatically extracted from $PnR field of metadata.
-            .. warning:: If the data has been previously transformed its range may not match the $PnR value.
-                In these cases auto_range should be set to False.
-        use_spln : bool
-            If True th transform is done using a spline. 
-            See Transformation.transform for more details.
-        get_transformer : bool
-            If True the transformer is returned in addition to the new Measurement. 
+        ------------
+        {FCMeasurement_transform_pars}
         ID : hashable | None
             ID for the resulting collection. If None is passed, the original ID is used.
-        args : 
-            Additional positional arguments to be passed to the Transformation.
-        kwargs :
-            Additional keyword arguments to be passed to the Transformation.
-            
+
         Returns
         -------
         new : FCMeasurement
@@ -222,15 +196,11 @@ class FCMeasurement(Measurement):
         transformer : Transformation
             The Transformation applied to the input measurement.
             Only returned if get_transformer=True.
-        
+
         Examples
         --------
-        >>> trans = original.transform('hlog')
-        >>> trans = original.transform('tlog', th=2)
-        >>> trans = original.transform('hlog', d=log10(2**18), auto_range=False)
-        >>> trans = original.transform('hlog', r=1000, use_spln=True, get_transformer=True)
-        >>> trans = original.transform('hlog', channels=['FSC-A', 'SSC-A'], b=500).transform('hlog', channels='B1-A', b=100)
-        '''
+        {FCMeasurement_transform_examples}
+        """
         data = self.get_data()
 
         channels = to_list(channels)
@@ -269,71 +239,53 @@ class FCMeasurement(Measurement):
         else:
             return new       
 
+    @doc_replacer
     def gate(self, gate):
         '''
         Apply given gate and return new gated sample (with assigned data).
         Note that no transformation is done by this funciton.
+
+        Parameters
+        ---------------
+
+        gate : {_gate_available_classes}
         '''
         data = self.get_data()
         newdata = gate(data)
         newsample = self.copy()
         newsample.set_data(data=newdata)
         return newsample
-    
+
     @property
     def counts(self):
+        """ Returns total number of events. """
         data = self.get_data()
-        return data.shape[0]       
+        return data.shape[0]
 
 class FCCollection(MeasurementCollection):
     '''
     A dict-like class for holding flow cytometry samples.
     '''
     _measurement_class = FCMeasurement
-    
-    def transform(self, transform, direction='forward', share_transform=True, 
+
+    @doc_replacer
+    def transform(self, transform, direction='forward', share_transform=True,
                   channels=None, return_all=True, auto_range=True,
-                  use_spln=True, get_transformer=False, ID = None, 
+                  use_spln=True, get_transformer=False, ID = None,
                   args=(), **kwargs):
         '''
-        Apply transform to each Measurement in the Collection. 
+        Apply transform to each Measurement in the Collection.
+
         Return a new Collection with transformed data.
-        .. warning : The new Collection will hold the data for **ALL** Measurements in memory!
-        
+
+        {_containers_held_in_memory_warning}
+
         Parameters
         ----------
-        transform : callable | str
-            Callable that does a transformation (should accept a number or array),
-            or one of the supported named transformations.
-            Supported transformation are: {}. 
-        share_transform : bool
-            True - same transformer will be used for all measurements in the collection.
-            False - a new transformer will be created for each measurement, allowing for varying data ranges. 
-        direction : 'forward' | 'inverse'
-            Direction of transformation.
-        channels : str | list of str | None
-            Names of channels to transform.
-            If None is given, all channels will be transformed.
-            .. warning:: Time channels will also be transformed if all channels are transformed.
-        return_all : bool
-            True -  return all columns, with specified ones transformed.
-            False - return only specified columns.
-        auto_range : bool 
-            If True data range (machine range) is automatically extracted from $PnR field of metadata.
-            .. warning:: If the data has been previously transformed its range may not match the $PnR value.
-                In these cases auto_range should be set to False.
-        use_spln : bool
-            If True th transform is done using a spline. 
-            See Transformation.transform for more details.
-        get_transformer : bool
-            If True the transformer is returned in addition to the new Measurement.
+        {FCMeasurement_transform_pars}
         ID : hashable | None
             ID for the resulting collection. If None is passed, the original ID is used.
-        args : 
-            Additional positional arguments to be passed to the Transformation.
-        kwargs :
-            Additional keyword arguments to be passed to the Transformation.
-            
+
         Returns
         -------
         new : FCCollection
@@ -341,14 +293,10 @@ class FCCollection(MeasurementCollection):
         transformer : Transformation
             The Transformation applied to the measurements.
             Only returned if get_transformer=True & share_transform=True.
-        
+
         Examples
         --------
-        >>> trans = original.transform('hlog')share_transform
-        >>> trans = original.transform('tlog', th=2)
-        >>> trans = original.transform('hlog', d=log10(2**18), auto_range=False)
-        >>> trans = original.transform('hlog', r=1000, use_spln=True, get_transformer=True)
-        >>> trans = original.transform('hlog', channels=['FSC-A', 'SSC-A'], b=500).transform('hlog', channels='B1-A', b=100)
+        {FCMeasurement_transform_examples}
         '''
         new = self.copy()
         if share_transform:
@@ -392,46 +340,56 @@ class FCCollection(MeasurementCollection):
         else:
             return new
 
+    @doc_replacer
     def gate(self, gate, ID=None):
         '''
-        Apply gate to each Measurement in the Collection. 
-        Return a new Collection with gated data.
-        Note that the new Collection will hold the data for ALL Measurements in memory!
-        
-        see FCMeasurement.gate for more details.
+        Applies the gate to each Measurement in the Collection, returning a new Collection with gated data.
+
+        {_containers_held_in_memory_warning}
+
+        Parameters
+        ------------------
+
+        gate : {_gate_available_classes}
+
+        ID : [ str, numeric, None]
+            New ID to be given to the output. If None, the ID of the current collection will be used.
         '''
         new = self.copy()
-        for k,v in new.iteritems(): 
+        for k,v in new.iteritems():
             new[k] = v.gate(gate)
         if ID is not None:
             new.ID = ID
         return new
-    
+
     def counts(self, ids=None, setdata=False, output_format='DataFrame'):
-        '''
+        """
         Return the counts in each of the specified measurements.
-        
+
         Parameters
         ----------
-        ids : hashable| iterable of hashables | None
+        ids : [hashable | iterable of hashables | None]
             Keys of measurements to get counts of.
-            If None is given get counts of all measurements. 
+            If None is given get counts of all measurements.
         setdata : bool
             Whether to set the data in the Measurement object.
             Used only if data is not already set.
-        output_format: 'DataFrame' | 'dict
-                
+        output_format : DataFrame | dict
+            Specifies the output format for that data.
+
         Returns
         -------
         DataFrame/Dictionary keyed by measurement keys containing the corresponding counts.
-        ''' 
-        return self.apply(lambda x:x.counts, ids=ids, setdata=setdata, output_format=output_format)   
+        """
+        return self.apply(lambda x:x.counts, ids=ids, setdata=setdata, output_format=output_format)
 
 
 class FCOrderedCollection(OrderedCollection, FCCollection):
     '''
     A dict-like class for holding flow cytometry samples that are arranged in a matrix.
     '''
+
+    @doc_replacer
     def plot(self, channel_names,  kind='histogram', transform=(None, None),
              gates=None, transform_first=True, apply_gates=True, plot_gates=True, gate_colors=None,
              ids=None, row_labels=None, col_labels=None,
@@ -439,35 +397,45 @@ class FCOrderedCollection(OrderedCollection, FCCollection):
              autolabel=True,
              **kwargs):
         """
-        For details see documentation for FCMeasurement.plot
-        **kwargs passes arguments to both grid_plot and to FCMeasurement.plot.
+        Produces a grid plot with each subplot corresponding to the data at the given position.
 
-        Note
-        -------
-        The function assumes that grid_plot and FCMeasurement.plot use unique key words.
-        Any key word arguments that appear in both functions are passed only to grid_plot in the end.
+        Parameters
+        ---------------
+        {FCMeasurement_plot_pars}
+        {graph_plotFCM_pars}
+
+        Layout
+        ========================
+        {_graph_grid_layout}
 
         Returns
         -------
-        gHandleList: list
-            gHandleList[0] -> reference to main axis
-            gHandleList[1] -> a list of lists
-                example: gHandleList[1][0][2] returns the subplot in row 0 and column 2
+        {_graph_grid_layout_returns}
 
         Examples
         ------------
         Below, plate is an instance of the FCOrderedCollection
 
-        plate.plot(['SSC-A', 'FSC-A'], kind='histogram', transform='hlog', autolabel=True)
+        >>> plate.plot(['SSC-A', 'FSC-A'], kind='histogram', transform='hlog', autolabel=True)
+        >>> plate.plot(['SSC-A', 'FSC-A'], transform='hlog', xlim=(0, 10000))
+        >>> plate.plot(['B1-A', 'Y2-A'], transform='hlog', kind='scatter', color='red', s=1, alpha=0.3)
 
-        plate.plot(['SSC-A', 'FSC-A'], transform='hlog', xlim=(0, 10000))
+        .. note:
 
-        plate.plot(['B1-A', 'Y2-A'], transform='hlog', kind='scatter', color='red', s=1, alpha=0.3)
+            For more details see documentation for FCMeasurement.plot
+            **kwargs passes arguments to both grid_plot and to FCMeasurement.plot.
         """
-        ###
+        ##
+        # Note
+        # -------
+        # The function assumes that grid_plot and FCMeasurement.plot use unique key words.
+        # Any key word arguments that appear in both functions are passed only to grid_plot in the end.
+
+        ##
         # Automatically figure out which of the kwargs should
         # be sent to grid_plot instead of two sample.plot
         # (May not be a robust solution, we'll see as the code evolves
+
         grid_arg_list = inspect.getargspec(OrderedCollection.grid_plot).args
 
         grid_plot_kwargs = { 'ids' :  ids,
@@ -496,52 +464,53 @@ class FCOrderedCollection(OrderedCollection, FCCollection):
 
         if autolabel:
             cnames = to_list(channel_names)
-            xlabel=cnames[0]
-
+            xlabel = cnames[0]
             if len(cnames) == 2:
-                ylabel=cnames[1]
+                ylabel = cnames[1]
 
         return self.grid_plot(plot_sample, xlim=xlim, ylim=ylim,
                     xlabel=xlabel, ylabel=ylabel,
                     **grid_plot_kwargs)
-            
 
 FCPlate = FCOrderedCollection
 
 if __name__ == '__main__':
-    import glob
-    datadir = '../tests/data/Plate01/'
-    fname = glob.glob(datadir + '*.fcs')[0]
-    sample = FCMeasurement(1, datafile=fname)
-    #print sample.channels
-    #print sample.channel_names
-#     hs = sample.transform('hlog', use_spln=True)
-#     hs.plot(('FSC-A','SSC-A'))
-#     import pylab
-#     pylab.show()
+    #print FCMeasurement.plot.__doc__
+    print FCOrderedCollection.plot.__doc__
+    #print FCMeasurement.transform.__doc__
+    #print FCOrderedCollection.transform.__doc__
 
-    plate = FCPlate.from_dir('p', datadir).dropna()
-    print plate.counts()
-    print plate
-
-    import time
-    s = time.clock()
-    hplate = plate.transform('hlog', channels=['FSC-A', 'SSC-A'], use_spln=False)
-    e = time.clock()
-    
-    ss = time.clock()
-    hplate = plate.transform('hlog', channels=['FSC-A', 'SSC-A'])
-    es = time.clock()
-    print e-s, es-ss
+    #import glob
+    #datadir = '../tests/data/Plate01/'
+    #fname = glob.glob(datadir + '*.fcs')[0]
+    #sample = FCMeasurement(1, datafile=fname)
+    ##print sample.channels
+    ##print sample.channel_names
+##     hs = sample.transform('hlog', use_spln=True)
+##     hs.plot(('FSC-A','SSC-A'))
+##     import pylab
+##     pylab.show()
+#
+    #plate = FCPlate.from_dir('p', datadir).dropna()
+    #print plate.counts()
+    #print plate
+#
+    #import time
+    #s = time.clock()
+    #hplate = plate.transform('hlog', channels=['FSC-A', 'SSC-A'], use_spln=False)
+    #e = time.clock()
+    #
+    #ss = time.clock()
+    #hplate = plate.transform('hlog', channels=['FSC-A', 'SSC-A'])
+    #es = time.clock()
+    #print e-s, es-ss
     #print plate.wells 
     #print plate.well_IDS
-    
     #plate.apply(lambda x:x.ID, 'ID', applyto='sample', well_ids=['A1','B1'])
     #plate.apply(lambda x:x.datafile, 'file', applyto='sample')
     #plate.apply(lambda x:x.shape[0], 'counts', keepdata=True)
     #plate.get_well_metadata(['date', 'etim'])
     #print plate.extracted['file'].values
-    
 #     plate.wells['1']['A'].get_metadata()
 #     
 #     well_ids = ['A2' , 'B3']
@@ -549,5 +518,3 @@ if __name__ == '__main__':
 #     
 #     plate.clear_well_data()  
 #     plate.clear_well_data(well_ids)             
-            
-        

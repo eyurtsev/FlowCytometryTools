@@ -95,7 +95,7 @@ Installing using git
         git clone https://bitbucket.org/gorelab/goreutilities.git GoreUtilities
         git clone https://bitbucket.org/gorelab/flowcytometrytools.git FlowCytometryTools
         cd FlowCytometryTools
-        git checkout v0.2.0
+        git checkout [version number]
 
 
 Updating using git

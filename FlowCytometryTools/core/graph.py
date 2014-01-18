@@ -6,10 +6,11 @@ from GoreUtilities.util import to_list
 import numpy
 import pylab as pl
 import matplotlib
+from common_doc import doc_replacer
 
 def plot_histogram2d(x, y, bins=200, ax=None, colorbar=True, **kwargs):
-    '''
-    Plots a 2D histogram given x, y and number of bins
+    """
+    Plots a 2D histogram given x, y and number of bins.
 
     Parameters
     ----------
@@ -21,18 +22,19 @@ def plot_histogram2d(x, y, bins=200, ax=None, colorbar=True, **kwargs):
         number of bins to break the data into
     ax : reference to axis
         axis to plot on
-    kwargs : kwargs
+    kwargs : key word arguments
         passed to pcolormesh
 
     Plotting Defaults
     -----------------
-        kwargs.setdefault('cmap', pl.cm.copper)
-        kwargs.setdefault('norm', matplotlib.colors.LogNorm())
+
+    kwargs.setdefault('cmap', pl.cm.copper)
+    kwargs.setdefault('norm', matplotlib.colors.LogNorm())
 
     Returns
     -------
-    Reference to plot
-    '''
+    output of pcolormesh
+    """
     if ax == None:
         ax = pl.gca()
 
@@ -53,49 +55,34 @@ def plot_histogram2d(x, y, bins=200, ax=None, colorbar=True, **kwargs):
         pl.colorbar(p)
     return p
 
+
+@doc_replacer
 def plotFCM(data, channel_names, kind='histogram', ax=None,
                 autolabel=True, xlabel_kwargs={}, ylabel_kwargs={},
                 colorbar=False,
                 **kwargs):
-    '''
+    """
     Plots the sample on the current axis.
+
     Follow with a call to matplotlibs show() in order to see the plot.
 
     Parameters
     ----------
     data : DataFrame
-    channel_names : str| iterable of str
-        name (names) channels to plot.
-        given a single channel plots a histogram
-        given two channels produces a 2d plot
-
-    transform : tuple
-        each element is set to None or 'logicle'
-        if 'logicle' then channel data is transformed with logicle transformation
-
-    kind : 'scatter' | 'histogram'
-        Specifies the kind of plot to use for plotting the data (only applies to 2D plots).
-
-    autolabel : False | True
-        If True the x and y axes are labeled automatically.
-
-    colorbar : False | True
-        Adds a colorbar if working 2d histogram
-
-    ax : reference | None
-        specifies which axis to plot on
+    {graph_plotFCM_pars}
+    {common_plot_ax}
 
     Returns
     -------
-    pHandle: reference to plot
-    '''
+    The output of the plot command used
+    """
     if ax == None: ax = pl.gca()
 
     xlabel_kwargs.setdefault('size', 16)
     ylabel_kwargs.setdefault('size', 16)
 
     channel_names = to_list(channel_names)
-    
+
     if len(channel_names) == 1:
         # 1d so histogram plot
         kwargs.setdefault('color', 'gray')
@@ -103,7 +90,7 @@ def plotFCM(data, channel_names, kind='histogram', ax=None,
 
         x = data[channel_names[0]]
         if len(x):
-            pHandle = ax.hist(x, **kwargs)
+            plot_output = ax.hist(x, **kwargs)
         else:
             return None
 
@@ -113,9 +100,9 @@ def plotFCM(data, channel_names, kind='histogram', ax=None,
 
         if kind == 'scatter':
             kwargs.setdefault('edgecolor', 'none')
-            pHandle = ax.scatter(x, y, **kwargs)
+            plot_output = ax.scatter(x, y, **kwargs)
         elif kind == 'histogram':
-            pHandle = plot_histogram2d(x, y, ax=ax, colorbar=colorbar, **kwargs)
+            plot_output = plot_histogram2d(x, y, ax=ax, colorbar=colorbar, **kwargs)
         else:
             raise Exception("Not a valid plot type. Must be 'scatter', 'histogram'")
 
@@ -124,4 +111,9 @@ def plotFCM(data, channel_names, kind='histogram', ax=None,
         ax.set_xlabel(channel_names[0], **xlabel_kwargs)
         ax.set_ylabel(y_label_text, **ylabel_kwargs)
 
-    return pHandle
+    return plot_output
+
+if __name__ == '__main__':
+    #print docstring.interpd.params.keys()
+    #print plot_histogram2d.__doc__
+    print plotFCM.__doc__
