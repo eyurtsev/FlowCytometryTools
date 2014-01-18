@@ -14,12 +14,11 @@ It is based on the powerful `pandas <http://pandas.pydata.org/>`__ package which
 Key Features
 ===================
 
-- Works with individual measurements, measurement collections, or plates of any shape.
+- Analyze individual measurements, measurement collections or plates.
 - Transformation: hyperlog, truncated log
 - Gating: Threshold, Interval, Quad, Poly
 - Plotting: 1d, 2d histograms for both single samples and plates.
 - Supports multiple FCS formats (2.0, 3.0, 3.1)
-  + The package reads the data exactly as is stored in the FCS file; i.e., the user chooses how to treat their data (transform, compensate etc.)
 
 Resources
 ===================
