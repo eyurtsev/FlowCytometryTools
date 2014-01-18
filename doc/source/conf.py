@@ -52,7 +52,7 @@ extensions = ['sphinx.ext.autodoc',
               'numpydoc',
               'ipython_directive',
               'ipython_console_highlighting',
-              'sphinx.ext.intersphinx',
+              #'sphinx.ext.intersphinx',
               'sphinx.ext.todo',
               'sphinx.ext.coverage',
               'sphinx.ext.pngmath',
@@ -169,7 +169,7 @@ html_theme_options = {
     'navbar_sidebarrel': False,
 
     # Render the current pages TOC in the navbar. (Default: true)
-    'navbar_pagenav': False,
+    'navbar_pagenav': True,
 
     # Global TOC depth for "site" navbar tab. (Default: 1)
     # Switching to -1 shows all levels.
