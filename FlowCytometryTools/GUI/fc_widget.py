@@ -321,11 +321,19 @@ class BaseGate(EventGenerator):
         Generates python code that can create the gate.
         """
         channels, verts = self.coordinates
+        num_channels = len(channels)
         channels = ', '.join(["'{}'".format(ch) for ch in channels])
 
         gencode.setdefault('name',      self.name)
         gencode.setdefault('region',    self.region)
-        gencode.setdefault('gate_type', self.gate_type.__name__)
+
+        ## TODO REFACTOR. TEMP FIX for quadgate.
+        gate_type_name = self.gate_type.__name__
+
+        if gate_type_name == 'ThresholdGate' and num_channels == 2:
+            gate_type_name = 'QuadGate'
+
+        gencode.setdefault('gate_type', gate_type_name)
         gencode.setdefault('verts',     verts)
         gencode.setdefault('channels',  channels)
         format_string = "{name} = {gate_type}({verts}, ({channels}), region='{region}', name='{name}')"
