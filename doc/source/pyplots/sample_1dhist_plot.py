@@ -7,7 +7,7 @@ datadir = os.path.join(FlowCytometryTools.__path__[0], 'tests', 'data', 'Plate01
 datafile = os.path.join(datadir, 'RFP_Well_A3.fcs')
 
 # Load data
-tsample = FCMeasurement(ID='Test Plate', datafile=datafile).transform('hlog', ('Y2-A', 'B1-A', 'V2-A'))
+tsample = FCMeasurement(ID='Test Plate', datafile=datafile).transform('hlog', channels=['Y2-A', 'B1-A', 'V2-A'])
 
 # Create gates
 y2_gate = ThresholdGate(1000.0, 'Y2-A', region='above')
