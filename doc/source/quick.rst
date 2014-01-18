@@ -79,24 +79,30 @@ The meaning of the fields in ``sample.meta`` is explained in the FCS format spec
 Transformations
 --------------------------
 
-The presence of both very dim and very bright cell populations in flow cytometry data can make
-it difficult to simultaneously visualize both populations on the same plot. 
+The presence of both very dim and very bright cell populations in flow
+cytometry data can make it difficult to simultaneously visualize both
+populations on the same plot. To address this problem, flow cytometry
+analysis programs typically apply a transformation to the
+data to make it easy to visualize and interpret properly.
 
-To solve this problem, one often applies a transformation to the data that makes it possible
-to visualize both cell populations on the same scale.
+Rather than having this transformation applied automatically and without your
+knowledge, this package provides a few of the common transformations (e.g.,
+hlog, tlog), but ultimately leaves it up to you to decide how to manipulate
+your data.
 
-
-If you'd like to see your data (and be able to make sense of it), you'll *likely* need to transform it. 
-
-Let's apply an 'hlog' transformation to the ``Y2-A``, ``B1-A`` and ``V2-A`` channels, 
-and save the transformed sample in ``tsample``.
+As an example, let's apply the 'hlog' transformation to the ``Y2-A``, ``B1-A`` and
+``V2-A`` channels, and save the transformed sample in ``tsample``.
 
 .. ipython:: python
 
     tsample = sample.transform('hlog', channels=['Y2-A', 'B1-A', 'V2-A'])
 
+Note that throughout the rest of the tutorial we'll always be working with hlog-transformed data.
+
 .. note::
-    You can read more about transformations here:
+    For more details see the API documentation section.
+
+    Also, you can read more about transformations here:
         * Bagwell. Cytometry Part A, 2005.
         * Parks, Roederer, and Moore. Cytometry Part A, 2006.
         * Trotter, Joseph. In Current Protocols in Cytometry. John Wiley & Sons, Inc., 2001.
