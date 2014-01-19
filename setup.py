@@ -1,5 +1,5 @@
-#from distutils.core import setup
 from setuptools import setup, find_packages
+# from distutils.core import setup
 ## get version info
 import re
 VERSIONFILE="FlowCytometryTools/_version.py"
@@ -29,7 +29,7 @@ setup(
     install_requires=[
           "setuptools",
           "pandas >= 0.8.0",
-          "GoreUtilities == {}".format(gore_utilities_version),
+          "GoreUtilities == {0}".format(gore_utilities_version),
       ],
     classifiers = [
         'Intended Audience :: Science/Research',
@@ -38,9 +38,9 @@ setup(
         'Topic :: Scientific/Engineering :: Medical Science Apps.',
     ],
 
-    include_package_data = True,
+    #include_package_data = False,
     long_description=open('README.rst').read(),
-    package_data = {
-        '': ['*.fcs'],
-    },
+    #package_data = {
+        #'': ['*.fcs'],
+    #},
 )
