@@ -11,6 +11,21 @@ import itertools
 ## TODO
 # 1. Make it impossible to pick multiple vertexes at once. (right now if vertex are too close they will be selected.)
 
+def apply_format(var, format_str):
+    """ Formats all non-iterables inside of the iterable var using the format_str
+    Example:
+    >>> print apply_format([2, [1, 4], 4, 1], '{:.1f}') # Returns ['2.0', ['1.0', '4.0'], '4.0', '1.0']
+    """
+    if isinstance(var, (list, tuple)):
+        new_var = map(lambda x : apply_format(x, format_str), var)
+        if isinstance(var, tuple):
+            new_var = '(' + ', '.join(new_var) + ')'
+        elif isinstance(var, list):
+            new_var = '[' + ', '.join(new_var) + ']'
+        return '{}'.format(new_var)
+    else:
+        return format_str.format(var)
+
 class MOUSE:
     LEFT_CLICK = 1
     RIGHT_CLICK = 3
@@ -323,6 +338,18 @@ class BaseGate(EventGenerator):
         channels, verts = self.coordinates
         num_channels = len(channels)
         channels = ', '.join(["'{}'".format(ch) for ch in channels])
+
+        ## Formatting the vertexes
+        # List level (must be first), used for gates that may have multiple vertexes like a polygon
+        if len(verts) == 1:
+            verts = verts[0]
+
+            # Tuple level (must be second), used for catching the number of dimensions on which a vertex is defined
+            if len(verts) == 1:
+                verts = verts[0]
+
+        # Format vertices to include less sigfigs
+        verts = apply_format(verts, '{:.3e}')
 
         gencode.setdefault('name',      self.name)
         gencode.setdefault('region',    self.region)
@@ -742,7 +769,7 @@ class FCToolBar(object):
         code_list = [gate.get_generation_code() for gate in self.gates]
         code_list.sort()
         code_list = '\n'.join(code_list)
-        return import_list + '\n' + code_list
+        return import_list + 2*'\n' + code_list
 
 def key_press_handler(event, canvas, toolbar=None):
     """
