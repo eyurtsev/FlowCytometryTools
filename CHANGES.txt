@@ -1,1 +1,7 @@
+v0.3.5, 2013-01-19
+
++ Boost in speed for transformations on collections of measurements (like 96-well plates).
++ Much of the documentation has been updated and improved.
++ Improved GUI.
+
 v0.3.0, 2013-10-27 Initial Release
