@@ -18,7 +18,7 @@ parser : ['name' | 'number' | 'read' | mapping | callable]
     * 'number' : Use the number given in the file name.
        For example, '[some name].001.fcs' will get key 001.
        The filename must look **exactly** like the template above.
-    * 'read' : Use the measurement ID sspecified in the metadata.
+    * 'read' : Use the measurement ID specified in the metadata.
     * mapping : mapping (dict-like) from datafiles to keys.
     * callable : takes datafile name and returns key.""",
 
@@ -146,7 +146,7 @@ _containers_held_in_memory_warning="""\
 .. warning::
     The new Collection will hold the data for **ALL** Measurements in memory!
     When analyzing multiple collections (e.g., multiple 96-well plates), it may be necessary
-    to only work one collection at a time. Please refer to the tutorials to see how 
+    to only work one collection at a time. Please refer to the tutorials to see how
     this can be done."""
 )
 
