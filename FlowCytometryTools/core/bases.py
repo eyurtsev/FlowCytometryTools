@@ -36,7 +36,7 @@ def _assign_IDS_to_datafiles(datafiles, parser, measurement_class=None, **kwargs
         The measurement class needs to have an `ID_from_data` method.
         Only used when parser='read'.
     kwargs: dict
-        Additional parametes to be passed to parser is it is a callable, or 'read'.
+        Additional parameters to be passed to parser is it is a callable, or 'read'.
         If parser is 'read', kwargs are passed to the measurement class's `ID_from_data` method.
 
     Returns
@@ -57,7 +57,7 @@ def _assign_IDS_to_datafiles(datafiles, parser, measurement_class=None, **kwargs
     elif parser == 'read':
         fparse = lambda x: measurement_class(ID='temporary', datafile=x).ID_from_data(**kwargs)
     else:
-        raise ValueError,  'Encountered unsupported value "%s" for parser paramter.' %parser 
+        raise ValueError,  'Encountered unsupported value "%s" for parser parameter.' %parser 
     d = dict( (fparse(dfile), dfile) for dfile in datafiles )
     return d
 
@@ -306,7 +306,7 @@ class Measurement(BaseObject):
         elif applyto == 'measurement':
             return func(self)
         else:
-            raise ValueError, 'Encountered unsupported value "%s" for applyto paramter.' %applyto       
+            raise ValueError, 'Encountered unsupported value "%s" for applyto parameter.' %applyto       
 
 Well = Measurement
 
@@ -670,8 +670,8 @@ class OrderedCollection(MeasurementCollection):
             if isinstance(parser, basestring):
                 position_parser = parser
             else:
-                msg = 'position_parser can only be None when parser argument is a string'
-                raise ValueError, msg
+                msg = "When using a custom parser, you must specify the position_parser keyword."
+                raise ValueError(msg)
         d = _assign_IDS_to_datafiles(datafiles, parser, cls._measurement_class, **ID_kwargs)
         measurements = []
         for sID, dfile in d.iteritems():
@@ -763,7 +763,8 @@ class OrderedCollection(MeasurementCollection):
                 return (self.row_labels[i], self.col_labels[j])
             parser = num_parser
         else:
-            raise ValueError,  'Encountered unsupported value "%s" for parser paramter.' %parser 
+            msg = '"{}" is not a supported value for the parser parameter.'.format(parser)
+            raise ValueError(msg)
         return parser
 
     def set_positions(self, positions=None, parser='name', ids=None):
@@ -794,7 +795,7 @@ class OrderedCollection(MeasurementCollection):
         # check that resulting assignment is unique (one measurement per position)
         temp = self._positions.copy()
         temp.update(positions)
-        if not len(temp.values())==len(set(temp.values())):
+        if not len(temp.values()) == len(set(temp.values())):
             msg = 'A position can only be occupied by a single measurement'
             raise Exception, msg
 
@@ -883,7 +884,7 @@ class OrderedCollection(MeasurementCollection):
         elif output_format is 'DataFrame':
             return self._dict2DF(result, noneval, dropna)
         else:
-            msg = ("The output_format must be either 'dict' or 'DataFrame'. " +
+            msg = ("output_format must be either 'dict' or 'DataFrame'. " +
                    "Encounterd unsupported value %s." %repr(output_format))
             raise Exception(msg)
 
@@ -971,7 +972,7 @@ class OrderedCollection(MeasurementCollection):
                     else:
                         func(data, ax)
             else:
-                raise ValueError, 'Encountered unsupported value {} for applyto paramter.'.format(applyto)
+                raise ValueError, 'Encountered unsupported value {} for applyto parameter.'.format(applyto)
         ###
         # Autoscaling behavior
         if not xlim and not ylim:
