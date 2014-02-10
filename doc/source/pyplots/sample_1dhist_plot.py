@@ -17,14 +17,14 @@ gated_sample = tsample.gate(y2_gate)
 
 # Plot
 ax1 = subplot(121);
-tsample.plot('Y2-A', bins=100);
+tsample.plot('Y2-A', bins=100, alpha=0.9);
 y2_gate.plot(color='k', linewidth=4, linestyle='-')
 title('All Events');
 
 ax2 = subplot(122, sharey=ax1, sharex=ax1);
-gated_sample.plot('Y2-A', bins=100, color='y');
+gated_sample.plot('Y2-A', bins=100, color='y', alpha=0.9);
 title('Fluorescent Events');
 
 tight_layout()
 
-#show()
+# show()
