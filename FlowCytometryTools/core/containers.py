@@ -7,7 +7,7 @@ TODO:
 '''
 from FlowCytometryTools import parse_fcs
 from bases import Measurement, MeasurementCollection, OrderedCollection
-from GoreUtilities.util import to_list
+from GoreUtilities.util import to_list as to_iter
 from itertools import cycle
 import graph
 import inspect
@@ -15,6 +15,13 @@ import numpy as np
 from FlowCytometryTools.core.transforms import Transformation
 from common_doc import doc_replacer
 
+def to_list(obj):
+    """ This is a quick fix to make sure indexing of DataFrames
+    takes place with lists instead of tuples. """
+    obj = to_iter(obj)
+    if isinstance(obj, tuple):
+        obj = list(obj)
+    return obj
 
 class FCMeasurement(Measurement):
     """
