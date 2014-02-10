@@ -295,12 +295,21 @@ Loading Data
 
 What we'd like to do is to construct a flow cytometry plate object by loading all the '\*.fcs' files in a directory.
 
-To do that, FCPlate needs to know where on the plate each file belongs; i.e., we need to tell it that the file 'My_awesome_data_Well_C9.fcs' belongs in Well C9.
+To do that, FCPlate needs to know where on the plate each file belongs; i.e.,
+we need to tell it that the file 'My_awesome_data_Well_C9.fcs' corresponds to well 'C9', which corresponds to the third row and the ninth column on the plate.
+
+The process by which the filename is mapped to a position on the plate is the following:
+
+1. The filename is fed into a **parser** which extracts a key from it. 
+   For example, given 'My_awesome_data_Well_C9.fcs', the parser returns 'C9'
+2. The key is fed into a **position mapper** which returns a matrix position.
+   For example, given 'C9' the position_mapper should return (2, 8). 
+   The reason it's (2, 8) rather than (3, 9) is because counting starts from 0 rather than 1. (So 'A' corresponds to 0.)
 
 Here's a summary table that'll help you decide what to do (depending on your file name format):
 
 +-------------------------------------+-----------------+------------------------------------------------------------------------------------+
-| File Name Format                    | parser          | Notes                                                                              |
+| File Name Format                    | parser          | Comments                                                                           |
 +=====================================+=================+====================================================================================+
 | '[whatever]_Well_C9_[blah].fcs'     | 'name'          |                                                                                    |
 +-------------------------------------+-----------------+------------------------------------------------------------------------------------+
