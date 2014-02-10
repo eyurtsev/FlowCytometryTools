@@ -15,9 +15,13 @@ Who is this for?
 FlowCytometryTools is for researchers who want to use the python programming language to analyze flow cytometry data.
 
 The package provides an interface that can directly work with collections of flow cytometry measurements (e.g., 96-well plates).
-As a result, users can significantly reduce the amount of effort required to perform data analysis.
 
 Basic familiarity with the python programming languages is recommended.
+
+You can find a few example scripts that load and plot flow cytometry data in the `gallery <http://gorelab.bitbucket.org/flowcytometrytools/gallery.html>`_ page.
+
+If you like what you see, then proceed to the `installation <http://gorelab.bitbucket.org/flowcytometrytools/gallery.html>`_ page and then
+to the `tutorial <http://gorelab.bitbucket.org/flowcytometrytools/tutorial.html>`_.
 
 Features
 ===================
@@ -27,6 +31,8 @@ Features
 - **Gating**: threshold, interval, quad, polygon gates
 - **GUI**: simple graphical user interface to draw gates
 - **FCS Formats**: Supports FCS 2.0, 3.0, and 3.1
+
+Note: Compensation matrices are not yet read from FCS files, so currently compensation needs to be done manually.
 
 Resources
 ===================
