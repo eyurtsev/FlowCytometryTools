@@ -1,21 +1,33 @@
 FlowCytometryTools
 -------------------
 
-The :mod:`FlowCytometryTools` package is a `Python <http://www.python.org>`__ package designed to perform quantitaive analysis of flow cytometry data. 
-
-It is based on the powerful `pandas <http://pandas.pydata.org/>`__ package which is tailored and optimized for interactive analysis of large data tables.
-
 **Authors**: Jonathan Friedman and Eugene Yurtsev
 
-Key Features
+FlowCytometryTools is a python package for visualization and analysis of high-throughput flow cytometry data.
+
+* **Intuitive**: provides a simple programmatic interface to work with flow cytometry data.
+* **Interactive**: makes use of the powerful `pandas <http://pandas.pydata.org/>`_ package to simplify analysis of large datasets.
+* **Flexible**: can be used for analyzing individual measurements, measurement collections or plates.
+
+Who is this for?
+=====================
+
+FlowCytometryTools is for researchers who want to use the python programming language to analyze flow cytometry data.
+
+The package provides an interface that can directly work with collections of flow cytometry measurements (e.g., 96-well plates).
+As a result, users can significantly reduce the amount of effort required to perform data analysis.
+
+Basic familiarity with the python programming languages is recommended.
+
+Features
 ===================
 
-- Works with individual measurements, measurement collections, or plates of any shape.
-- Transformation: hyperlog, truncated log
-- Gating: Threshold, Interval, Quad, Poly
-- Plotting: 1d, 2d histograms for both single samples and plates.
-- Supports multiple FCS formats (2.0, 3.0, 3.1)
-  
+- **Transformations**: hyperlog (hlog), truncated log (tlog)
+- **Plotting**: 1D, 2D histograms for both single samples and collections (e.g., 96-well plates).
+- **Gating**: threshold, interval, quad, polygon gates
+- **GUI**: simple graphical user interface to draw gates
+- **FCS Formats**: Supports FCS 2.0, 3.0, and 3.1
+
 Resources
 ===================
 
@@ -23,13 +35,12 @@ Resources
 - **Source Repository:** https://bitbucket.org/gorelab/flowcytometrytools
 - **Comments or questions:** https://bitbucket.org/gorelab/flowcytometrytools/issues
 
-
 LICENSE
 ===================
 
 The MIT License (MIT)
 
-Copyright (c) 2013 Eugene Yurtsev and Jonathan Friedman
+Copyright (c) 2013-2014 Eugene Yurtsev and Jonathan Friedman
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -48,4 +59,3 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
-
