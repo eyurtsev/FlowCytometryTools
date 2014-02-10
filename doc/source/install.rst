@@ -3,23 +3,22 @@
 Installing dependencies
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The FlowCytometryTools is a python package. As such, it requires
-a python interpreter to work. If you don't have python installed, then `get it here <http://www.python.org/getit/>`_. 
-The package works with either python 2.6 or 2.7, but **not** with python 3.0 or higher.
-
-This package makes use of a few scientific and data analysis libraries for python. The dependencies are listed below, followed
-by instructions on how to install them on the various operation systems.
+The FlowCytometryTools is a python package. As such, it requires a python
+interpreter to work. In addition, this package makes use of a few scientific
+and data analysis libraries for python. All the dependencies are listed below,
+followed by a section containing instructions on how to install all the
+dependencies on the different operating systems.
 
 **Required Dependencies**
 
+#. `python <http://www.python.org/getit/>`_ : 2.6 or 2.7 (note that python 3.0 or higher are not yet supported!)
 #. `pandas <http://pandas.sourceforge.net/index.html>`__ (Recommended version: 0.12.0 or higher).
 #. `matplotlib <http://matplotlib.org/>`__: (Recommended version: 1.13.1 or higher).
-#. `scipy <http://www.scipy.org/>`__: Required for hyperlog transformations.
+#. `scipy <http://www.scipy.org/>`__ 
 
 **Optional Dependencies**
 
 #. `wx-python <http://wiki.wxpython.org/How%20to%20install%20wxPython>`__ : Used for the FlowCytometryTools GUI.
-
 
 
 Windows / MacOS users
