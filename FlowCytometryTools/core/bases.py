@@ -19,6 +19,7 @@ from GoreUtilities.util import get_files, save, load, to_list, get_tag_value
 from GoreUtilities import graph
 import os
 from common_doc import doc_replacer
+import warnings
 
 @doc_replacer
 def _assign_IDS_to_datafiles(datafiles, parser, measurement_class=None, **kwargs):
@@ -601,7 +602,7 @@ class OrderedCollection(MeasurementCollection):
         - add reshape?
     """
     @doc_replacer
-    def __init__(self, ID, measurements, position_parser, shape=(8,12),
+    def __init__(self, ID, measurements, position_mapper, shape=(8,12),
                  positions=None, row_labels=None, col_labels=None):
         """
         A dictionary-like container for holding multiple Measurements in a 2D array.
@@ -615,12 +616,12 @@ class OrderedCollection(MeasurementCollection):
             Collection ID
         measurements : mappable | iterable
             values are measurements of appropriate type (type is explicitly checked for).
-        {_bases_position_parser}
+        {_bases_position_mapper}
         shape : 2-tuple
             Shape of the 2D array of measurements (rows, cols).
         positions : dict | None
             Mapping of measurement_key:(row,col)
-            If None is given set positions as specified by the position_parser arg. 
+            If None is given set positions as specified by the position_mapper arg. 
         row_labels : iterable of str
             If None is given, rows will be labeled 'A','B','C', ...
         col_labels : iterable of str
@@ -637,7 +638,7 @@ class OrderedCollection(MeasurementCollection):
         self.col_labels = col_labels
         ##set positions
         self._positions = {}
-        self.set_positions(positions, parser=position_parser)
+        self.set_positions(positions, parser=position_mapper)
         ## check that all positions have been set
         for k in self.iterkeys():
             if k not in self._positions:
@@ -652,7 +653,7 @@ class OrderedCollection(MeasurementCollection):
 
     @classmethod
     @doc_replacer
-    def from_files(cls, ID, datafiles, parser='name', position_parser=None, ID_kwargs={}, **kwargs):
+    def from_files(cls, ID, datafiles, parser='name', position_mapper=None, ID_kwargs={}, **kwargs):
         """
         Create an OrderedCollection of measurements from a set of data files.
 
@@ -661,30 +662,30 @@ class OrderedCollection(MeasurementCollection):
         {_bases_ID}
         {_bases_data_files}
         {_bases_filename_parser}
-        {_bases_position_parser}
+        {_bases_position_mapper}
         {_bases_ID_kwargs}
         kwargs : dict
             Additional key word arguments to be passed to constructor.
         """
-        if position_parser is None:
+        if position_mapper is None:
             if isinstance(parser, basestring):
-                position_parser = parser
+                position_mapper = parser
             else:
-                msg = "When using a custom parser, you must specify the position_parser keyword."
+                msg = "When using a custom parser, you must specify the position_mapper keyword."
                 raise ValueError(msg)
         d = _assign_IDS_to_datafiles(datafiles, parser, cls._measurement_class, **ID_kwargs)
         measurements = []
         for sID, dfile in d.iteritems():
             measurements.append(cls._measurement_class(sID, datafile=dfile))
-        return cls(ID, measurements, position_parser, **kwargs)
+        return cls(ID, measurements, position_mapper, **kwargs)
 
     @classmethod
     @doc_replacer
-    def from_dir(cls, ID, path, parser='name', position_parser=None, pattern='*.fcs', recursive=False, 
+    def from_dir(cls, ID, path, file_to_key_parser='name', parser='name', position_mapper=None, pattern='*.fcs', recursive=False, 
                  ID_kwargs={}, **kwargs):
         """
         Create a Collection of measurements from data files contained in a directory.
-        
+
         Parameters
         ----------
         {_bases_ID}
@@ -695,13 +696,13 @@ class OrderedCollection(MeasurementCollection):
         recursive : bool
             Recursively look for files matching pattern in subdirectories.
         {_bases_filename_parser}
-        {_bases_position_parser}
+        {_bases_position_mapper}
         {_bases_ID_kwargs}
         kwargs : dict
             Additional key word arguments to be passed to constructor.
         """
         datafiles = get_files(path, pattern, recursive)
-        return cls.from_files(ID, datafiles, parser=parser, position_parser=position_parser,
+        return cls.from_files(ID, datafiles, parser=parser, position_mapper=position_mapper,
                               ID_kwargs=ID_kwargs, **kwargs)
 
 #     def set_labels(self, labels, axis='rows'):
@@ -739,14 +740,14 @@ class OrderedCollection(MeasurementCollection):
         return valid_r and valid_c
 
     @doc_replacer
-    def _get_ID2position_parser(self, parser):
+    def _get_ID2position_mapper(self, parser):
         '''
         Defines a position parser that is used
         to map between sample IDs and positions.
 
         Parameters
         --------------
-        {_bases_position_parser}
+        {_bases_position_mapper}
 
         TODO: Fix the name to work with more than 26 letters
         of the alphabet.
@@ -788,7 +789,7 @@ class OrderedCollection(MeasurementCollection):
                 ids = self.keys()
             else:
                 ids = to_list(ids)
-            parser = self._get_ID2position_parser(parser)
+            parser = self._get_ID2position_mapper(parser)
             positions = dict( (ID, parser(ID)) for ID in ids )
         else:
             pass
