@@ -19,7 +19,6 @@ from GoreUtilities.util import get_files, save, load, to_list, get_tag_value
 from GoreUtilities import graph
 import os
 from common_doc import doc_replacer
-import warnings
 
 @doc_replacer
 def _assign_IDS_to_datafiles(datafiles, parser, measurement_class=None, **kwargs):
