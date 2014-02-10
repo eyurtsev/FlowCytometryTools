@@ -1,4 +1,4 @@
-.. _quick:
+.. _tutorial:
 
 .. currentmodule:: FlowCytometryTools
 
