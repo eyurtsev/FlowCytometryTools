@@ -37,12 +37,13 @@ You have at least two options:
 
    Open a terminal window and enter the following:: 
 
-        sudo apt-get build-dep python-matplotlib 
+        sudo apt-get build-dep python-matplotlib  # Dependencies of matplotlib
         sudo apt-get install python-pip python-dev
-        sudo apt-get install python-wxgtk2.8
+        sudo apt-get install python-wxgtk2.8 # Optional dependency for FlowCytometryTools GUI
         sudo pip install --upgrade pip
-        sudo pip install setuptools
-        sudo apt-get install gfortran libopenblas-dev liblapack-dev
+        sudo pip install setuptools 
+        sudo apt-get install gfortran libopenblas-dev liblapack-dev # Dependencies for scipy
+        sudo pip install pyzmq jinja2 tornado # Dependencies for ipython notebook
         sudo pip install numpy scipy matplotlib ipython ipython-notebook pandas sympy 
 
    This should install both optional and required the dependencies.  Please shoot us an email if we forgot to include something. (Or if you have specific instructions for a different flavor of unix.)
