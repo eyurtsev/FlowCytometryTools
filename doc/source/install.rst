@@ -42,6 +42,7 @@ You have at least two options:
         sudo apt-get install python-wxgtk2.8
         sudo pip install --upgrade pip
         sudo pip install setuptools
+        sudo apt-get install gfortran libopenblas-dev liblapack-dev
         sudo pip install numpy scipy matplotlib ipython ipython-notebook pandas sympy 
 
    This should install both optional and required the dependencies.  Please shoot us an email if we forgot to include something. (Or if you have specific instructions for a different flavor of unix.)
