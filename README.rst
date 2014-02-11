@@ -20,7 +20,7 @@ Basic familiarity with the python programming languages is recommended.
 
 You can find a few example scripts that load and plot flow cytometry data in the `gallery <http://gorelab.bitbucket.org/flowcytometrytools/gallery.html>`_ page.
 
-If you like what you see, then proceed to the `installation <http://gorelab.bitbucket.org/flowcytometrytools/gallery.html>`_ page and then
+If you like what you see, then proceed to the `installation <http://gorelab.bitbucket.org/flowcytometrytools/install.html>`_ page and then
 to the `tutorial <http://gorelab.bitbucket.org/flowcytometrytools/tutorial.html>`_.
 
 Features
@@ -40,6 +40,26 @@ Resources
 - **Documentation:** http://gorelab.bitbucket.org/flowcytometrytools/
 - **Source Repository:** https://bitbucket.org/gorelab/flowcytometrytools
 - **Comments or questions:** https://bitbucket.org/gorelab/flowcytometrytools/issues
+
+Dependencies
+===================
+
+For more information about how to obtain these, please see the `installation
+<http://gorelab.bitbucket.org/flowcytometrytools/install.html>`_ page.
+
+FlowCytometryTools may work with older versions of some of these dependencies, but if
+you run into issues, please update the dependencies.
+
+**Required Dependencies**
+
+#. `python <http://www.python.org/getit/>`_ : 2.6 or 2.7 (note that python 3.0 or higher are not yet supported!)
+#. `pandas <http://pandas.sourceforge.net/index.html>`__ (Recommended version: 0.12.0 or higher).
+#. `matplotlib <http://matplotlib.org/>`__: (Recommended version: 1.13.1 or higher).
+#. `scipy <http://www.scipy.org/>`__ 
+
+**Optional Dependencies**
+
+#. `wx-python <http://wiki.wxpython.org/How%20to%20install%20wxPython>`__ : Used for the FlowCytometryTools GUI.
 
 LICENSE
 ===================
