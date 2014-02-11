@@ -1,6 +1,6 @@
 .. _install:
 
-Installing dependencies
+Installing Dependencies
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The FlowCytometryTools is a python package. As such, it requires a python
@@ -19,7 +19,6 @@ dependencies on the different operating systems.
 **Optional Dependencies**
 
 #. `wx-python <http://wiki.wxpython.org/How%20to%20install%20wxPython>`__ : Used for the FlowCytometryTools GUI.
-
 
 Windows / MacOS users
 =================================
