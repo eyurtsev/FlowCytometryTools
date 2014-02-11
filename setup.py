@@ -28,7 +28,6 @@ setup(
 
     install_requires=[
           "setuptools",
-          "pandas >= 0.8.0",
           "GoreUtilities == {0}".format(gore_utilities_version),
       ],
     classifiers = [
