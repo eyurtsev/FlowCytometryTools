@@ -12,13 +12,14 @@ factory methods for construction from files.
 - consider always reading in data in measurements, perhaps storing on disk
 using shelve|PyTables|pandas HDFStore
 '''
+import os, inspect, decorator
+import pylab as pl
 from pandas import DataFrame as DF
 from numpy import nan, unravel_index
-import pylab as pl
 from GoreUtilities.util import get_files, save, load, to_list, get_tag_value
 from GoreUtilities import graph
-import os
 from common_doc import doc_replacer
+
 
 @doc_replacer
 def _assign_IDS_to_datafiles(datafiles, parser, measurement_class=None, **kwargs):
@@ -87,6 +88,29 @@ def int2letters(x, alphabet):
     letters.reverse()
     return ''.join(letters)
 
+_now = 'apply_now'
+@decorator.decorator
+def queueable(fun, *args, **kwargs):
+    params = inspect.getcallargs(fun, *args, **kwargs)
+    if not _now in params: 
+        raise ValueError, '"%s" must be a parameter of queued function "%s"' %(_now, fun.__name__)
+    f_name = fun.__name__
+    kw_name = inspect.getargspec(fun).keywords
+    kws = params.pop(kw_name, {})
+    params.update(kws)
+    if params[_now]:
+        out = fun(*args, **kwargs)
+        out.queue = []
+        out.history.append((f_name, params))
+        return out
+    else:        
+        new = params['self'].copy()
+        del params['self']
+        params[_now] = True
+
+        new.queue.append((f_name, params))
+        return new
+
 class BaseObject(object):
     '''
     Object providing common utility methods.
@@ -139,15 +163,13 @@ class Measurement(BaseObject):
         self.ID = ID
         self.datafile = datafile
         self.metafile = metafile
-        if readdata:
-            self.set_data(datafile=datafile, **readdata_kwargs)
-        else:
-            self.data = None
-        if readmeta:
-            self.set_meta(metafile=metafile, **readmeta_kwargs)
-        else:
-            self.meta = None
+        self.data = None
+        self.meta = None
+        if readdata: self.set_data(**readdata_kwargs)
+        if readmeta: self.set_meta(**readmeta_kwargs)
         self.position = {}
+        self.history = []
+        self.queue   = []
 
     def _set_position(self, orderedcollection_id, pos):
         self.position[orderedcollection_id] = pos
@@ -159,6 +181,28 @@ class Measurement(BaseObject):
         else:
             return self.data.shape
 
+    def apply_queued(self): 
+        new = self.copy()
+        new.queue = []
+        for a in self.queue:
+            name, params = a
+            new = getattr(new, name)(**params)
+        return new
+    
+    @queueable
+    def fake_action(self, a, b='!', apply_now=False, **kws):
+        '''
+        Detailed doc.
+        '''
+        new = self.copy()
+        if apply_now:
+            data = self.get_data()
+            c = kws.get('c',' ')
+            new.data = data + (a + b +' (%s). '%c)
+            return new
+        else:
+            raise ValueError, 'Now=False passed the decorator.'
+    
     # ----------------------
     # Methods of exposing underlying data
     # ----------------------
@@ -174,7 +218,8 @@ class Measurement(BaseObject):
         This function should be overwritten for each 
         specific data type. 
         '''
-        pass
+#         pass
+        return ''
     
     def read_meta(self, **kwargs):
         '''
@@ -183,39 +228,23 @@ class Measurement(BaseObject):
         '''
         pass
 
-    def _set_attr_from_file(self, name, value=None, path=None, **kwargs):
+    def set_data(self, **kwargs):
         '''
-        Assign values to attribute of self.
-        Attribute values can be passed by user or read from file.
-        If read from file: 
-            i) the method used to read the file is 'self.read_[attr name]'
-            (e.g. for an attribute named 'meta' 'self.read_meta' 
-            will be used).
-            ii) the file path will also be set to an attribute
-            named: '[attr name]file'. (e.g. for an attribute named 
-            'meta' a 'metafile' attribute will be created).
+        Read data into memory, applying all actions in queue.
+        Additionally, update queue and history.
         '''
-        if value is not None:
-            setattr(self, name, value)
-        else:
-            if path is not None:
-                setattr(self, name+'file', path)
-            value = getattr(self, 'read_%s' %name)(**kwargs)
-        setattr(self, name, value)
+        data = self.get_data(**kwargs)
+        setattr(self, 'data', data)
+        self.history += self.queue
+        self.queue = []
 
-    def set_data(self, data=None, datafile=None, **kwargs):
+    def set_meta(self, **kwargs):
         '''
-        Assign values to self.data and self.meta. 
-        Data is not returned
+        Assign values to self.meta. 
+        Meta is not returned
         '''
-        self._set_attr_from_file('data', data, datafile, **kwargs)
-
-    def set_meta(self, meta=None, metafile=None, **kwargs):
-        '''
-        Assign values to self.data and self.meta. 
-        Data is not returned
-        '''
-        self._set_attr_from_file('meta', meta, metafile, **kwargs)
+        meta = self.get_meta(**kwargs)
+        setattr(self, 'meta', meta)
 
     def _get_attr_from_file(self, name, **kwargs):
         '''
@@ -239,13 +268,17 @@ class Measurement(BaseObject):
         else:
             value = None
         return value
-
+        
     def get_data(self, **kwargs):
         '''
         Get the measurement data.
         If data is not set, read from 'self.datafile' using 'self.read_data'.
         '''
-        return self._get_attr_from_file('data', **kwargs)
+        if self.queue:
+            new = self.apply_queued()
+            return new.get_data()
+        else:
+            return self._get_attr_from_file('data', **kwargs)
 
     def get_meta(self, **kwargs):
         '''
@@ -1024,7 +1057,20 @@ class OrderedCollection(MeasurementCollection):
         return ax_main, ax_subplots
 
 if __name__ == '__main__':
-    print OrderedCollection.grid_plot.__doc__
+    m = Measurement('m', datafile='')
+    mm = m.fake_action('Hello', b=' there', c='Hola', apply_now=True)
+    mm2 = mm.fake_action('World', c='Mundo', apply_now=False)
+    mmm = mm2.apply_queued()
+    for t in [m,mm,mm2, mmm]:
+        print t.data, '| ', t.get_data(), '|', len(t.queue), '|', len(t.history)
+    
+    mm2.set_data()
+    mm3 = mm2.fake_action('Goodbye')
+    for t in [mm2, mm3]:
+        print t.data, '| ', t.get_data(), '|', len(t.queue), '|', len(t.history)
+    
+    
+#     print OrderedCollection.grid_plot.__doc__
     #print OrderedCollection.__doc__
     #print OrderedCollection.__init__.__doc__
     #print OrderedCollection.from_files.__doc__
