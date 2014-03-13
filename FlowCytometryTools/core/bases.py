@@ -195,13 +195,11 @@ class Measurement(BaseObject):
         Detailed doc.
         '''
         new = self.copy()
-        if apply_now:
-            data = self.get_data()
-            c = kws.get('c',' ')
-            new.data = data + (a + b +' (%s). '%c)
-            return new
-        else:
-            raise ValueError, 'Now=False passed the decorator.'
+        data = self.get_data()
+        if data is None: data = ''
+        c = kws.get('c',' ')
+        new.data = data + (a + b +' (%s). '%c)
+        return new
     
     # ----------------------
     # Methods of exposing underlying data
@@ -218,8 +216,7 @@ class Measurement(BaseObject):
         This function should be overwritten for each 
         specific data type. 
         '''
-#         pass
-        return ''
+        pass
     
     def read_meta(self, **kwargs):
         '''
