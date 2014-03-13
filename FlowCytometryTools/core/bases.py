@@ -163,8 +163,8 @@ class Measurement(BaseObject):
         self.ID = ID
         self.datafile = datafile
         self.metafile = metafile
-        self.data = None
-        self.meta = None
+        self._data = None
+        self._meta = None
         if readdata: self.set_data(**readdata_kwargs)
         if readmeta: self.set_meta(**readmeta_kwargs)
         self.position = {}
@@ -198,7 +198,9 @@ class Measurement(BaseObject):
         data = self.get_data()
         if data is None: data = ''
         c = kws.get('c',' ')
-        new.data = data + (a + b +' (%s). '%c)
+        new_data = data + (a + b +' (%s). '%c)
+#         new.set_data(data=new_data)
+        new.data = new_data
         return new
     
     # ----------------------
@@ -210,6 +212,8 @@ class Measurement(BaseObject):
     def __getitem__(self, key):
         return self.data.__getitem__(key)
 
+    # ----------------------
+    # Methods getting/setting data
     # ----------------------
     def read_data(self, **kwargs):
         '''
@@ -225,23 +229,25 @@ class Measurement(BaseObject):
         '''
         pass
 
-    def set_data(self, **kwargs):
+    def set_data(self, data=None, **kwargs):
         '''
         Read data into memory, applying all actions in queue.
         Additionally, update queue and history.
         '''
-        data = self.get_data(**kwargs)
-        setattr(self, 'data', data)
+        if data is None:
+            data = self.get_data(**kwargs)
+        setattr(self, '_data', data)
         self.history += self.queue
         self.queue = []
 
-    def set_meta(self, **kwargs):
+    def set_meta(self, meta=None, **kwargs):
         '''
         Assign values to self.meta. 
         Meta is not returned
         '''
-        meta = self.get_meta(**kwargs)
-        setattr(self, 'meta', meta)
+        if meta is None:
+            meta = self.get_meta(**kwargs)
+        setattr(self, '_meta', meta)
 
     def _get_attr_from_file(self, name, **kwargs):
         '''
@@ -256,7 +262,7 @@ class Measurement(BaseObject):
             named: '[attr name]file'. (e.g. for an attribute named 
             'meta' a 'metafile' attribute will be created).
         '''
-        current_value = getattr(self, name)
+        current_value = getattr(self, '_' + name)
         if current_value is not None:
             value = current_value
         else:
@@ -273,7 +279,7 @@ class Measurement(BaseObject):
             return new.get_data()
         else:
             return self._get_attr_from_file('data', **kwargs)
-
+    
     def get_meta(self, **kwargs):
         '''
         Get the measurement metadata.
@@ -281,6 +287,10 @@ class Measurement(BaseObject):
         '''
         return self._get_attr_from_file('meta', **kwargs)
 
+    data = property(get_data, set_data, doc='Data may be stored in memory or on disk')
+    meta = property(get_meta, set_meta, doc='Metadata associated with measurement.')
+
+    # ----------------------
     def get_meta_fields(self, fields, **kwargs):
         '''
         Get specific fields of associated metadata.
@@ -1052,16 +1062,16 @@ class OrderedCollection(MeasurementCollection):
 
 if __name__ == '__main__':
     m = Measurement('m', datafile='')
-    mm = m.fake_action('Hello', b=' there', c='Hola', apply_now=True)
+    mm = m.fake_action('Hello', b=' there', c='Hola', apply_now=False)
     mm2 = mm.fake_action('World', c='Mundo', apply_now=False)
     mmm = mm2.apply_queued()
     for t in [m,mm,mm2, mmm]:
-        print t.data, '| ', t.get_data(), '|', len(t.queue), '|', len(t.history)
+        print t._data, '| ', t.data, '|', len(t.queue), '|', len(t.history)
     
     mm2.set_data()
     mm3 = mm2.fake_action('Goodbye')
     for t in [mm2, mm3]:
-        print t.data, '| ', t.get_data(), '|', len(t.queue), '|', len(t.history)
+        print t._data, '| ', t.data, '|', len(t.queue), '|', len(t.history)
     
     
 #     print OrderedCollection.grid_plot.__doc__
