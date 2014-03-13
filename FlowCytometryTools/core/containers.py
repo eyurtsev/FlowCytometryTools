@@ -6,7 +6,7 @@ Created on Jun 14, 2013
 TODO:
 '''
 from FlowCytometryTools import parse_fcs
-from bases import Measurement, MeasurementCollection, OrderedCollection
+from bases import Measurement, MeasurementCollection, OrderedCollection, queueable
 from GoreUtilities.util import to_list as to_iter
 from itertools import cycle
 import graph
@@ -178,11 +178,13 @@ class FCMeasurement(Measurement):
         #else:
         from FlowCytometryTools.GUI import gui
         return gui.FCGUI(measurement=self)
-
+    
+    @queueable
     @doc_replacer
     def transform(self, transform, direction='forward',
                   channels=None, return_all=True, auto_range=True,
                   use_spln=True, get_transformer=False, ID = None,
+                  apply_now=False,
                   args=(), **kwargs):
         """
         Applies a transformation to the specified channels.
@@ -237,7 +239,7 @@ class FCMeasurement(Measurement):
         new_data[channels] = transformed
         ## create new Measurement
         new = self.copy()    
-        new.set_data(data=new_data)
+        new.data = new_data
         
         if ID is not None:
             new.ID = ID
@@ -245,9 +247,10 @@ class FCMeasurement(Measurement):
             return new, transformer
         else:
             return new       
-
+    
+    @queueable
     @doc_replacer
-    def gate(self, gate):
+    def gate(self, gate, apply_now=False):
         '''
         Apply given gate and return new gated sample (with assigned data).
         Note that no transformation is done by this funciton.
@@ -260,7 +263,7 @@ class FCMeasurement(Measurement):
         data = self.get_data()
         newdata = gate(data)
         newsample = self.copy()
-        newsample.set_data(data=newdata)
+        newsample.data = newdata
         return newsample
 
     @property
@@ -279,6 +282,7 @@ class FCCollection(MeasurementCollection):
     def transform(self, transform, direction='forward', share_transform=True,
                   channels=None, return_all=True, auto_range=True,
                   use_spln=True, get_transformer=False, ID = None,
+                  apply_now=False,
                   args=(), **kwargs):
         '''
         Apply transform to each Measurement in the Collection.
@@ -334,12 +338,12 @@ class FCCollection(MeasurementCollection):
                     transformer.set_spline(xmin, xmax)
             ## transform all measurements     
             for k,v in new.iteritems(): 
-                new[k] = v.transform(transformer, channels=channels, return_all=return_all, use_spln=use_spln)
+                new[k] = v.transform(transformer, channels=channels, return_all=return_all, use_spln=use_spln, apply_now=apply_now)
         else:
             for k,v in new.iteritems(): 
                 new[k] = v.transform(transform, direction=direction, channels=channels, 
                                      return_all=return_all, auto_range=auto_range, get_transformer=False,
-                                     use_spln=use_spln, args=args, **kwargs)
+                                     use_spln=use_spln, apply_now=apply_now, args=args, **kwargs)
         if ID is not None:
             new.ID = ID
         if share_transform and get_transformer:
@@ -348,7 +352,7 @@ class FCCollection(MeasurementCollection):
             return new
 
     @doc_replacer
-    def gate(self, gate, ID=None):
+    def gate(self, gate, ID=None, apply_now=False):
         '''
         Applies the gate to each Measurement in the Collection, returning a new Collection with gated data.
 
@@ -364,7 +368,7 @@ class FCCollection(MeasurementCollection):
         '''
         new = self.copy()
         for k,v in new.iteritems():
-            new[k] = v.gate(gate)
+            new[k] = v.gate(gate, apply_now=apply_now)
         if ID is not None:
             new.ID = ID
         return new
@@ -483,24 +487,27 @@ FCPlate = FCOrderedCollection
 
 if __name__ == '__main__':
     #print FCMeasurement.plot.__doc__
-    print FCOrderedCollection.plot.__doc__
+#     print FCOrderedCollection.plot.__doc__
     #print FCMeasurement.transform.__doc__
     #print FCOrderedCollection.transform.__doc__
 
-    #import glob
-    #datadir = '../tests/data/Plate01/'
-    #fname = glob.glob(datadir + '*.fcs')[0]
-    #sample = FCMeasurement(1, datafile=fname)
-    ##print sample.channels
-    ##print sample.channel_names
-##     hs = sample.transform('hlog', use_spln=True)
-##     hs.plot(('FSC-A','SSC-A'))
-##     import pylab
-##     pylab.show()
-#
-    #plate = FCPlate.from_dir('p', datadir).dropna()
-    #print plate.counts()
-    #print plate
+    import glob
+    datadir = '../tests/data/Plate01/'
+    fname = glob.glob(datadir + '*.fcs')[0]
+    sample = FCMeasurement(1, datafile=fname)
+    
+    from FlowCytometryTools import ThresholdGate
+    g = ThresholdGate(6e3, 'FSC-A', 'above')
+
+    plate = FCPlate.from_dir('p', datadir).dropna()
+    print plate.counts()
+    
+    queued = plate.transform('hlog').gate(g)
+    print queued.counts()
+    
+    in_mem = plate.transform('hlog', apply_now=True).gate(g, apply_now=True)
+    print queued.counts()
+
 #
     #import time
     #s = time.clock()
