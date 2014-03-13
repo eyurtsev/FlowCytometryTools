@@ -257,13 +257,10 @@ class Measurement(BaseObject):
             'meta' a 'metafile' attribute will be created).
         '''
         current_value = getattr(self, name)
-        current_path  = getattr(self, name+'file')
         if current_value is not None:
             value = current_value
-        elif current_path is not None:
-            value = getattr(self, 'read_%s' %name)(**kwargs)
         else:
-            value = None
+            value = getattr(self, 'read_%s' %name)(**kwargs)
         return value
         
     def get_data(self, **kwargs):
