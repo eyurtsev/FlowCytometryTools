@@ -8,8 +8,10 @@ TODO:
 from FlowCytometryTools import parse_fcs
 from bases import Measurement, MeasurementCollection, OrderedCollection
 from GoreUtilities.util import to_list as to_iter
+from GoreUtilities.graph import plot_ndpanel
 from itertools import cycle
 import graph
+from pandas import DataFrame
 import inspect
 import numpy as np
 from FlowCytometryTools.core.transforms import Transformation
@@ -76,9 +78,10 @@ class FCMeasurement(Measurement):
         except:
             raise Exception("The keyword '{}' does not exist in the following FCS file: {}".format(ID_field, self.datafile))
 
+
     @doc_replacer
     def plot(self, channel_names, transform=(None, None), kind='histogram',
-             gates=None, transform_first=True, apply_gates=True, plot_gates=True,
+             gates=None, transform_first=True, apply_gates=False, plot_gates=True,
              gate_colors=None, **kwargs):
         """
         Plots the flow cytometry data associated with the sample on the current axis.
@@ -153,6 +156,29 @@ class FCMeasurement(Measurement):
                 g.plot(ax=ax, ax_channels=channel_names, color=c)
 
         return plot_output
+
+    def matplot(self, channel_names='auto', kind='histogram',
+             gates=None,apply_gates=False, plot_gates=True,
+             gate_colors=None, **kwargs):
+        """
+        Generates a cross plot.
+        """
+        if channel_names == 'auto':
+            channel_names = list(self.channel_names)
+
+        def plot_region(channels, **kwargs):
+            if channels[0] == channels[1]:
+                channels = channels[0]
+
+            self.plot(channels, kind=kind, gates=gates,
+                    apply_gates=apply_gates, plot_gates=plot_gates,
+                    gate_colors=gate_colors, autolabel=False)
+
+        channel_list = np.array(list(channel_names), dtype=object)
+        channel_mat = [[(x, y) for x in channel_list] for y in channel_list]
+        channel_mat = DataFrame(channel_mat, columns=channel_list, index=channel_list)
+        return plot_ndpanel(channel_mat, plot_region, **kwargs)
+
 
     def view(self):
         '''
