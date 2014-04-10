@@ -111,6 +111,28 @@ FCMeasurement_transform_examples="""\
 >>> trans = original.transform('hlog', r=1000, use_spln=True, get_transformer=True)
 >>> trans = original.transform('hlog', channels=['FSC-A', 'SSC-A'], b=500).transform('hlog', channels='B1-A', b=100)""",
 
+FCMeasurement_subsample_parameters="""\
+key : [int | float | slice]
+    Use to specify how many events to choose or to provide a slice for indexing.
+
+    * int : returns a random sample size key (sampling without replacement)
+    * float : specifies a fraction of events to use (float must be between 0 and 1)
+    * slice : applies a slice
+how : ['random' | 'first' | 'last']
+    Specifies which events to choose.
+
+    * 'first' : chooses first number=key events.
+    * 'last' : chooses last number=key events.
+    * 'last' : chooses number=key events randomly (without replacement)
+
+    Note: irrelevant when the key is a slice
+auto_resize : [False | True]
+    If True, attempts to automatically control indexing errors.
+    For example, if there are only 1000 events in the fcs sample,
+    but the key is set to subsample 2000 events, then an error willbe raised.
+    However, with auto_resize set to True, the key will be adjusted
+    to 1000 events.""",
+
 graph_plotFCM_pars = """\
 channel_names : [str | iterable of str]
     The name (or names) of the channels to plot.
@@ -157,6 +179,7 @@ _containers_held_in_memory_warning="""\
     to only work one collection at a time. Please refer to the tutorials to see how
     this can be done."""
 )
+
 
 _doc_dict.update(_gore_doc_dict)
 

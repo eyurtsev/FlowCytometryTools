@@ -14,6 +14,7 @@ import inspect
 import numpy as np
 from FlowCytometryTools.core.transforms import Transformation
 from common_doc import doc_replacer
+from random import sample
 
 def to_list(obj):
     """ This is a quick fix to make sure indexing of DataFrames
@@ -244,13 +245,62 @@ class FCMeasurement(Measurement):
         if get_transformer:
             return new, transformer
         else:
-            return new       
+            return new
+
+    @doc_replacer
+    def subsample(self, key, how='random', auto_resize=False):
+        """
+        Allows arbitrary slicing (subsampling) of the data.
+
+        Parameters
+        ---------------
+
+        {FCMeasurement_subsample_parameters}
+
+        Returns
+        -------------
+        new sample with subsampled event data.
+        """
+        data = self.get_data()
+        shape = data.shape
+
+        try:
+            if isinstance(key, float):
+                if (key > 1.0) or (key < 0.0):
+                    raise ValueError('If float, key must be between 0.0 and 1.0')
+                shape = data.shape
+                key = int(shape[0]*key)
+            if isinstance(key, slice):
+                if auto_resize:
+                    if key.stop > shape[0]:
+                        key = slice(key.start, shape[0], key.step) # Generate new slice
+                newdata = data.iloc[key]
+            elif isinstance(key, int):
+                if auto_resize:
+                    if key > shape[0]:
+                        key = shape[0]
+                if key < 1:
+                    # EDGE CAES: Must return an empty sample
+                    how = 'first'
+                if how == 'random':
+                    newdata = data.loc[sample(data.index, key)] # Use loc not iloc here!!
+                elif how == 'first':
+                    newdata = data.iloc[:key]
+                elif how == 'last':
+                    newdata = data.iloc[-key:]
+            else:
+                raise TypeError("'key' must be of type int, float or slice")
+        except IndexError:
+            print("If you're encountering an out-of-bounds error, try to setting 'auto_resize' to True.")
+            raise
+        newsample = self.copy()
+        newsample.set_data(data=newdata)
+        return newsample
 
     @doc_replacer
     def gate(self, gate):
         '''
         Apply given gate and return new gated sample (with assigned data).
-        Note that no transformation is done by this funciton.
 
         Parameters
         ---------------
@@ -365,6 +415,27 @@ class FCCollection(MeasurementCollection):
         new = self.copy()
         for k,v in new.iteritems():
             new[k] = v.gate(gate)
+        if ID is not None:
+            new.ID = ID
+        return new
+
+    @doc_replacer
+    def subsample(self, key, how='random', auto_resize=False, ID=None):
+        """
+        Allows arbitrary slicing (subsampling) of the data.
+
+        Parameters
+        ---------------
+
+        {FCMeasurement_subsample_parameters}
+
+        Returns
+        -------------
+        new collection of subsampled event data.
+        """
+        new = self.copy()
+        for k,v in new.iteritems():
+            new[k] = v.subsample(key=key, how=how, auto_resize=auto_resize)
         if ID is not None:
             new.ID = ID
         return new
