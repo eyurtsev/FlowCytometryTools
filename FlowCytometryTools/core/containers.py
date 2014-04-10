@@ -412,12 +412,9 @@ class FCCollection(MeasurementCollection):
         ID : [ str, numeric, None]
             New ID to be given to the output. If None, the ID of the current collection will be used.
         '''
-        new = self.copy()
-        for k,v in new.iteritems():
-            new[k] = v.gate(gate)
-        if ID is not None:
-            new.ID = ID
-        return new
+        def func(well):
+            return well.gate(gate)
+        return self.apply(func, output_format='collection', ID=ID)
 
     @doc_replacer
     def subsample(self, key, how='random', auto_resize=False, ID=None):
@@ -426,19 +423,15 @@ class FCCollection(MeasurementCollection):
 
         Parameters
         ---------------
-
         {FCMeasurement_subsample_parameters}
 
         Returns
         -------------
         new collection of subsampled event data.
         """
-        new = self.copy()
-        for k,v in new.iteritems():
-            new[k] = v.subsample(key=key, how=how, auto_resize=auto_resize)
-        if ID is not None:
-            new.ID = ID
-        return new
+        def func(well):
+            return well.subsample(key=key, how=how, auto_resize=auto_resize)
+        return self.apply(func, output_format='collection', ID=ID)
 
     def counts(self, ids=None, setdata=False, output_format='DataFrame'):
         """
