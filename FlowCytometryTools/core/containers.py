@@ -248,13 +248,12 @@ class FCMeasurement(Measurement):
             return new
 
     @doc_replacer
-    def subsample(self, key, how='random', auto_resize=False):
+    def subsample(self, key, order='random', auto_resize=False):
         """
         Allows arbitrary slicing (subsampling) of the data.
 
         Parameters
         ---------------
-
         {FCMeasurement_subsample_parameters}
 
         Returns
@@ -262,34 +261,44 @@ class FCMeasurement(Measurement):
         new sample with subsampled event data.
         """
         data = self.get_data()
-        shape = data.shape
+        num_events = data.shape[0]
+
+        if isinstance(key, float):
+            if (key > 1.0) or (key < 0.0):
+                raise ValueError('If float, key must be between 0.0 and 1.0')
+            key = int(num_events*key)
+        elif isinstance(key, tuple):
+            all_float = all([isinstance(x, float) for x in key])
+            if (len(key) > 2) or (not all_float):
+                raise ValueError('Tuple must consist of two floats, each between 0.0 and 1.0')
+            start = int(num_events * key[0])
+            stop  = int(num_events * key[1])
+            key = slice(start, stop) # Convert to a slice
 
         try:
-            if isinstance(key, float):
-                if (key > 1.0) or (key < 0.0):
-                    raise ValueError('If float, key must be between 0.0 and 1.0')
-                shape = data.shape
-                key = int(shape[0]*key)
             if isinstance(key, slice):
                 if auto_resize:
-                    if key.stop > shape[0]:
-                        key = slice(key.start, shape[0], key.step) # Generate new slice
+                    stop = key.stop if key.stop < num_events else num_events
+                    start = key.start if key.start < num_events else num_events
+                    key = slice(start, stop, key.step) # Generate new slice
                 newdata = data.iloc[key]
             elif isinstance(key, int):
                 if auto_resize:
-                    if key > shape[0]:
-                        key = shape[0]
+                    if key > num_events:
+                        key = num_events
                 if key < 1:
                     # EDGE CAES: Must return an empty sample
-                    how = 'first'
-                if how == 'random':
+                    order = 'start'
+                if order == 'random':
                     newdata = data.loc[sample(data.index, key)] # Use loc not iloc here!!
-                elif how == 'first':
+                elif order == 'start':
                     newdata = data.iloc[:key]
-                elif how == 'last':
+                elif order == 'end':
                     newdata = data.iloc[-key:]
+                else:
+                    raise ValueError("order must be in ('random', 'start', 'end')")
             else:
-                raise TypeError("'key' must be of type int, float or slice")
+                raise TypeError("'key' must be of type int, float, tuple or slice.")
         except IndexError:
             print("If you're encountering an out-of-bounds error, try to setting 'auto_resize' to True.")
             raise
@@ -417,9 +426,12 @@ class FCCollection(MeasurementCollection):
         return self.apply(func, output_format='collection', ID=ID)
 
     @doc_replacer
-    def subsample(self, key, how='random', auto_resize=False, ID=None):
+    def subsample(self, key, order='random', auto_resize=False, ID=None):
         """
         Allows arbitrary slicing (subsampling) of the data.
+
+        Note: when using order='random', the sampling is random
+        for each of the measurements in the collection.
 
         Parameters
         ---------------
@@ -430,7 +442,7 @@ class FCCollection(MeasurementCollection):
         new collection of subsampled event data.
         """
         def func(well):
-            return well.subsample(key=key, how=how, auto_resize=auto_resize)
+            return well.subsample(key=key, order=order, auto_resize=auto_resize)
         return self.apply(func, output_format='collection', ID=ID)
 
     def counts(self, ids=None, setdata=False, output_format='DataFrame'):

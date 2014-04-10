@@ -112,20 +112,30 @@ FCMeasurement_transform_examples="""\
 >>> trans = original.transform('hlog', channels=['FSC-A', 'SSC-A'], b=500).transform('hlog', channels='B1-A', b=100)""",
 
 FCMeasurement_subsample_parameters="""\
-key : [int | float | slice]
-    Use to specify how many events to choose or to provide a slice for indexing.
+key : [int | float | tuple | slice]
+    When key is a single number, it specifies a number/fraction of events
+    to use. Use the parameter 'order' to specify how to subsample
+    the requested number/fraction of events.
 
-    * int : returns a random sample size key (sampling without replacement)
-    * float : specifies a fraction of events to use (float must be between 0 and 1)
-    * slice : applies a slice
-how : ['random' | 'first' | 'last']
-    Specifies which events to choose.
+    * int : specifies a number of events to use
+    * float : specifies a fraction of events to use (a number between 0 and 1)
 
-    * 'first' : chooses first number=key events.
-    * 'last' : chooses last number=key events.
-    * 'last' : chooses number=key events randomly (without replacement)
+    When key is a tuple (2 floats) or a slice, the 'order' parameter is irrelevant.
 
-    Note: irrelevant when the key is a slice
+    * tuple : consists of two floats, each between 0 and 1. For example,
+    key = (0.66666, 1.0) returns the last one third of events.
+
+    * slice : applies a slice. For example, key = slice(10, 1000, 20) returns
+    events with indexes [10, 30, 50, ...]
+
+order : ['random' | 'start' | 'end']
+    Specifies which events to choose. This is only relevant
+    when key is either an int or a float.
+
+    * 'random' : chooses the events randomly (without replacement)
+    * 'start' : subsamples starting from the start
+    * 'end' : subsamples starting from the end
+
 auto_resize : [False | True]
     If True, attempts to automatically control indexing errors.
     For example, if there are only 1000 events in the fcs sample,
