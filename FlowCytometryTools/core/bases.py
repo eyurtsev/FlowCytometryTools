@@ -712,7 +712,10 @@ class OrderedCollection(MeasurementCollection):
         d = _assign_IDS_to_datafiles(datafiles, parser, cls._measurement_class, **ID_kwargs)
         measurements = []
         for sID, dfile in d.iteritems():
-            measurements.append(cls._measurement_class(sID, datafile=dfile))
+            try:
+                measurements.append(cls._measurement_class(sID, datafile=dfile))
+            except:
+                print dfile
         return cls(ID, measurements, position_mapper, **kwargs)
 
     @classmethod

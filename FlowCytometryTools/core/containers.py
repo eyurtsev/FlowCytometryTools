@@ -184,7 +184,7 @@ class FCMeasurement(Measurement):
     def transform(self, transform, direction='forward',
                   channels=None, return_all=True, auto_range=True,
                   use_spln=True, get_transformer=False, ID = None,
-                  apply_now=False,
+                  apply_now=True,
                   args=(), **kwargs):
         """
         Applies a transformation to the specified channels.
@@ -250,7 +250,7 @@ class FCMeasurement(Measurement):
     
     @queueable
     @doc_replacer
-    def gate(self, gate, apply_now=False):
+    def gate(self, gate, apply_now=True):
         '''
         Apply given gate and return new gated sample (with assigned data).
         Note that no transformation is done by this funciton.
@@ -282,7 +282,7 @@ class FCCollection(MeasurementCollection):
     def transform(self, transform, direction='forward', share_transform=True,
                   channels=None, return_all=True, auto_range=True,
                   use_spln=True, get_transformer=False, ID = None,
-                  apply_now=False,
+                  apply_now=True,
                   args=(), **kwargs):
         '''
         Apply transform to each Measurement in the Collection.
@@ -352,7 +352,7 @@ class FCCollection(MeasurementCollection):
             return new
 
     @doc_replacer
-    def gate(self, gate, ID=None, apply_now=False):
+    def gate(self, gate, ID=None, apply_now=True):
         '''
         Applies the gate to each Measurement in the Collection, returning a new Collection with gated data.
 
@@ -490,24 +490,45 @@ if __name__ == '__main__':
 #     print FCOrderedCollection.plot.__doc__
     #print FCMeasurement.transform.__doc__
     #print FCOrderedCollection.transform.__doc__
+    
+#     from datetime import date, timedelta
+#     from numpy import array
+#     t1 = date(2014,3,15)
+#      
+#     flow_plates = []
+#     for i in range(3):
+#         t = t1 + timedelta(days=i)
+#         datadir = '/home/yonatanf/Dropbox/Gore/invasion/fc_data/%s/EXP_32/'%t.isoformat()
+#         flow_plates.append(FCPlate.from_dir('t%d'%(i+1), datadir, parser='name', pattern='*EXP_32*.fcs').dropna())
+#  
+#     hplates = [p.transform('hlog', apply_now=False, channels=['FSC-A','SSC-A','B1-A'], b=2.5) for p in flow_plates]    
+#     print hplates[-1].counts()
+#     
+#     from FlowCytometryTools import PolyGate
+#     size_gate = PolyGate([(8.530e+02, 1.593e+03), (1.419e+03, 1.306e+02), (8.429e+03, 4.299e+03), (6.051e+03, 5.966e+03)], ('FSC-A', 'SSC-A'), region='in', name='gate1')
+#     yfp_gate = PolyGate([(4.960e+03, 6.597e+02), (1.104e+03, 7.098e+02), (5.613e+03, 8.293e+03), (8.973e+03, 6.732e+03)], ('B1-A', 'FSC-A'), region='in', name='gate2')
+# 
+#     gated_size = [hplate.gate(size_gate, apply_now=False) for hplate in hplates]
+#     size_counts = array([gs.counts().values for gs in gated_size])
 
     import glob
     datadir = '../tests/data/Plate01/'
     fname = glob.glob(datadir + '*.fcs')[0]
     sample = FCMeasurement(1, datafile=fname)
-    
+     
     from FlowCytometryTools import ThresholdGate
     g = ThresholdGate(6e3, 'FSC-A', 'above')
-
+ 
     plate = FCPlate.from_dir('p', datadir).dropna()
     print plate.counts()
-    
-    queued = plate.transform('hlog').gate(g)
+     
+    queued = plate.transform('hlog', apply_now=False).gate(g, apply_now=False)
     print queued.counts()
-    
+    print type(queued['A4']._data)
+     
     in_mem = plate.transform('hlog', apply_now=True).gate(g, apply_now=True)
-    print queued.counts()
-
+    print in_mem.counts()
+    print type(in_mem['A4']._data)
 #
     #import time
     #s = time.clock()
