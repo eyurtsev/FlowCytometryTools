@@ -157,11 +157,23 @@ class FCMeasurement(Measurement):
 
         return plot_output
 
-    def matplot(self, channel_names='auto', kind='histogram',
-             gates=None,apply_gates=False, plot_gates=True,
+    def matplot(self, channel_names='auto',
+             gates=None, plot_gates=True,
+             diag_kw={}, offdiag_kw={},
              gate_colors=None, **kwargs):
         """
-        Generates a cross plot.
+        Generates a matrix of subplots allowing for a quick way
+        to examine how the sample looks in different channels.
+
+        Parameters
+        -------------
+        channel_names : [list | 'auto']
+            List of channel names to plot.
+        offdiag_plot : ['histogram' | 'scatter']
+            Specifies the type of plot for the off-diagonal elements.
+
+        diag_kw : dict
+            Not implemented
         """
         if channel_names == 'auto':
             channel_names = list(self.channel_names)
@@ -169,31 +181,23 @@ class FCMeasurement(Measurement):
         def plot_region(channels, **kwargs):
             if channels[0] == channels[1]:
                 channels = channels[0]
+            kind = 'histogram'
 
             self.plot(channels, kind=kind, gates=gates,
-                    apply_gates=apply_gates, plot_gates=plot_gates,
+                    plot_gates=plot_gates,
                     gate_colors=gate_colors, autolabel=False)
 
         channel_list = np.array(list(channel_names), dtype=object)
         channel_mat = [[(x, y) for x in channel_list] for y in channel_list]
         channel_mat = DataFrame(channel_mat, columns=channel_list, index=channel_list)
+        kwargs.setdefault('wspace', 0.1)
+        kwargs.setdefault('hspace', 0.1)
         return plot_ndpanel(channel_mat, plot_region, **kwargs)
 
 
     def view(self):
         '''
         Loads the current FCS sample viewer
-
-        Parameters
-        ----------
-        channel_names : str | list of str
-            (Not implemented yet)
-            Names of channels to load by default
-
-        Returns
-        -------
-
-        TODO: Implement channel_names
         '''
         #if launch_new_subprocess: # This is not finished until I can list the gates somewhere
             #from FlowCytometryTools import __path__ as p
@@ -424,7 +428,7 @@ class FCOrderedCollection(OrderedCollection, FCCollection):
 
     @doc_replacer
     def plot(self, channel_names,  kind='histogram', transform=(None, None),
-             gates=None, transform_first=True, apply_gates=True, plot_gates=True, gate_colors=None,
+             gates=None, transform_first=True, apply_gates=False, plot_gates=True, gate_colors=None,
              ids=None, row_labels=None, col_labels=None,
              xlim=None, ylim=None,
              autolabel=True,
@@ -488,7 +492,7 @@ class FCOrderedCollection(OrderedCollection, FCCollection):
 
         def plot_sample(sample, ax):
             return sample.plot(channel_names, transform=transform, ax=ax,
-                               gates=gates, transform_first=transform_first, apply_gates=apply_gates, 
+                               gates=gates, transform_first=transform_first, apply_gates=apply_gates,
                                plot_gates=plot_gates, gate_colors=gate_colors,
                                colorbar=False,
                                kind=kind, autolabel=False, **kwargs)
