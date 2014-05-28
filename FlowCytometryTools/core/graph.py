@@ -88,15 +88,15 @@ def plotFCM(data, channel_names, kind='histogram', ax=None,
         kwargs.setdefault('color', 'gray')
         kwargs.setdefault('histtype', 'stepfilled')
 
-        x = data[channel_names[0]]
+        x = data[channel_names[0]].values
         if len(x):
             plot_output = ax.hist(x, **kwargs)
         else:
             return None
 
     elif len(channel_names) == 2:
-        x = data[channel_names[0]] # index of first channels name
-        y = data[channel_names[1]] # index of first channels name
+        x = data[channel_names[0]].values # value of first channel
+        y = data[channel_names[1]].values # value of second channel
 
         if kind == 'scatter':
             kwargs.setdefault('edgecolor', 'none')

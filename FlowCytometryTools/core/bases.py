@@ -408,10 +408,12 @@ class MeasurementCollection(collections.MutableMapping, BaseObject):
     # ----------------------
     # User methods
     # ----------------------
-    def apply(self, func, ids=None, applyto='measurement', noneval=nan, setdata=False, **kwargs):
+    def apply(self, func, ids=None, applyto='measurement', noneval=nan,
+            setdata=False, output_format='dict', ID=None,
+            **kwargs):
         '''
         Apply func to each of the specified measurements.
-        
+
         Parameters
         ----------
         func : callable 
@@ -427,17 +429,41 @@ class MeasurementCollection(collections.MutableMapping, BaseObject):
         setdata : bool
             Whether to set the data in the Measurement object.
             Used only if data is not already set.
-        
+        output_format : ['dict' | 'collection']
+            * collection : keeps result as collection
+            WARNING: For collection, func should return a copy of the measurement instance rather
+            than the original measurement instance.
         Returns
         -------
-        Dictionary keyed by measurement keys containing the corresponding output of func.
-        ''' 
+        Dictionary keyed by measurement keys containing the corresponding output of func
+        or returns a collection (if output_format='collection').
+        '''
         if ids is None:
             ids = self.keys()
         else:
             ids = to_list(ids)
         result = dict( (i, self[i].apply(func, applyto, noneval, setdata)) for i in ids )
-        return result
+
+        if output_format == 'collection':
+            can_keep_as_collection = all([isinstance(r, self._measurement_class) for r in result.values()])
+            if not can_keep_as_collection:
+                raise TypeError('Cannot turn output into a collection. The provided func must return results of type {}'.format(_measurement_class))
+
+            new_collection = self.copy()
+            # Locate IDs to remove
+            ids_to_remove  = [x for x in self.keys() if x not in ids]
+            # Remove data for these IDs
+            for ids in ids_to_remove:
+                new_collection.pop(ids)
+            # Update keys with new values
+            for k,v in new_collection.iteritems():
+                new_collection[k] = result[k]
+            if ID is not None:
+                new_collection.ID = ID
+            return new_collection
+        else:
+            # Return a dictionary
+            return result
 
     def set_data(self, ids=None):
         """
@@ -445,7 +471,7 @@ class MeasurementCollection(collections.MutableMapping, BaseObject):
         """
         fun = lambda x: x.set_data()
         self.apply(fun, ids=ids, applyto='measurement')
-         
+
     def _clear_measurement_attr(self, attr, ids=None):
         fun = lambda x: setattr(x, attr, None)
         self.apply(fun, ids=ids, applyto='measurement')
@@ -850,7 +876,7 @@ class OrderedCollection(MeasurementCollection):
 
     def apply(self, func, ids=None, applyto='measurement',
               output_format='DataFrame', noneval=nan,
-              setdata=False, dropna=False):
+              setdata=False, dropna=False, ID=None):
         """
         Apply func to each of the specified measurements.
 
@@ -864,7 +890,7 @@ class OrderedCollection(MeasurementCollection):
         applyto :  'measurement' | 'data'
             'measurement' : apply to measurements objects themselves.
             'data'        : apply to measurement associated data
-        output_format: 'DataFrame' | 'dict'
+        output_format: ['DataFrame' | 'dict' | 'collection']
         noneval : obj
             Value returned if applyto is 'data' but no data is available.
         setdata : bool
@@ -872,17 +898,28 @@ class OrderedCollection(MeasurementCollection):
             Used only if data is not already set.
         dropna : bool
             whether to remove rows/cols that contain no measurements.
+        ID : [None | str | numeric]
+            ID is used as the new ID for the collection.
+            If None, then the old ID is retained.
+            Note: Only applicable when output is a collection.
 
         Returns
         -------
-        DataFrame/Dictionary containing the output of func for each Measurement. 
+        DataFrame/Dictionary/Collection containing the output of func for each Measurement.
         """
-        result = super(OrderedCollection, self).apply(func, ids, applyto, 
-                                                       noneval, setdata)
+        _output = 'collection' if output_format == 'collection' else 'dict'
+        result = super(OrderedCollection, self).apply(func, ids, applyto,
+                                                       noneval, setdata,
+                                           output_format=_output)
+
+        # Note: result should be of type dict or collection for the code
+        # below to work
         if output_format is 'dict':
             return result
         elif output_format is 'DataFrame':
             return self._dict2DF(result, noneval, dropna)
+        elif output_format is 'collection':
+            return result
         else:
             msg = ("output_format must be either 'dict' or 'DataFrame'. " +
                    "Encounterd unsupported value %s." %repr(output_format))
