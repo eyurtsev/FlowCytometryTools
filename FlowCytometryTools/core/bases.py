@@ -392,7 +392,11 @@ class MeasurementCollection(collections.MutableMapping, BaseObject):
         d = _assign_IDS_to_datafiles(datafiles, parser, cls._measurement_class, **ID_kwargs)
         measurements = []
         for sID, dfile in d.iteritems():
+            try:
                 measurements.append(cls._measurement_class(sID, datafile=dfile))
+            except:
+                msg = 'Error occured while trying to parse file: %s' %dfile
+                raise IOError, msg 
         return cls(ID, measurements)
 
     @classmethod
@@ -715,7 +719,8 @@ class OrderedCollection(MeasurementCollection):
             try:
                 measurements.append(cls._measurement_class(sID, datafile=dfile))
             except:
-                print dfile
+                msg = 'Error occured while trying to parse file: %s' %dfile
+                raise IOError, msg 
         return cls(ID, measurements, position_mapper, **kwargs)
 
     @classmethod
