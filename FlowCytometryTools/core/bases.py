@@ -188,20 +188,21 @@ class Measurement(BaseObject):
             name, params = a
             new = getattr(new, name)(**params)
         return new
-    
-    @queueable
-    def fake_action(self, a, b='!', apply_now=False, **kws):
-        '''
-        Detailed doc.
-        '''
-        new = self.copy()
-        data = self.get_data()
-        if data is None: data = ''
-        c = kws.get('c',' ')
-        new_data = data + (a + b +' (%s). '%c)
-#         new.set_data(data=new_data)
-        new.data = new_data
-        return new
+
+#     # An example for how to write a queueable function 
+#     @queueable
+#     def fake_action(self, a, b='!', apply_now=False, **kws):
+#         '''
+#         Detailed doc.
+#         '''
+#         new = self.copy()
+#         data = self.get_data()
+#         if data is None: data = ''
+#         c = kws.get('c',' ')
+#         new_data = data + (a + b +' (%s). '%c)
+# #         new.set_data(data=new_data)
+#         new.data = new_data
+#         return new
     
     # ----------------------
     # Methods of exposing underlying data
