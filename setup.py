@@ -18,8 +18,8 @@ setup(
     version = version,
     description = 'A python package for performing flow cytometry analysis',
     author = 'Jonathan Friedman, Eugene Yurtsev',
-    author_email = 'eyurtsev@mit.edu',
-    url = 'https://bitbucket.org/gorelab/goreutilities/',
+    author_email = 'eyurtsev@gmail.com',
+    url = 'https://gorelab.bitbucket.org/flowcytometrytools',
     download_url = 'https://bitbucket.org/gorelab/flowcytometrytools/get/v{0}.zip'.format(version),
     keywords = ['flow cytometry', 'data analysis', 'cytometry', 'single cell'],
     license='MIT',
@@ -28,7 +28,6 @@ setup(
 
     install_requires=[
           "setuptools",
-          "pandas >= 0.8.0",
           "GoreUtilities == {0}".format(gore_utilities_version),
       ],
     classifiers = [

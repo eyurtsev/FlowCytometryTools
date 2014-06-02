@@ -411,10 +411,10 @@ class CompositeGate(_ComposableMixin):
             gate = self.gates[0]
             return '~{0}'.format(gate.name)
         else:
-            return '{0} {2} {1}'.format(*self.gates).format(self.how)
+            return '{0} {1} {2}'.format(self.gates[0].name, self.how, self.gates[1].name)
 
     def __str__(self):
-        return self.__name__
+        return self.name
 
     def _identify(self, dataframe):
         idx = [gate._identify(dataframe) for gate in self.gates]
