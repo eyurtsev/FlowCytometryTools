@@ -357,7 +357,6 @@ class PolyGate(Gate):
             If 'in', the gate only passes through data that lies inside the interval.
         {_gate_pars_name}
         """
-        self.path = Path(vert)
         self._region_options = ('in', 'out')
         super(PolyGate, self).__init__(vert, channels, region, name)
 
@@ -369,7 +368,8 @@ class PolyGate(Gate):
         ----------
         dataframe : DataFrame
         """
-        idx = self.path.contains_points(dataframe.filter(self.channels))
+        path = Path(self.vert)
+        idx = path.contains_points(dataframe.filter(self.channels))
 
         if self.region == 'out':
             idx = ~idx
@@ -446,13 +446,18 @@ class CompositeGate(_ComposableMixin):
             gate.plot(flip=flip, ax_channels=ax_channels, ax=ax, *args, **kwargs)
 
 if __name__ == '__main__':
-    print Gate.__init__.__doc__
-    print PolyGate.__init__.__doc__
-    print QuadGate.__init__.__doc__
-    print ThresholdGate.__init__.__doc__
-    print IntervalGate.__init__.__doc__
+    size_gate = PolyGate([(8.530e+02, 1.593e+03), (1.419e+03, 1.306e+02), (8.429e+03, 4.299e+03), (6.051e+03, 5.966e+03)], ('FSC-A', 'SSC-A'), region='in', name='gate1')
 
-    print PolyGate.plot.__doc__
-    print QuadGate.plot.__doc__
-    print ThresholdGate.plot.__doc__
-    print IntervalGate.plot.__doc__
+    from copy import deepcopy
+    deepcopy(size_gate)
+
+#     print Gate.__init__.__doc__
+#     print PolyGate.__init__.__doc__
+#     print QuadGate.__init__.__doc__
+#     print ThresholdGate.__init__.__doc__
+#     print IntervalGate.__init__.__doc__
+# 
+#     print PolyGate.plot.__doc__
+#     print QuadGate.plot.__doc__
+#     print ThresholdGate.plot.__doc__
+#     print IntervalGate.plot.__doc__

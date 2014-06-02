@@ -6,7 +6,7 @@ Created on Jun 14, 2013
 TODO:
 '''
 from FlowCytometryTools import parse_fcs
-from bases import Measurement, MeasurementCollection, OrderedCollection
+from bases import Measurement, MeasurementCollection, OrderedCollection, queueable
 from GoreUtilities.util import to_list as to_iter
 from GoreUtilities.graph import plot_ndpanel
 from itertools import cycle
@@ -16,6 +16,7 @@ import inspect
 import numpy as np
 from FlowCytometryTools.core.transforms import Transformation
 from common_doc import doc_replacer
+from random import sample
 
 def to_list(obj):
     """ This is a quick fix to make sure indexing of DataFrames
@@ -208,11 +209,13 @@ class FCMeasurement(Measurement):
         #else:
         from FlowCytometryTools.GUI import gui
         return gui.FCGUI(measurement=self)
-
+    
+    @queueable
     @doc_replacer
     def transform(self, transform, direction='forward',
                   channels=None, return_all=True, auto_range=True,
                   use_spln=True, get_transformer=False, ID = None,
+                  apply_now=True,
                   args=(), **kwargs):
         """
         Applies a transformation to the specified channels.
@@ -267,20 +270,79 @@ class FCMeasurement(Measurement):
         new_data[channels] = transformed
         ## create new Measurement
         new = self.copy()    
-        new.set_data(data=new_data)
+        new.data = new_data
         
         if ID is not None:
             new.ID = ID
         if get_transformer:
             return new, transformer
         else:
-            return new       
+            return new
 
     @doc_replacer
-    def gate(self, gate):
+    def subsample(self, key, order='random', auto_resize=False):
+        """
+        Allows arbitrary slicing (subsampling) of the data.
+
+        Parameters
+        ---------------
+        {FCMeasurement_subsample_parameters}
+
+        Returns
+        -------------
+        new sample with subsampled event data.
+        """
+        data = self.get_data()
+        num_events = data.shape[0]
+
+        if isinstance(key, float):
+            if (key > 1.0) or (key < 0.0):
+                raise ValueError('If float, key must be between 0.0 and 1.0')
+            key = int(num_events*key)
+        elif isinstance(key, tuple):
+            all_float = all([isinstance(x, float) for x in key])
+            if (len(key) > 2) or (not all_float):
+                raise ValueError('Tuple must consist of two floats, each between 0.0 and 1.0')
+            start = int(num_events * key[0])
+            stop  = int(num_events * key[1])
+            key = slice(start, stop) # Convert to a slice
+
+        try:
+            if isinstance(key, slice):
+                if auto_resize:
+                    stop = key.stop if key.stop < num_events else num_events
+                    start = key.start if key.start < num_events else num_events
+                    key = slice(start, stop, key.step) # Generate new slice
+                newdata = data.iloc[key]
+            elif isinstance(key, int):
+                if auto_resize:
+                    if key > num_events:
+                        key = num_events
+                if key < 1:
+                    # EDGE CAES: Must return an empty sample
+                    order = 'start'
+                if order == 'random':
+                    newdata = data.loc[sample(data.index, key)] # Use loc not iloc here!!
+                elif order == 'start':
+                    newdata = data.iloc[:key]
+                elif order == 'end':
+                    newdata = data.iloc[-key:]
+                else:
+                    raise ValueError("order must be in ('random', 'start', 'end')")
+            else:
+                raise TypeError("'key' must be of type int, float, tuple or slice.")
+        except IndexError:
+            print("If you're encountering an out-of-bounds error, try to setting 'auto_resize' to True.")
+            raise
+        newsample = self.copy()
+        newsample.set_data(data=newdata)
+        return newsample
+
+    @queueable
+    @doc_replacer
+    def gate(self, gate, apply_now=True):
         '''
         Apply given gate and return new gated sample (with assigned data).
-        Note that no transformation is done by this funciton.
 
         Parameters
         ---------------
@@ -290,7 +352,7 @@ class FCMeasurement(Measurement):
         data = self.get_data()
         newdata = gate(data)
         newsample = self.copy()
-        newsample.set_data(data=newdata)
+        newsample.data = newdata
         return newsample
 
     @property
@@ -309,6 +371,7 @@ class FCCollection(MeasurementCollection):
     def transform(self, transform, direction='forward', share_transform=True,
                   channels=None, return_all=True, auto_range=True,
                   use_spln=True, get_transformer=False, ID = None,
+                  apply_now=True,
                   args=(), **kwargs):
         '''
         Apply transform to each Measurement in the Collection.
@@ -364,12 +427,12 @@ class FCCollection(MeasurementCollection):
                     transformer.set_spline(xmin, xmax)
             ## transform all measurements     
             for k,v in new.iteritems(): 
-                new[k] = v.transform(transformer, channels=channels, return_all=return_all, use_spln=use_spln)
+                new[k] = v.transform(transformer, channels=channels, return_all=return_all, use_spln=use_spln, apply_now=apply_now)
         else:
             for k,v in new.iteritems(): 
                 new[k] = v.transform(transform, direction=direction, channels=channels, 
                                      return_all=return_all, auto_range=auto_range, get_transformer=False,
-                                     use_spln=use_spln, args=args, **kwargs)
+                                     use_spln=use_spln, apply_now=apply_now, args=args, **kwargs)
         if ID is not None:
             new.ID = ID
         if share_transform and get_transformer:
@@ -378,7 +441,7 @@ class FCCollection(MeasurementCollection):
             return new
 
     @doc_replacer
-    def gate(self, gate, ID=None):
+    def gate(self, gate, ID=None, apply_now=True):
         '''
         Applies the gate to each Measurement in the Collection, returning a new Collection with gated data.
 
@@ -392,12 +455,29 @@ class FCCollection(MeasurementCollection):
         ID : [ str, numeric, None]
             New ID to be given to the output. If None, the ID of the current collection will be used.
         '''
-        new = self.copy()
-        for k,v in new.iteritems():
-            new[k] = v.gate(gate)
-        if ID is not None:
-            new.ID = ID
-        return new
+        def func(well):
+            return well.gate(gate, apply_now=apply_now)
+        return self.apply(func, output_format='collection', ID=ID)
+
+    @doc_replacer
+    def subsample(self, key, order='random', auto_resize=False, ID=None):
+        """
+        Allows arbitrary slicing (subsampling) of the data.
+
+        Note: when using order='random', the sampling is random
+        for each of the measurements in the collection.
+
+        Parameters
+        ---------------
+        {FCMeasurement_subsample_parameters}
+
+        Returns
+        -------------
+        new collection of subsampled event data.
+        """
+        def func(well):
+            return well.subsample(key=key, order=order, auto_resize=auto_resize)
+        return self.apply(func, output_format='collection', ID=ID)
 
     def counts(self, ids=None, setdata=False, output_format='DataFrame'):
         """
@@ -513,24 +593,48 @@ FCPlate = FCOrderedCollection
 
 if __name__ == '__main__':
     #print FCMeasurement.plot.__doc__
-    print FCOrderedCollection.plot.__doc__
+#     print FCOrderedCollection.plot.__doc__
     #print FCMeasurement.transform.__doc__
     #print FCOrderedCollection.transform.__doc__
+    
+#     from datetime import date, timedelta
+#     from numpy import array
+#     t1 = date(2014,3,15)
+#      
+#     flow_plates = []
+#     for i in range(3):
+#         t = t1 + timedelta(days=i)
+#         datadir = '/home/yonatanf/Dropbox/Gore/invasion/fc_data/%s/EXP_32/'%t.isoformat()
+#         flow_plates.append(FCPlate.from_dir('t%d'%(i+1), datadir, parser='name', pattern='*EXP_32*.fcs').dropna())
+#  
+#     hplates = [p.transform('hlog', apply_now=False, channels=['FSC-A','SSC-A','B1-A'], b=2.5) for p in flow_plates]    
+#     print hplates[-1].counts()
+#     
+#     from FlowCytometryTools import PolyGate
+#     size_gate = PolyGate([(8.530e+02, 1.593e+03), (1.419e+03, 1.306e+02), (8.429e+03, 4.299e+03), (6.051e+03, 5.966e+03)], ('FSC-A', 'SSC-A'), region='in', name='gate1')
+#     yfp_gate = PolyGate([(4.960e+03, 6.597e+02), (1.104e+03, 7.098e+02), (5.613e+03, 8.293e+03), (8.973e+03, 6.732e+03)], ('B1-A', 'FSC-A'), region='in', name='gate2')
+# 
+#     gated_size = [hplate.gate(size_gate, apply_now=False) for hplate in hplates]
+#     size_counts = array([gs.counts().values for gs in gated_size])
 
-    #import glob
-    #datadir = '../tests/data/Plate01/'
-    #fname = glob.glob(datadir + '*.fcs')[0]
-    #sample = FCMeasurement(1, datafile=fname)
-    ##print sample.channels
-    ##print sample.channel_names
-##     hs = sample.transform('hlog', use_spln=True)
-##     hs.plot(('FSC-A','SSC-A'))
-##     import pylab
-##     pylab.show()
-#
-    #plate = FCPlate.from_dir('p', datadir).dropna()
-    #print plate.counts()
-    #print plate
+    import glob
+    datadir = '../tests/data/Plate01/'
+    fname = glob.glob(datadir + '*.fcs')[0]
+    sample = FCMeasurement(1, datafile=fname)
+     
+    from FlowCytometryTools import ThresholdGate
+    g = ThresholdGate(6e3, 'FSC-A', 'above')
+ 
+    plate = FCPlate.from_dir('p', datadir).dropna()
+    print plate.counts()
+     
+    queued = plate.transform('hlog', apply_now=False).gate(g, apply_now=False)
+    print queued.counts()
+    print type(queued['A4']._data)
+     
+    in_mem = plate.transform('hlog', apply_now=True).gate(g, apply_now=True)
+    print in_mem.counts()
+    print type(in_mem['A4']._data)
 #
     #import time
     #s = time.clock()
