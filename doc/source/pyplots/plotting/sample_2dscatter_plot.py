@@ -13,7 +13,7 @@ tsample = FCMeasurement(ID='Test Sample', datafile=datafile)
 tsample = tsample.transform('hlog', channels=['Y2-A', 'B1-A', 'V2-A'], b=500.0)
 
 # Plot
-tsample.plot('Y2-A', bins=100, alpha=0.9, color='green');
+tsample.plot(['Y2-A', 'B1-A'], kind='scatter', alpha=0.6, color='gray');
 grid(True)
 
-# show() # <-- Uncomment when running as a script.
+#show() # <-- Uncomment when running as a script.

@@ -29,5 +29,7 @@ for rows in ax_subplots:
         grid(True)
         ax.set_xticks(linspace(-2000.0, 10000.0, 5))
         ax.set_yticks(linspace(-2000.0, 10000.0, 5))
+        tick_params(axis='both', which='major', labelsize=6)
+        tick_params(axis='both', which='minor', labelsize=6)
 
 #show() # <-- Uncomment when running as a script.

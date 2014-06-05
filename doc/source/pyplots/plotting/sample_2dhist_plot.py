@@ -9,8 +9,8 @@ datafile = os.path.join(datadir, 'RFP_Well_A3.fcs')
 # datafile = '[insert path to your own fcs file]' 
 
 # Load data
-tsample = FCMeasurement(ID='Test Plate', datafile=datafile)
-tsample = tsample.transform('hlog', channels=['Y2-A', 'B1-A', 'V2-A'])
+tsample = FCMeasurement(ID='Test Sample', datafile=datafile)
+tsample = tsample.transform('hlog', channels=['Y2-A', 'B1-A', 'V2-A'], b=500.0)
 
 # Plot
 tsample.plot(['Y2-A', 'B1-A'], bins=100, alpha=0.9, cmap=cm.hot);
