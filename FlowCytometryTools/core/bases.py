@@ -12,13 +12,14 @@ factory methods for construction from files.
 - consider always reading in data in measurements, perhaps storing on disk
 using shelve|PyTables|pandas HDFStore
 '''
+import os, inspect, decorator
+import pylab as pl
 from pandas import DataFrame as DF
 from numpy import nan, unravel_index
-import pylab as pl
 from GoreUtilities.util import get_files, save, load, to_list, get_tag_value
 from GoreUtilities import graph
-import os
 from common_doc import doc_replacer
+
 
 @doc_replacer
 def _assign_IDS_to_datafiles(datafiles, parser, measurement_class=None, **kwargs):
@@ -87,6 +88,29 @@ def int2letters(x, alphabet):
     letters.reverse()
     return ''.join(letters)
 
+_now = 'apply_now'
+@decorator.decorator
+def queueable(fun, *args, **kwargs):
+    params = inspect.getcallargs(fun, *args, **kwargs)
+    if not _now in params: 
+        raise ValueError, '"%s" must be a parameter of queued function "%s"' %(_now, fun.__name__)
+    f_name = fun.__name__
+    kw_name = inspect.getargspec(fun).keywords
+    kws = params.pop(kw_name, {})
+    params.update(kws)
+    if params[_now]:
+        out = fun(*args, **kwargs)
+        out.queue = []
+        out.history.append((f_name, params))
+        return out
+    else:        
+        new = params['self'].copy()
+        del params['self']
+        params[_now] = True
+
+        new.queue.append((f_name, params))
+        return new
+
 class BaseObject(object):
     '''
     Object providing common utility methods.
@@ -139,15 +163,13 @@ class Measurement(BaseObject):
         self.ID = ID
         self.datafile = datafile
         self.metafile = metafile
-        if readdata:
-            self.set_data(datafile=datafile, **readdata_kwargs)
-        else:
-            self.data = None
-        if readmeta:
-            self.set_meta(metafile=metafile, **readmeta_kwargs)
-        else:
-            self.meta = None
+        self._data = None
+        self._meta = None
+        if readdata: self.set_data(**readdata_kwargs)
+        if readmeta: self.set_meta(**readmeta_kwargs)
         self.position = {}
+        self.history = []
+        self.queue   = []
 
     def _set_position(self, orderedcollection_id, pos):
         self.position[orderedcollection_id] = pos
@@ -159,6 +181,29 @@ class Measurement(BaseObject):
         else:
             return self.data.shape
 
+    def apply_queued(self): 
+        new = self.copy()
+        new.queue = []
+        for a in self.queue:
+            name, params = a
+            new = getattr(new, name)(**params)
+        return new
+
+#     # An example for how to write a queueable function 
+#     @queueable
+#     def fake_action(self, a, b='!', apply_now=False, **kws):
+#         '''
+#         Detailed doc.
+#         '''
+#         new = self.copy()
+#         data = self.get_data()
+#         if data is None: data = ''
+#         c = kws.get('c',' ')
+#         new_data = data + (a + b +' (%s). '%c)
+# #         new.set_data(data=new_data)
+#         new.data = new_data
+#         return new
+    
     # ----------------------
     # Methods of exposing underlying data
     # ----------------------
@@ -168,6 +213,8 @@ class Measurement(BaseObject):
     def __getitem__(self, key):
         return self.data.__getitem__(key)
 
+    # ----------------------
+    # Methods getting/setting data
     # ----------------------
     def read_data(self, **kwargs):
         '''
@@ -183,39 +230,25 @@ class Measurement(BaseObject):
         '''
         pass
 
-    def _set_attr_from_file(self, name, value=None, path=None, **kwargs):
+    def set_data(self, data=None, **kwargs):
         '''
-        Assign values to attribute of self.
-        Attribute values can be passed by user or read from file.
-        If read from file: 
-            i) the method used to read the file is 'self.read_[attr name]'
-            (e.g. for an attribute named 'meta' 'self.read_meta' 
-            will be used).
-            ii) the file path will also be set to an attribute
-            named: '[attr name]file'. (e.g. for an attribute named 
-            'meta' a 'metafile' attribute will be created).
+        Read data into memory, applying all actions in queue.
+        Additionally, update queue and history.
         '''
-        if value is not None:
-            setattr(self, name, value)
-        else:
-            if path is not None:
-                setattr(self, name+'file', path)
-            value = getattr(self, 'read_%s' %name)(**kwargs)
-        setattr(self, name, value)
+        if data is None:
+            data = self.get_data(**kwargs)
+        setattr(self, '_data', data)
+        self.history += self.queue
+        self.queue = []
 
-    def set_data(self, data=None, datafile=None, **kwargs):
+    def set_meta(self, meta=None, **kwargs):
         '''
-        Assign values to self.data and self.meta. 
-        Data is not returned
+        Assign values to self.meta. 
+        Meta is not returned
         '''
-        self._set_attr_from_file('data', data, datafile, **kwargs)
-
-    def set_meta(self, meta=None, metafile=None, **kwargs):
-        '''
-        Assign values to self.data and self.meta. 
-        Data is not returned
-        '''
-        self._set_attr_from_file('meta', meta, metafile, **kwargs)
+        if meta is None:
+            meta = self.get_meta(**kwargs)
+        setattr(self, '_meta', meta)
 
     def _get_attr_from_file(self, name, **kwargs):
         '''
@@ -230,23 +263,24 @@ class Measurement(BaseObject):
             named: '[attr name]file'. (e.g. for an attribute named 
             'meta' a 'metafile' attribute will be created).
         '''
-        current_value = getattr(self, name)
-        current_path  = getattr(self, name+'file')
+        current_value = getattr(self, '_' + name)
         if current_value is not None:
             value = current_value
-        elif current_path is not None:
-            value = getattr(self, 'read_%s' %name)(**kwargs)
         else:
-            value = None
+            value = getattr(self, 'read_%s' %name)(**kwargs)
         return value
-
+        
     def get_data(self, **kwargs):
         '''
         Get the measurement data.
         If data is not set, read from 'self.datafile' using 'self.read_data'.
         '''
-        return self._get_attr_from_file('data', **kwargs)
-
+        if self.queue:
+            new = self.apply_queued()
+            return new.get_data()
+        else:
+            return self._get_attr_from_file('data', **kwargs)
+    
     def get_meta(self, **kwargs):
         '''
         Get the measurement metadata.
@@ -254,6 +288,10 @@ class Measurement(BaseObject):
         '''
         return self._get_attr_from_file('meta', **kwargs)
 
+    data = property(get_data, set_data, doc='Data may be stored in memory or on disk')
+    meta = property(get_meta, set_meta, doc='Metadata associated with measurement.')
+
+    # ----------------------
     def get_meta_fields(self, fields, **kwargs):
         '''
         Get specific fields of associated metadata.
@@ -355,7 +393,11 @@ class MeasurementCollection(collections.MutableMapping, BaseObject):
         d = _assign_IDS_to_datafiles(datafiles, parser, cls._measurement_class, **ID_kwargs)
         measurements = []
         for sID, dfile in d.iteritems():
+            try:
                 measurements.append(cls._measurement_class(sID, datafile=dfile))
+            except:
+                msg = 'Error occured while trying to parse file: %s' %dfile
+                raise IOError, msg 
         return cls(ID, measurements)
 
     @classmethod
@@ -408,10 +450,12 @@ class MeasurementCollection(collections.MutableMapping, BaseObject):
     # ----------------------
     # User methods
     # ----------------------
-    def apply(self, func, ids=None, applyto='measurement', noneval=nan, setdata=False, **kwargs):
+    def apply(self, func, ids=None, applyto='measurement', noneval=nan,
+            setdata=False, output_format='dict', ID=None,
+            **kwargs):
         '''
         Apply func to each of the specified measurements.
-        
+
         Parameters
         ----------
         func : callable 
@@ -427,17 +471,41 @@ class MeasurementCollection(collections.MutableMapping, BaseObject):
         setdata : bool
             Whether to set the data in the Measurement object.
             Used only if data is not already set.
-        
+        output_format : ['dict' | 'collection']
+            * collection : keeps result as collection
+            WARNING: For collection, func should return a copy of the measurement instance rather
+            than the original measurement instance.
         Returns
         -------
-        Dictionary keyed by measurement keys containing the corresponding output of func.
-        ''' 
+        Dictionary keyed by measurement keys containing the corresponding output of func
+        or returns a collection (if output_format='collection').
+        '''
         if ids is None:
             ids = self.keys()
         else:
             ids = to_list(ids)
         result = dict( (i, self[i].apply(func, applyto, noneval, setdata)) for i in ids )
-        return result
+
+        if output_format == 'collection':
+            can_keep_as_collection = all([isinstance(r, self._measurement_class) for r in result.values()])
+            if not can_keep_as_collection:
+                raise TypeError('Cannot turn output into a collection. The provided func must return results of type {}'.format(_measurement_class))
+
+            new_collection = self.copy()
+            # Locate IDs to remove
+            ids_to_remove  = [x for x in self.keys() if x not in ids]
+            # Remove data for these IDs
+            for ids in ids_to_remove:
+                new_collection.pop(ids)
+            # Update keys with new values
+            for k,v in new_collection.iteritems():
+                new_collection[k] = result[k]
+            if ID is not None:
+                new_collection.ID = ID
+            return new_collection
+        else:
+            # Return a dictionary
+            return result
 
     def set_data(self, ids=None):
         """
@@ -445,7 +513,7 @@ class MeasurementCollection(collections.MutableMapping, BaseObject):
         """
         fun = lambda x: x.set_data()
         self.apply(fun, ids=ids, applyto='measurement')
-         
+
     def _clear_measurement_attr(self, attr, ids=None):
         fun = lambda x: setattr(x, attr, None)
         self.apply(fun, ids=ids, applyto='measurement')
@@ -675,7 +743,11 @@ class OrderedCollection(MeasurementCollection):
         d = _assign_IDS_to_datafiles(datafiles, parser, cls._measurement_class, **ID_kwargs)
         measurements = []
         for sID, dfile in d.iteritems():
-            measurements.append(cls._measurement_class(sID, datafile=dfile))
+            try:
+                measurements.append(cls._measurement_class(sID, datafile=dfile))
+            except:
+                msg = 'Error occured while trying to parse file: %s' %dfile
+                raise IOError, msg 
         return cls(ID, measurements, position_mapper, **kwargs)
 
     @classmethod
@@ -850,7 +922,7 @@ class OrderedCollection(MeasurementCollection):
 
     def apply(self, func, ids=None, applyto='measurement',
               output_format='DataFrame', noneval=nan,
-              setdata=False, dropna=False):
+              setdata=False, dropna=False, ID=None):
         """
         Apply func to each of the specified measurements.
 
@@ -864,7 +936,7 @@ class OrderedCollection(MeasurementCollection):
         applyto :  'measurement' | 'data'
             'measurement' : apply to measurements objects themselves.
             'data'        : apply to measurement associated data
-        output_format: 'DataFrame' | 'dict'
+        output_format: ['DataFrame' | 'dict' | 'collection']
         noneval : obj
             Value returned if applyto is 'data' but no data is available.
         setdata : bool
@@ -872,17 +944,28 @@ class OrderedCollection(MeasurementCollection):
             Used only if data is not already set.
         dropna : bool
             whether to remove rows/cols that contain no measurements.
+        ID : [None | str | numeric]
+            ID is used as the new ID for the collection.
+            If None, then the old ID is retained.
+            Note: Only applicable when output is a collection.
 
         Returns
         -------
-        DataFrame/Dictionary containing the output of func for each Measurement. 
+        DataFrame/Dictionary/Collection containing the output of func for each Measurement.
         """
-        result = super(OrderedCollection, self).apply(func, ids, applyto, 
-                                                       noneval, setdata)
+        _output = 'collection' if output_format == 'collection' else 'dict'
+        result = super(OrderedCollection, self).apply(func, ids, applyto,
+                                                       noneval, setdata,
+                                           output_format=_output)
+
+        # Note: result should be of type dict or collection for the code
+        # below to work
         if output_format is 'dict':
             return result
         elif output_format is 'DataFrame':
             return self._dict2DF(result, noneval, dropna)
+        elif output_format is 'collection':
+            return result
         else:
             msg = ("output_format must be either 'dict' or 'DataFrame'. " +
                    "Encounterd unsupported value %s." %repr(output_format))
@@ -1024,7 +1107,20 @@ class OrderedCollection(MeasurementCollection):
         return ax_main, ax_subplots
 
 if __name__ == '__main__':
-    print OrderedCollection.grid_plot.__doc__
+    m = Measurement('m', datafile='')
+    mm = m.fake_action('Hello', b=' there', c='Hola', apply_now=False)
+    mm2 = mm.fake_action('World', c='Mundo', apply_now=False)
+    mmm = mm2.apply_queued()
+    for t in [m,mm,mm2, mmm]:
+        print t._data, '| ', t.data, '|', len(t.queue), '|', len(t.history)
+    
+    mm2.set_data()
+    mm3 = mm2.fake_action('Goodbye')
+    for t in [mm2, mm3]:
+        print t._data, '| ', t.data, '|', len(t.queue), '|', len(t.history)
+    
+    
+#     print OrderedCollection.grid_plot.__doc__
     #print OrderedCollection.__doc__
     #print OrderedCollection.__init__.__doc__
     #print OrderedCollection.from_files.__doc__

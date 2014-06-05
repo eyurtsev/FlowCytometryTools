@@ -18,9 +18,10 @@ FCMeasurement
     FCMeasurement.gate
     FCMeasurement.counts
     FCMeasurement.get_data
-    FCMeasurement.view
+    FCMeasurement.view_interactively
     FCMeasurement.channel_names
     FCMeasurement.channels
+    FCMeasurement.subsample
 
 FCPlate
 ===========================
@@ -28,6 +29,7 @@ FCPlate
 .. autosummary::
    :toctree: API
 
+   FCOrderedCollection
    FCPlate 
    FCPlate.from_files
    FCPlate.from_dir
@@ -37,6 +39,7 @@ FCPlate
    FCPlate.gate
    FCPlate.counts
    FCPlate.dropna
+   FCPlate.subsample
 
 Gates
 ----------------------------
@@ -48,7 +51,7 @@ Gates
     IntervalGate
     QuadGate
     PolyGate 
-
+    FlowCytometryTools.core.gates.CompositeGate 
 
 Transformations
 ----------------------------

@@ -55,20 +55,16 @@ ID_kwargs: dict
     Passed to '_assign_IDS_to_datafiles' method.""",
 
 _gate_available_classes="""\
-[:class:`~FlowCytometryTools.ThresholdGate`, :class:`~FlowCytometryTools.IntervalGate`, \
-:class:`~FlowCytometryTools.QuadGate`, :class:`~FlowCytometryTools.PolyGate` ]""",
+[:class:`~FlowCytometryTools.ThresholdGate` | :class:`~FlowCytometryTools.IntervalGate` | \
+:class:`~FlowCytometryTools.QuadGate` | :class:`~FlowCytometryTools.PolyGate` | \
+:class:`~FlowCytometryTools.core.gates.CompositeGate`]
+""",
 
 FCMeasurement_plot_pars="""\
-transform : [valid transform | tuple of valid transforms | None]
-    Transform to be applied to corresponding channels using the
-    FCMeasurement.transform function.
-    If a single transform is given, it will be applied to all plotted channels.
 gates : [None | Gate | iterable of Gate]
     Gate should be in {_gate_available_classes}.
     When supplied, the gates are drawn on the plot.
-    The gates are applied by default.
-transform_first : bool
-    Apply transforms before gating.""",
+    The gates are applied by default.""",
 
 FCMeasurement_transform_pars="""\
 transform : ['hlog' | 'tlog' | 'glog' | callable]
@@ -110,6 +106,36 @@ FCMeasurement_transform_examples="""\
 >>> trans = original.transform('hlog', d=log10(2**18), auto_range=False)
 >>> trans = original.transform('hlog', r=1000, use_spln=True, get_transformer=True)
 >>> trans = original.transform('hlog', channels=['FSC-A', 'SSC-A'], b=500).transform('hlog', channels='B1-A', b=100)""",
+
+FCMeasurement_subsample_parameters="""\
+key : [int | float | tuple | slice]
+    When key is a single number, it specifies a number/fraction of events
+    to use. Use the parameter 'order' to specify how to subsample
+    the requested number/fraction of events.
+
+    * int : specifies a number of events to use
+    * float : specifies a fraction of events to use (a number between 0 and 1)
+    * tuple : consists of two floats, each between 0 and 1. For example, key = (0.66666, 1.0) returns the last one third of events.
+    * slice : applies a slice. For example, key = slice(10, 1000, 20) returns events with indexes [10, 30, 50, ...]
+
+    .. note:
+
+        When key is a tuple (2 floats) or a slice, the 'order' parameter is irrelevant.
+
+order : ['random' | 'start' | 'end']
+    Specifies which events to choose. This is only relevant
+    when key is either an int or a float.
+
+    * 'random' : chooses the events randomly (without replacement)
+    * 'start' : subsamples starting from the start
+    * 'end' : subsamples starting from the end
+
+auto_resize : [False | True]
+    If True, attempts to automatically control indexing errors.
+    For example, if there are only 1000 events in the fcs sample,
+    but the key is set to subsample 2000 events, then an error will be raised.
+    However, with auto_resize set to True, the key will be adjusted
+    to 1000 events.""",
 
 graph_plotFCM_pars = """\
 channel_names : [str | iterable of str]
@@ -157,6 +183,7 @@ _containers_held_in_memory_warning="""\
     to only work one collection at a time. Please refer to the tutorials to see how
     this can be done."""
 )
+
 
 _doc_dict.update(_gore_doc_dict)
 
