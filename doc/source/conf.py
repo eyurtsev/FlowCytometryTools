@@ -49,18 +49,44 @@ extensions = ['sphinx.ext.autodoc',
               'sphinx.ext.doctest',
               'sphinx.ext.extlinks',
               'sphinx.ext.todo',
-              'numpydoc',
-              'ipython_directive',
-              'ipython_console_highlighting',
+              #'numpydoc',
+              'sphinxcontrib.napoleon',
+              'sphinxcontrib.googleanalytics',
               #'sphinx.ext.intersphinx',
               'sphinx.ext.todo',
+              'sphinx.ext.linkcode',
               'sphinx.ext.coverage',
               'sphinx.ext.pngmath',
               'sphinx.ext.ifconfig',
               'sphinx.ext.autosummary',
               'matplotlib.sphinxext.only_directives',
               'matplotlib.sphinxext.plot_directive',
+              ##
+              # On newer versions
+              'IPython.sphinxext.ipython_directive',
+              'IPython.sphinxext.ipython_console_highlighting'
+
+              ##
+              # On older sphinx versions
+              #'ipython_directive',
+              #'ipython_console_highlighting',
               ]
+
+## Google analytics
+googleanalytics_id = 'UA-45363835-3'
+googleanalytics_enabled = True
+
+## Napoleon settings
+napoleon_google_docstring = False
+napoleon_numpy_docstring = True
+napoleon_include_private_with_doc = False
+napoleon_include_special_with_doc = True
+napoleon_use_admonition_for_examples = True
+napoleon_use_admonition_for_notes = True
+napoleon_use_admonition_for_references = False
+napoleon_use_ivar = False
+napoleon_use_param = True
+napoleon_use_rtype = True
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates', '_templates/autosummary']
@@ -76,7 +102,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'FlowCytometryTools'
-copyright = u'2013, Jonathan Friedman & Eugene Yurtsev'
+copyright = u'2013-2014, Jonathan Friedman & Eugene Yurtsev'
 
 import FlowCytometryTools
 
@@ -203,7 +229,8 @@ html_theme_options = {
     # such as "amelia" or "cosmo".
     #
     # Note that this is served off CDN, so won't be available offline.
-    'bootswatch_theme': "flatly",
+    'bootswatch_theme': "yeti",
+    #'bootswatch_theme': "flatly",
     #'bootswatch_theme': "united",
     #'bootswatch_theme': "spacelab",
 
@@ -253,7 +280,7 @@ html_last_updated_fmt = '%b %d, %Y'
 #html_sidebars = {}
 
 EY_doc_names = ['localtoc.html']
-html_sidebars = {'tutorial': EY_doc_names, 'install': EY_doc_names, 'api' : EY_doc_names}
+html_sidebars = {'tutorial': EY_doc_names, 'install': EY_doc_names, 'api' : EY_doc_names, 'gallery' : EY_doc_names}
 
 # Additional templates that should be rendered to pages, maps page names to
 # template names.
@@ -376,3 +403,69 @@ texinfo_documents = [
 
 # Example configuration for intersphinx: refer to the Python standard library.
 intersphinx_mapping = {'http://docs.python.org/': None}
+
+
+# -----------------------------------------------------------------------------
+# Source code links
+# -----------------------------------------------------------------------------
+
+import inspect
+from os.path import relpath, dirname
+import FlowCytometryTools
+
+
+from git import *
+import FlowCytometryTools
+repo = Repo(FlowCytometryTools.__path__[0])
+current_commit = repo.commit()
+current_branch = repo.active_branch
+
+def linkcode_resolve(domain, info):
+    """
+    Determine the URL corresponding to Python object
+
+    Code from scipy:
+        http://nullege.com/codes/show/src@s@c@scipy-HEAD@doc@source@conf.py
+    """
+    if domain != 'py':
+        return None
+
+    modname = info['module']
+    fullname = info['fullname']
+
+    submod = sys.modules.get(modname)
+    if submod is None:
+        return None
+
+    obj = submod
+    for part in fullname.split('.'):
+        try:
+            obj = getattr(obj, part)
+        except:
+            return None
+
+    try:
+        fn = inspect.getsourcefile(obj)
+    except:
+        fn = None
+    if not fn:
+        try:
+            fn = inspect.getsourcefile(sys.modules[obj.__module__])
+        except:
+            fn = None
+    if not fn:
+        return None
+
+    try:
+        source, lineno = inspect.findsource(obj)
+    except:
+        lineno = None
+
+    if lineno:
+        linespec = "#cl-%d" % (lineno + 1)
+    else:
+        linespec = ""
+
+    fn = relpath(fn, start=dirname(FlowCytometryTools.__file__))
+
+    return "//bitbucket.org/gorelab/flowcytometrytools/src/{}/FlowCytometryTools/{}?at={}{}".format(current_commit, fn, current_branch, linespec)
