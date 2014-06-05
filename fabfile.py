@@ -20,7 +20,7 @@ BUILD_DIRS = (
 
 SDIST_RST_FILES = (
     "README.rst",
-    "HISTORY.rst",
+    #"HISTORY.rst",
 )
 
 SDIST_TXT_FILES = [os.path.splitext(x)[0] + ".txt" for x in SDIST_RST_FILES]
