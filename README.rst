@@ -61,6 +61,29 @@ you run into issues, please update the dependencies.
 
 #. `wx-python <http://wiki.wxpython.org/How%20to%20install%20wxPython>`__ : Used for the FlowCytometryTools GUI.
 
+Changes
+=====================
+
+v0.4.0, 2014-06-05
+
++ Updates in documentation
++ Added experimental view() function
++ Renamed old view() function into -> view_interactively()
++ Added queueing to help when dealing with large quantities of data.
++ Histogram plots should work with pandas (0.14.0) & matplotlib (1.3.1).
+
+v0.3.6, 2014-02-11
+
++ Mostly updates in documentation
+
+v0.3.5, 2014-01-19
+
++ Boost in speed for transformations on collections of measurements (like 96-well plates).
++ Much of the documentation has been updated and improved.
++ Improved GUI.
+
+v0.3.0, 2013-10-27 Initial Release
+
 LICENSE
 ===================
 
