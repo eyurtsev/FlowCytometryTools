@@ -82,8 +82,7 @@ class FCMeasurement(Measurement):
 
     @doc_replacer
     def plot(self, channel_names, kind='histogram',
-             gates=None, plot_gates=True,
-             gate_colors=None, **kwargs):
+             gates=None, gate_colors=None, **kwargs):
         """
         Plots the flow cytometry data associated with the sample on the current axis.
 
@@ -116,7 +115,7 @@ class FCMeasurement(Measurement):
 
         plot_output  = graph.plotFCM(self.data, channel_names, kind=kind, **kwargs)
 
-        if plot_gates and gates is not None:
+        if gates is not None:
             if gate_colors is None:
                 gate_colors = cycle(('b', 'g', 'r', 'm', 'c', 'y'))
             for (g, c) in zip(gates, gate_colors):
@@ -125,7 +124,7 @@ class FCMeasurement(Measurement):
         return plot_output
 
     def matplot(self, channel_names='auto',
-             gates=None, plot_gates=True,
+             gates=None,
              diag_kw={}, offdiag_kw={},
              gate_colors=None, **kwargs):
         """
@@ -155,7 +154,6 @@ class FCMeasurement(Measurement):
             kind = 'histogram'
 
             self.plot(channels, kind=kind, gates=gates,
-                    plot_gates=plot_gates,
                     gate_colors=gate_colors, autolabel=False)
 
         channel_list = np.array(list(channel_names), dtype=object)
@@ -492,7 +490,7 @@ class FCOrderedCollection(OrderedCollection, FCCollection):
 
     @doc_replacer
     def plot(self, channel_names,  kind='histogram',
-             gates=None, plot_gates=True, gate_colors=None,
+             gates=None, gate_colors=None,
              ids=None, row_labels=None, col_labels=None,
              xlim=None, ylim=None,
              autolabel=True,
@@ -554,8 +552,7 @@ class FCOrderedCollection(OrderedCollection, FCCollection):
 
         def plot_sample(sample, ax):
             return sample.plot(channel_names, ax=ax,
-                               gates=gates, plot_gates=plot_gates,
-                               gate_colors=gate_colors,
+                               gates=gates, gate_colors=gate_colors,
                                colorbar=False,
                                kind=kind, autolabel=False, **kwargs)
 
