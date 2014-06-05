@@ -123,7 +123,7 @@ class FCMeasurement(Measurement):
 
         return plot_output
 
-    def matplot(self, channel_names='auto',
+    def view(self, channel_names='auto',
              gates=None,
              diag_kw={}, offdiag_kw={},
              gate_colors=None, **kwargs):
@@ -164,7 +164,7 @@ class FCMeasurement(Measurement):
         return plot_ndpanel(channel_mat, plot_region, **kwargs)
 
 
-    def view(self):
+    def view_interactively(self):
         '''
         Loads the current FCS sample viewer
 
@@ -230,7 +230,8 @@ class FCMeasurement(Measurement):
                     # the -1 below because the channel numbers begin from 1 instead of 0 (this is fragile code)
                     ranges = [float(r['$PnR']) for i, r in channel_meta.iterrows() if self.channel_names[i-1] in channels]
                     if not np.allclose(ranges, ranges[0]):
-                        raise Exception, 'Not all specified channels have the same data range, therefore they cannot be transformed together.'
+                        raise Exception("""Not all specified channels have the same data range, therefore they cannot be transformed together.\
+                                           \nHINT: Try transforming one channel at a time. You'll need to provide the name of the channel in the transform.""")
                     kwargs['d'] = np.log10(ranges[0])
             transformer = Transformation(transform, direction, args, **kwargs)
         ## create new data
