@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 ## get version info
 import re
 VERSIONFILE="FlowCytometryTools/_version.py"
-gore_utilities_version = '0.3.4'
+gore_utilities_version = '0.4.0'
 verstrline = open(VERSIONFILE, "rt").read()
 VSRE = r"^version = ['\"]([^'\"]*)['\"]"
 mo = re.search(VSRE, verstrline, re.M)
@@ -23,7 +23,7 @@ setup(
     download_url = 'https://bitbucket.org/gorelab/flowcytometrytools/get/v{0}.zip'.format(version),
     keywords = ['flow cytometry', 'data analysis', 'cytometry', 'single cell'],
     license='MIT',
-    dependency_links = ['https://bitbucket.org/gorelab/goreutilities/get/v{0}.zip#egg=GoreUtilities-{0}'.format(gore_utilities_version)],
+    #dependency_links = ['https://bitbucket.org/gorelab/goreutilities/get/v{0}.zip#egg=GoreUtilities-{0}'.format(gore_utilities_version)],
     #dependency_links = ['https://bitbucket.org/gorelab/goreutilities/get/master.zip#egg=GoreUtilities-0.3.0'.format(version)],
 
     install_requires=[
