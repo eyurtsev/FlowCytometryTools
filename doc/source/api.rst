@@ -18,7 +18,7 @@ FCMeasurement
     FCMeasurement.gate
     FCMeasurement.counts
     FCMeasurement.get_data
-    FCMeasurement.view
+    FCMeasurement.view_interactively
     FCMeasurement.channel_names
     FCMeasurement.channels
     FCMeasurement.subsample

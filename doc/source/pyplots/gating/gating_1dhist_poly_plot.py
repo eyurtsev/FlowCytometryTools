@@ -16,7 +16,7 @@ tsample = tsample.transform('hlog', channels=['Y2-A', 'B1-A', 'V2-A'], b=500.0)
 from FlowCytometryTools import PolyGate
 
 # HINT: If you have wx-python installed, then you can use the GUI to create the gate.
-# You can launch the GUI by executing the command tsample.view()
+# You can launch the GUI by executing the command tsample.view_interactively()
 
 gate1 = PolyGate([(-5.441e+02, 7.978e+03), (-8.605e+02, 6.739e+03), (-5.811e+02, 4.633e+03),
     (1.502e+03, 5.118e+03), (8.037e+02, 8.215e+03), (8.037e+02, 8.215e+03)], ('B1-A', 'Y2-A'), region='in', name='poly gate')

@@ -261,9 +261,9 @@ While we're at it, here's another gate for events with a B1-A value (CFP) above 
 Using the GUI
 ```````````````````````
 
-You can launch the GUI for creating the gates, by calling the view() method of an ``FCMeasurement`` instance.
+You can launch the GUI for creating the gates, by calling the view_interactively() method of an ``FCMeasurement`` instance.
 
->>> tsample.view()
+>>> tsample.view_interactively()
 
 .. warning::
 
