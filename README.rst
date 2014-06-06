@@ -1,13 +1,13 @@
 FlowCytometryTools
 -------------------
 
-**Authors**: Jonathan Friedman and Eugene Yurtsev
+**Authors**: Jonathan Friedman and `Eugene Yurtsev <http://eyurtsev.mit.edu>`_
 
 FlowCytometryTools is a python package for visualization and analysis of high-throughput flow cytometry data.
 
-* **Intuitive**: provides a simple programmatic interface to work with flow cytometry data.
-* **Interactive**: makes use of the powerful `pandas <http://pandas.pydata.org/>`_ package to simplify analysis of large datasets.
-* **Flexible**: can be used for analyzing individual measurements, measurement collections or plates.
+* **Intuitive**: provides a simple programmatic interface to work with flow cytometry data
+* **Flexible**: can analyze either individual samples or collections of many plates
+* **Scalable**: simplifies analysis of high-throughput data using the power of `pandas <http://pandas.pydata.org/>`_ 
 
 Who is this for?
 =====================
@@ -52,10 +52,10 @@ you run into issues, please update the dependencies.
 
 **Required Dependencies**
 
-#. `python <http://www.python.org/getit/>`_ : 2.6 or 2.7 (note that python 3.0 or higher are not yet supported!)
+#. `python <http://www.python.org/getit/>`_ 2.6 or 2.7 (note that python 3.0 or higher are not yet supported!)
 #. `decorator <https://pypi.python.org/pypi/decorator>`_
 #. `pandas <http://pandas.sourceforge.net/index.html>`__ (Recommended version: 0.12.0 or higher).
-#. `matplotlib <http://matplotlib.org/>`__: (Recommended version: 1.13.1 or higher).
+#. `matplotlib <http://matplotlib.org/>`__ (Recommended version: 1.13.1 or higher).
 #. `scipy <http://www.scipy.org/>`__ 
 
 **Optional Dependencies**
