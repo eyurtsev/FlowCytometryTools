@@ -3,13 +3,54 @@
     <!-- TODO: There should be a way to include all of the required javascript
                and CSS so matplotlib can add to the set in the future if it
                needs to. -->
+
+    <!-- matplotlib's --!>
     <link rel="stylesheet" href="_static/css/page.css" type="text/css">
     <link rel="stylesheet" href="_static/css/boilerplate.css" type="text/css" />
     <link rel="stylesheet" href="_static/css/fbm.css" type="text/css" />
-    <link rel="stylesheet" href="_static/jquery/css/themes/base/jquery-ui.min.css" >
+    <script src="mpl.js"></script>
+
+    <!-- jquery and jquery ui -->
     <script src="_static/jquery/js/jquery-1.7.1.min.js"></script>
     <script src="_static/jquery/js/jquery-ui.min.js"></script>
-    <script src="mpl.js"></script>
+    <link rel="stylesheet" href="_static/jquery/css/themes/base/jquery-ui.min.css" > 
+    <!-- <link rel="stylesheet" href="//code.jquery.com/ui/1.11.0/themes/smoothness/jquery-ui.css"> --!>
+
+    <!-- boostrap -->
+    <!-- Latest compiled and minified JavaScript -->
+    <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+    <!-- bootstrap yeti theme --!>
+    <link href="//maxcdn.bootstrapcdn.com/bootswatch/3.2.0/yeti/bootstrap.min.css" rel="stylesheet">
+    <!-- <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css"> --!>
+
+
+    <style>
+        #toolbar {
+            text-align:center;
+            padding: 20px;
+        }
+        /* support: IE7 */
+        *+html #toolbar {
+            display: inline;
+        }
+
+        #figure {
+            display:inline-block;
+            margin-top: 50px;
+            margin-left: auto;
+            margin-right: auto;
+            border:1px solid black;
+        }
+
+        #workspace {
+            overflow:auto;
+            max-height:100%%;
+            height:100%%;
+            display:block;
+            border:1px solid black;
+        }
+    </style>
+
 
     <script>
       /* This is a callback that is called when the user saves
@@ -38,15 +79,74 @@
               ondownload,
               // The HTML element in which to place the figure
               $('div#figure'));
+
+          // Initialize the controls.
+           var send_message = function(type, properties) {
+                properties['type'] = type;
+                websocket.send(JSON.stringify(properties));
+            }
+
+           initialize_toolbar(send_message);
+
+
         }
       );
+    </script>
+    <script>
+        var initialize_toolbar = function(send_message) {
+
+            $( "#open_file" )
+                .button()
+                .click(function( ) {
+                        send_message('app_control', {name : 'open_file'});
+                });
+        
+
+            $( "#draw_poly_gate" )
+                .button()
+                .click(function( ) {
+                        send_message('app_control', {name : 'draw_poly_gate'});
+                });
+
+            $( "#draw_vertical_gate" )
+                .button()
+                .click(function( ) {
+                        send_message('app_control', {name : 'draw_vertical_gate'});
+                });
+
+            $( "#draw_horizontal_gate" )
+                .button()
+                .click(function( ) {
+                        send_message('app_control', {name : 'draw_horizontal_gate'});
+                });
+
+            $( "#delete_gate" )
+                .button()
+                .click(function( ) {
+                        send_message('app_control', {name : 'delete_gate'});
+                });
+
+            $("#figure").draggable({ containment: "#workspace" });
+
+            $("#toolbar").find("button").addClass("btn btn-primary");
+        };
     </script>
 
     <title>matplotlib</title>
   </head>
 
   <body>
-    <div id="figure">
+    <div id="toolbar" class="ui-widget-header ui-corner-all">
+        <button id="open_file"><span class="glyphicon glyphicon-cloud-upload"></span></button>
+        <button id="draw_poly_gate"><span class="glyphicon glyphicon-star-empty"></span></button>
+        <button id="draw_vertical_gate"><span class="glyphicon glyphicon-resize-vertical"></span></button>
+        <button id="draw_horizontal_gate"><span class="glyphicon glyphicon-resize-horizontal"></span></button>
+        <button id="delete_gate"><span class="glyphicon glyphicon-trash"></span></button>
+    </div>
+
+    <div id="workspace">
+        <div id="figure">
+        </div>
     </div>
   </body>
 </html>

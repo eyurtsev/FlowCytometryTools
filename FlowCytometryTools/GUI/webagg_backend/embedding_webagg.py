@@ -25,20 +25,20 @@ from matplotlib.backends.backend_webagg_core import (
 from matplotlib.figure import Figure
 
 import numpy as np
-
 import json
 
+from FlowCytometryTools.GUI import fc_widget
 
 def create_figure():
     """
     Creates a simple example figure.
     """
-    fig = Figure()
-    a = fig.add_subplot(111)
-    t = np.arange(0.0, 3.0, 0.01)
-    s = np.sin(2 * np.pi * t)
-    a.plot(t, s)
-    return fig
+    #fig = Figure()
+    import pylab as pl
+    fig = pl.figure()
+    ax = fig.add_subplot(111)
+    fc_manager = fc_widget.FCToolBar(ax)
+    return fig, fc_manager
 
 class MyApplication(tornado.web.Application):
     class MainPage(tornado.web.RequestHandler):
@@ -134,6 +134,23 @@ class MyApplication(tornado.web.Application):
             message = json.loads(message)
             if message['type'] == 'supports_binary':
                 self.supports_binary = message['value']
+            elif message['type'] == 'app_control':
+                manager = self.application.fc_manager
+
+                if message['name'] == 'open_file':
+                    import os
+                    import tkFileDialog
+                    filename = tkFileDialog.askopenfilename(initialdir=os.path.curdir, defaultextension='.fcs')
+                    if len(filename) != 0:
+                        manager.load_fcs(filename)
+                elif message['name'] == 'draw_poly_gate':
+                    manager.create_gate_widget('poly')
+                elif message['name'] == 'draw_horizontal_gate':
+                    manager.create_gate_widget('horizontal threshold')
+                elif message['name'] == 'draw_vertical_gate':
+                    manager.create_gate_widget('vertical threshold')
+                elif message['name'] == 'delete_gate':
+                    manager.remove_active_gate()
             else:
                 manager = self.application.manager
                 manager.handle_json(message)
@@ -149,8 +166,9 @@ class MyApplication(tornado.web.Application):
                     blob.encode('base64').replace('\n', ''))
                 self.write_message(data_uri)
 
-    def __init__(self, figure):
+    def __init__(self, figure, fc_manager):
         self.figure = figure
+        self.fc_manager = fc_manager
         self.manager = new_figure_manager_given_figure(
             id(figure), figure)
 
@@ -175,8 +193,8 @@ class MyApplication(tornado.web.Application):
 
 
 if __name__ == "__main__":
-    figure = create_figure()
-    application = MyApplication(figure)
+    figure, fc_manager = create_figure()
+    application = MyApplication(figure, fc_manager)
 
     http_server = tornado.httpserver.HTTPServer(application)
     http_server.listen(8080)
