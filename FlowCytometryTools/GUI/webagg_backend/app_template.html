@@ -26,8 +26,11 @@
 
     <style>
         #toolbar {
-            text-align:center;
-            padding: 20px;
+            position: absolute;
+            width: 100%%;
+            left: 0;
+            text-align: center;
+            margin: auto;
         }
         /* support: IE7 */
         *+html #toolbar {
@@ -39,7 +42,7 @@
             margin-top: 50px;
             margin-left: auto;
             margin-right: auto;
-            border:1px solid black;
+            border:3px solid orange;
         }
 
         #workspace {
@@ -47,7 +50,6 @@
             max-height:100%%;
             height:100%%;
             display:block;
-            border:1px solid black;
         }
     </style>
 
@@ -88,6 +90,9 @@
 
            initialize_toolbar(send_message);
 
+            $('#figure').position({
+                of: $(window)
+            });
 
         }
       );
@@ -128,7 +133,7 @@
 
             $("#figure").draggable({ containment: "#workspace" });
 
-            $("#toolbar").find("button").addClass("btn btn-primary");
+            $("#toolbar").find("div").find("button").addClass("btn btn-default navbar-btn btn-primary");
         };
     </script>
 
@@ -136,14 +141,22 @@
   </head>
 
   <body>
-    <div id="toolbar" class="ui-widget-header ui-corner-all">
-        <button id="open_file"><span class="glyphicon glyphicon-cloud-upload"></span></button>
-        <button id="draw_poly_gate"><span class="glyphicon glyphicon-star-empty"></span></button>
-        <button id="draw_vertical_gate"><span class="glyphicon glyphicon-resize-vertical"></span></button>
-        <button id="draw_horizontal_gate"><span class="glyphicon glyphicon-resize-horizontal"></span></button>
-        <button id="delete_gate"><span class="glyphicon glyphicon-trash"></span></button>
-    </div>
-
+    <nav class="navbar navbar-default navbar-static-top" role="navigation">
+      <div class="container">
+          <ul class="nav navbar-nav navbar-left">
+            <li><a href="#">FlowCytometryTools</a></li>
+          </ul>
+          <div id="toolbar">
+            <div class="btn-group btn-group-lg">
+                <button id="open_file" title="Load an FCS file"><span class="glyphicon glyphicon-cloud-upload"></span></button>
+                <button id="draw_poly_gate"><span class="glyphicon glyphicon-star-empty"></span></button>
+                <button id="draw_vertical_gate"><span class="glyphicon glyphicon-resize-vertical"></span></button>
+                <button id="draw_horizontal_gate"><span class="glyphicon glyphicon-resize-horizontal"></span></button>
+                <button id="delete_gate"><span class="glyphicon glyphicon-trash"></span></button>
+            </div>
+          </div>
+      </div>
+    </nav>
     <div id="workspace">
         <div id="figure">
         </div>
