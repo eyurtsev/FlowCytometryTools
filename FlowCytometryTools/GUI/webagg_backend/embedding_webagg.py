@@ -27,7 +27,10 @@ from matplotlib.figure import Figure
 import numpy as np
 import json
 
+
 from FlowCytometryTools.GUI import fc_widget
+import os
+import tkFileDialog
 
 def create_figure():
     """
@@ -35,7 +38,7 @@ def create_figure():
     """
     #fig = Figure()
     import pylab as pl
-    fig = pl.figure()
+    fig = Figure()
     ax = fig.add_subplot(111)
     fc_manager = fc_widget.FCToolBar(ax)
     return fig, fc_manager
@@ -138,8 +141,6 @@ class MyApplication(tornado.web.Application):
                 manager = self.application.fc_manager
 
                 if message['name'] == 'open_file':
-                    import os
-                    import tkFileDialog
                     filename = tkFileDialog.askopenfilename(initialdir=os.path.curdir, defaultextension='.fcs')
                     if len(filename) != 0:
                         manager.load_fcs(filename)
@@ -171,6 +172,12 @@ class MyApplication(tornado.web.Application):
         self.fc_manager = fc_manager
         self.manager = new_figure_manager_given_figure(
             id(figure), figure)
+
+        # Route callbacks from the widget directly to javascript
+        #self.fc_manager.add_callback(lambda event : self.WebSocket.send_json(['hello']))
+        def x(*args, **kwargs):
+            print(args, kwargs)
+        fc_manager.add_callback(x)
 
         super(MyApplication, self).__init__([
             # Static files for the CSS and JS

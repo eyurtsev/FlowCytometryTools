@@ -10,6 +10,9 @@ import itertools
 
 ## TODO
 # 1. Make it impossible to pick multiple vertexes at once. (right now if vertex are too close they will be selected.)
+# 2. refactor events?
+# 3. Refactor/rename FCToolBar -> FCGateManager
+# 4. Make a separate file for drawing tools
 
 def apply_format(var, format_str):
     """ Formats all non-iterables inside of the iterable var using the format_str
@@ -156,7 +159,6 @@ class BaseVertex(EventGenerator):
                 svertex.update_position(verts[0], verts[1])
         self.callback(Event(Event.BASE_GATE_CHANGED))
 
-
 class SpawnableVertex(AxesWidget, EventGenerator):
     """
     Defines a moveable vertex. The vertex must be associated
@@ -262,7 +264,7 @@ class SpawnableVertex(AxesWidget, EventGenerator):
             self.artist.set_ydata([ydata])
 
     def _update(self):
-        self.canvas.draw()
+        self.canvas.draw_idle()
 
     def update_looks(self, state):
         if state == 'active':
@@ -369,8 +371,6 @@ class BaseGate(EventGenerator):
             gate_type_name = 'QuadGate'
         return gate_type_name
 
-
-
     def set_axis(self, ch, ax):
         self.remove_spawned_gates()
         sgate = self.spawn(ch, ax)
@@ -408,7 +408,7 @@ class PlottableGate(AxesWidget):
             self._spawned_vertex_list.remove(event.info['caller'])
 
     def _update(self):
-        self.canvas.draw()
+        self.canvas.draw_idle()
 
     def remove(self):
         # IMPORTANT Do not remove spawned vertexes from the _list directly. Use 
@@ -440,13 +440,6 @@ class PlottableGate(AxesWidget):
     @property
     def vertex(self):
         return self._spawned_vertex_list
-
-    #def set_visible(self, visible):
-        #for artist in self.artist_list:
-            #artist.set_visible(visible)
-        #for vertex in to_list(self.vertex):
-            #vertex.set_visible(visible)
-        #self._update()
 
 class PolyGate(PlottableGate):
     def create_artist(self):
@@ -560,17 +553,17 @@ class PolyDrawer(AxesWidget):
         self._update()
 
     def _update(self):
-        self.canvas.draw()
+        self.canvas.draw_idle()
 
     def _clean(self):
         self.disconnect_events()
         self.line.remove()
 
-class FCToolBar(object):
+class FCToolBar(EventGenerator):
     """
     Manages gate creation widgets.
     """
-    def __init__(self, ax):
+    def __init__(self, ax, callback_list=None):
         self.gates = []
         self.fig = ax.figure
         self.ax = ax
@@ -579,11 +572,23 @@ class FCToolBar(object):
         self.sample = None
         self.canvas = self.fig.canvas
         self.key_handler_cid = self.canvas.mpl_connect('key_press_event', lambda event : key_press_handler(event, self.canvas, self))
+        self.pick_event_cid = self.canvas.mpl_connect('pick_event',  self.pick_event_handler)
         self.gate_num = 1
         self.current_channels = 'd1', 'd2'
+        self.add_callback(callback_list)
 
     def disconnect_events(self):
         self.canvas.mpl_disconnect(self.key_handler_cid)
+        self.canvas.mpl_disconnect(self.pick_event_cid)
+
+    def pick_event_handler(self, event):
+        """ Handles pick events """
+        if hasattr(self, 'xlabel_artist') and (event.artist == self.xlabel_artist):
+            print('x-axis')
+            self.callback(Event('xlabel_click'))
+        if hasattr(self, 'ylabel_artist') and (event.artist == self.ylabel_artist):
+            print('y-axis')
+            self.callback(Event('ylabel_click'))
 
     def add_gate(self, gate):
         self.gates.append(gate)
@@ -613,6 +618,11 @@ class FCToolBar(object):
         self.set_active_gate(event.info['caller'])
 
     def create_gate_widget(self, kind):
+        def clean_drawing_tools():
+            self._drawing_tool.disconnect_events()
+            self.canvas.draw_idle()
+            self._drawing_tool = None
+
         def create_gate(*args):
             canceled = False # TODO allow drawing tool to cancel
             verts = args[0]
@@ -638,7 +648,7 @@ class FCToolBar(object):
                 gate.spawn(ch, self.ax)
                 self.add_gate(gate)
 
-            clean_drawing_tools(kind)
+            clean_drawing_tools()
 
         def start_drawing(kind):
             if kind == 'poly':
@@ -651,12 +661,11 @@ class FCToolBar(object):
                 self._drawing_tool = Cursor(self.ax, vertOn=1, horizOn=0)
 
             if isinstance(self._drawing_tool, Cursor):
-                self._drawing_tool.connect_event('button_press_event', lambda event : create_gate([(event.xdata, event.ydata)]))
+                def finish_drawing(event):
+                    self._drawing_tool.clear(None)
+                    return create_gate([(event.xdata, event.ydata)])
 
-        def clean_drawing_tools(kind):
-            self._drawing_tool.disconnect_events()
-            self._drawing_tool = None
-            self.canvas.draw()
+                self._drawing_tool.connect_event('button_press_event', finish_drawing)
 
         start_drawing(kind)
 
@@ -688,7 +697,6 @@ class FCToolBar(object):
         if self.sample is not None:
             self.current_channels = list(self.sample.channel_names[0:2])
             self.set_axis(self.current_channels, self.ax)
-            self.plot_data()
 
     def set_axis(self, channels, ax):
         """
@@ -697,9 +705,6 @@ class FCToolBar(object):
             names must be unique
         """
         self.current_channels = channels
-
-        for gate in self.gates:
-            gate.set_axis(channels, ax)
         self.plot_data()
 
     def close(self):
@@ -717,31 +722,36 @@ class FCToolBar(object):
         sample = self.sample
         ax = self.ax
 
-        if self._plt_data is not None:
-            if isinstance(self._plt_data, tuple):
-                # This is the case for histograms which return a tuple
-                patches = self._plt_data[2]
-                map(lambda x : x.remove(), patches)
-            else:
-                self._plt_data.remove()
-            del self._plt_data
-            self._plt_data = None
+        ###
+        # Old code to clear data (but keep the gates)
+        # Keep for a shortwhile until we make sure that the code below works.
+        # Trying switching to ax.cla() coupled with redrawing of gates below...
+        #if self._plt_data is not None:
+            #if isinstance(self._plt_data, tuple):
+                ## This is the case for histograms which return a tuple
+                #patches = self._plt_data[2]
+                #map(lambda x : x.remove(), patches)
+            #else:
+                #self._plt_data.remove()
+            #del self._plt_data
+            #self._plt_data = None
 
+        # Clear spawned gates
+        [gate.remove_spawned_gates() for gate in self.gates]
+
+        # Clear axis
+        ax.cla()
 
         if self.current_channels is None:
             self.current_channels = sample.channel_names[:2]
 
-        channels = self.current_channels
+        # Plot the data
+        self._plt_data = sample.plot(self.current_channels, ax=ax)
 
-        if len(channels) == 1: # Then histogram
-            self._plt_data = sample.plot(channels[0], ax=ax)
-            xlabel = self.current_channels[0]
-            ylabel = 'Counts'
-        else:
-            self._plt_data = sample.plot(channels, ax=ax)
-            xlabel = self.current_channels[0]
-            ylabel = self.current_channels[1]
+        # Respawn gates
+        [gate.set_axis(self.current_channels, self.ax) for gate in self.gates]
 
+        # Set data limits
         if hasattr(self._plt_data, 'get_datalim'):
             bbox = self._plt_data.get_datalim(self.ax.transData)
             p0 = bbox.get_points()[0]
@@ -755,6 +765,12 @@ class FCToolBar(object):
             xlims = (xlims[0], xlims[-1])
             self.ax.set_xlim(xlims)
             self.ax.set_ylim(0, max(self._plt_data[0]))
+
+        # Set pickers for x and y axis
+        self.xlabel_artist = ax.get_xaxis().get_label()
+        self.ylabel_artist = ax.get_yaxis().get_label()
+        self.xlabel_artist.set_picker(5)
+        self.ylabel_artist.set_picker(5)
 
         self.fig.canvas.draw()
 
@@ -861,6 +877,7 @@ if __name__ == '__main__':
         fig = pl.figure()
         ax = fig.add_subplot(1, 1, 1)
         manager = FCToolBar(ax)
+        #manager.load_fcs('../tests/data/FlowCytometers/FACSCaliburHTS/Sample_Well_A02.fcs')
         pl.show()
 
     example3()

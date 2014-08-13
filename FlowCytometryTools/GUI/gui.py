@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 import wx
 import matplotlib
-matplotlib.use('wxagg')
 from wireframe import GeneratedWireframe
 import fc_widget
 
@@ -114,4 +113,5 @@ class FCGUI(object):
         self.app.MainLoop()
 
 if __name__ == "__main__":
-    app = FCGUI('../tests/data/FlowCytometers/FACSCaliburHTS/Sample_Well_A02.fcs')
+    #app = FCGUI('../tests/data/FlowCytometers/FACSCaliburHTS/Sample_Well_A02.fcs')
+    app = FCGUI()
