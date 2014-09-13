@@ -40,4 +40,4 @@ grid(True)
 
 title('Custom log transformation')
 
-show() # <-- Uncomment when running as a script.
+#show() # <-- Uncomment when running as a script.

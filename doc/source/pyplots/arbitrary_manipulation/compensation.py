@@ -42,4 +42,4 @@ compensated_sample.plot(['Y2-A', 'FSC-A'], kind='scatter', color='green', alpha=
 legend(loc='best')
 grid(True)
 
-show() # <-- Uncomment when running as a script.
+#show() # <-- Uncomment when running as a script.
