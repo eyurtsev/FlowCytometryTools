@@ -10,6 +10,9 @@ import itertools
 
 ## TODO
 # 1. Make it impossible to pick multiple vertexes at once. (right now if vertex are too close they will be selected.)
+# 2. refactor events?
+# 3. Refactor/rename FCToolBar -> FCGateManager
+# 4. Make a separate file for drawing tools
 
 def apply_format(var, format_str):
     """ Formats all non-iterables inside of the iterable var using the format_str
@@ -156,7 +159,6 @@ class BaseVertex(EventGenerator):
                 svertex.update_position(verts[0], verts[1])
         self.callback(Event(Event.BASE_GATE_CHANGED))
 
-
 class SpawnableVertex(AxesWidget, EventGenerator):
     """
     Defines a moveable vertex. The vertex must be associated
@@ -262,7 +264,7 @@ class SpawnableVertex(AxesWidget, EventGenerator):
             self.artist.set_ydata([ydata])
 
     def _update(self):
-        self.canvas.draw()
+        self.canvas.draw_idle()
 
     def update_looks(self, state):
         if state == 'active':
@@ -401,7 +403,7 @@ class PlottableGate(AxesWidget):
             self._spawned_vertex_list.remove(event.info['caller'])
 
     def _update(self):
-        self.canvas.draw()
+        self.canvas.draw_idle()
 
     def remove(self):
         # IMPORTANT Do not remove spawned vertexes from the _list directly. Use 
@@ -546,7 +548,7 @@ class PolyDrawer(AxesWidget):
         self._update()
 
     def _update(self):
-        self.canvas.draw()
+        self.canvas.draw_idle()
 
     def _clean(self):
         self.disconnect_events()
@@ -599,6 +601,11 @@ class FCToolBar(object):
         self.set_active_gate(event.info['caller'])
 
     def create_gate_widget(self, kind):
+        def clean_drawing_tools():
+            self._drawing_tool.disconnect_events()
+            self.canvas.draw_idle()
+            self._drawing_tool = None
+
         def create_gate(*args):
             canceled = False # TODO allow drawing tool to cancel
             verts = args[0]
@@ -624,7 +631,7 @@ class FCToolBar(object):
                 gate.spawn(ch, self.ax)
                 self.add_gate(gate)
 
-            clean_drawing_tools(kind)
+            clean_drawing_tools()
 
         def start_drawing(kind):
             if kind == 'poly':
@@ -637,12 +644,11 @@ class FCToolBar(object):
                 self._drawing_tool = Cursor(self.ax, vertOn=1, horizOn=0)
 
             if isinstance(self._drawing_tool, Cursor):
-                self._drawing_tool.connect_event('button_press_event', lambda event : create_gate([(event.xdata, event.ydata)]))
+                def finish_drawing(event):
+                    self._drawing_tool.clear(None)
+                    return create_gate([(event.xdata, event.ydata)])
 
-        def clean_drawing_tools(kind):
-            self._drawing_tool.disconnect_events()
-            self._drawing_tool = None
-            self.canvas.draw()
+                self._drawing_tool.connect_event('button_press_event', finish_drawing)
 
         start_drawing(kind)
 
@@ -848,6 +854,7 @@ if __name__ == '__main__':
         fig = pl.figure()
         ax = fig.add_subplot(1, 1, 1)
         manager = FCToolBar(ax)
+        #manager.load_fcs('../tests/data/FlowCytometers/FACSCaliburHTS/Sample_Well_A02.fcs')
         pl.show()
 
     example3()
