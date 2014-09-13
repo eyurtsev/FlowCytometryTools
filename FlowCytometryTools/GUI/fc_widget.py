@@ -369,13 +369,6 @@ class BaseGate(EventGenerator):
             gate_type_name = 'QuadGate'
         return gate_type_name
 
-
-
-    def set_axis(self, ch, ax):
-        self.remove_spawned_gates()
-        sgate = self.spawn(ch, ax)
-        self._refresh_activation()
-
     @property
     def source_channels(self):
         """ Returns a set describing the source channels on which the gate is defined. """
@@ -440,13 +433,6 @@ class PlottableGate(AxesWidget):
     @property
     def vertex(self):
         return self._spawned_vertex_list
-
-    #def set_visible(self, visible):
-        #for artist in self.artist_list:
-            #artist.set_visible(visible)
-        #for vertex in to_list(self.vertex):
-            #vertex.set_visible(visible)
-        #self._update()
 
 class PolyGate(PlottableGate):
     def create_artist(self):
@@ -688,7 +674,6 @@ class FCToolBar(object):
         if self.sample is not None:
             self.current_channels = list(self.sample.channel_names[0:2])
             self.set_axis(self.current_channels, self.ax)
-            self.plot_data()
 
     def set_axis(self, channels, ax):
         """
@@ -698,9 +683,26 @@ class FCToolBar(object):
         """
         self.current_channels = channels
 
+        ## 
+        # Order of operations is important 
+        # because there is a clear command in 
+        # plot_data
+        # difficult to implement better b/c
+        # output from plotting functions from matplotlib
+        # don't return all required information.
+
+        # Remove existing gates
         for gate in self.gates:
-            gate.set_axis(channels, ax)
+            gate.remove_spawned_gates()
+        ## 
+        # Has a clear axis command inside!!
+        # which will "force kill" spawned gates
         self.plot_data()
+
+        for gate in self.gates:
+            sgate = gate.spawn(channels, ax)
+            gate._refresh_activation()
+
 
     def close(self):
         for gate in self.gates:
@@ -714,48 +716,33 @@ class FCToolBar(object):
     def plot_data(self):
         """ Plots the loaded data """
         if self.sample is None: return
-        sample = self.sample
-        ax = self.ax
 
-        if self._plt_data is not None:
-            if isinstance(self._plt_data, tuple):
-                # This is the case for histograms which return a tuple
-                patches = self._plt_data[2]
-                map(lambda x : x.remove(), patches)
-            else:
-                self._plt_data.remove()
-            del self._plt_data
-            self._plt_data = None
+        # Clear the axes
+        self.ax.cla()
 
+        ###
+        # Potential code to clear axis
+        # will be easier to use in future version
+        # of matplotlib
+        #
+        #    #if self._plt_data is not None:
+        #        ## HARD CODED FOR SPEED NEEDS FIXING
+        #        #if self._plt_data[0] == '1dhist':
+        #            #patches = self._plt_data[1]
+        #            #[p.remove() for p in patches] # removes patches
+        #        #elif self._plt_data[0] == '2dhist':
+        #            #axes_image = self._plt_data[1]
+        #            #print axes_image
+        #            #print type(axes_image)
+        #            #axes_image.remove()
+        #        #self._plt_data = None
 
         if self.current_channels is None:
-            self.current_channels = sample.channel_names[:2]
+            self.current_channels = self.sample.channel_names[:2]
 
         channels = self.current_channels
-
-        if len(channels) == 1: # Then histogram
-            self._plt_data = sample.plot(channels[0], ax=ax)
-            xlabel = self.current_channels[0]
-            ylabel = 'Counts'
-        else:
-            self._plt_data = sample.plot(channels, ax=ax)
-            xlabel = self.current_channels[0]
-            ylabel = self.current_channels[1]
-
-        if hasattr(self._plt_data, 'get_datalim'):
-            bbox = self._plt_data.get_datalim(self.ax.transData)
-            p0 = bbox.get_points()[0]
-            p1 = bbox.get_points()[1]
-
-            self.ax.set_xlim(p0[0], p1[0])
-            self.ax.set_ylim(p0[1], p1[1])
-        else:
-            # Then it's a histogram?
-            xlims = self._plt_data[1]
-            xlims = (xlims[0], xlims[-1])
-            self.ax.set_xlim(xlims)
-            self.ax.set_ylim(0, max(self._plt_data[0]))
-
+        channels_to_plot = channels[0] if len(channels) == 1 else channels
+        out = self.sample.plot(channels_to_plot, ax=self.ax)
         self.fig.canvas.draw()
 
     def get_generation_code(self):
@@ -797,11 +784,11 @@ def key_press_handler(event, canvas, toolbar=None):
     elif key in ['8']:
         print toolbar.get_generation_code()
 
-class Globals():
-    """ Used for testing only """
-    pass
-
 if __name__ == '__main__':
+    class Globals():
+        """ Used for testing only """
+        pass
+
     def example1():
         fig = figure()
         ax = fig.add_subplot(1, 4, 1)
