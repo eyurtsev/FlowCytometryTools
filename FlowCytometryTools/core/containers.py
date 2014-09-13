@@ -17,6 +17,7 @@ import numpy as np
 from FlowCytometryTools.core.transforms import Transformation
 from common_doc import doc_replacer
 from random import sample
+import matplotlib
 
 def to_list(obj):
     """ This is a quick fix to make sure indexing of DataFrames
@@ -165,22 +166,36 @@ class FCMeasurement(Measurement):
 
 
     def view_interactively(self):
-        '''
-        Loads the current FCS sample viewer
+        """
+        Loads the current sample in a graphical interface for drawing gates.
 
         .. warning::
 
             You must have wxpython installed in order for the GUI to work.
-        '''
-        #if launch_new_subprocess: # This is not finished until I can list the gates somewhere
-            #from FlowCytometryTools import __path__ as p
-            #from subprocess import call
-            #import os
-            #script_path = os.path.join(p[0], 'GUI', 'flomeasurementwGUI.py')
-            #call(["python", script_path, self.datafile])
-        #else:
+        """
+        ##
+        # Because this may be called from within ipython notebook inline
+        # we should adjust the backend
+        try:
+            from IPython import get_ipython
+        except ImportError:
+            get_ipython = None
+
+        switch_backends = ('inline' in matplotlib.get_backend()) and (get_ipython is not None)
+
+        # Switch from inline to wx if needed/possible
+        if switch_backends:
+            ipython = get_ipython()
+            ipython.magic('matplotlib wx')
+
         from FlowCytometryTools.GUI import gui
-        return gui.FCGUI(measurement=self)
+        output = gui.FCGUI(measurement=self)
+
+        # Switch back to inline mode if started in inline
+        if switch_backends:
+            ipython.magic('matplotlib inline')
+
+        return output
 
     @queueable
     @doc_replacer
