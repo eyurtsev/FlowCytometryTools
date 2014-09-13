@@ -162,6 +162,15 @@ Throughout the rest of the tutorial we'll always be working with hlog-transforme
         * Parks, Roederer, and Moore. Cytometry Part A, 2006.
         * Trotter, Joseph. In Current Protocols in Cytometry. John Wiley & Sons, Inc., 2001.
 
+Compensation and custom transformations
+++++++++++++++++++++++++++++++++++++++++++
+
+If you want to compensate your data or perform a custom transformation 
+there's an example in the `gallery <gallery.html>`_.
+
+**HINT**: It's very easy!
+
+
 Plotting
 --------------------------
 

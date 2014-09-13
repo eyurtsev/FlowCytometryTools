@@ -27,7 +27,7 @@ def transform_using_this_method(original_sample):
 sample = FCMeasurement(ID='Test Sample', datafile=datafile)
 
 # Transform using our own custom method
-custom_transform_sample = sample.appy(transform_using_this_method)
+custom_transform_sample = sample.apply(transform_using_this_method)
 
 ###
 # To do this with a collection (a plate):

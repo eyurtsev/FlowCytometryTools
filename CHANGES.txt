@@ -1,3 +1,9 @@
+v0.4.1, 2014-09-13
+
++ Bug fixes for GUI
++ Now works with matplotlib 1.4.0
++ Added documentation and examples to gallery
+
 v0.4.0, 2014-06-05
 
 + Updates in documentation
