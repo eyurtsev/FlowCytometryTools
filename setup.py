@@ -28,6 +28,7 @@ setup(
 
     install_requires=[
           "setuptools",
+          "decorator",
           "GoreUtilities == {0}".format(gore_utilities_version),
       ],
     classifiers = [

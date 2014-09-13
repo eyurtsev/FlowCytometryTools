@@ -1,20 +1,20 @@
 FlowCytometryTools
 -------------------
 
-**Authors**: Jonathan Friedman and Eugene Yurtsev
+**Authors**: Jonathan Friedman and `Eugene Yurtsev <http://eyurtsev.mit.edu>`_
 
 FlowCytometryTools is a python package for visualization and analysis of high-throughput flow cytometry data.
 
-* **Intuitive**: provides a simple programmatic interface to work with flow cytometry data.
-* **Interactive**: makes use of the powerful `pandas <http://pandas.pydata.org/>`_ package to simplify analysis of large datasets.
-* **Flexible**: can be used for analyzing individual measurements, measurement collections or plates.
+* **Intuitive**: provides a simple programmatic interface to work with flow cytometry data
+* **Flexible**: can analyze either individual samples or collections of many plates
+* **Scalable**: simplifies analysis of high-throughput data using the power of `pandas <http://pandas.pydata.org/>`_ 
 
 Who is this for?
 =====================
 
 FlowCytometryTools is for researchers who want to use the python programming language to analyze flow cytometry data.
 
-The package provides an interface that can directly work with collections of flow cytometry measurements (e.g., 96-well plates).
+The package is specifically tailored for high-throughput analysis. It provides an interface that can directly work with collections of flow cytometry measurements (e.g., 96-well plates).
 
 Basic familiarity with the python programming languages is recommended.
 
@@ -52,14 +52,51 @@ you run into issues, please update the dependencies.
 
 **Required Dependencies**
 
-#. `python <http://www.python.org/getit/>`_ : 2.6 or 2.7 (note that python 3.0 or higher are not yet supported!)
+#. `python <http://www.python.org/getit/>`_ 2.6 or 2.7 (note that python 3.0 or higher are not yet supported!)
+#. `decorator <https://pypi.python.org/pypi/decorator>`_
 #. `pandas <http://pandas.sourceforge.net/index.html>`__ (Recommended version: 0.12.0 or higher).
-#. `matplotlib <http://matplotlib.org/>`__: (Recommended version: 1.13.1 or higher).
+#. `matplotlib <http://matplotlib.org/>`__ (Recommended version: 1.13.1 or higher).
 #. `scipy <http://www.scipy.org/>`__ 
 
 **Optional Dependencies**
 
 #. `wx-python <http://wiki.wxpython.org/How%20to%20install%20wxPython>`__ : Used for the FlowCytometryTools GUI.
+
+Changes
+=====================
+
+v0.4.0, 2014-06-05
+
++ Updates in documentation
++ Added experimental view() function
++ Renamed old view() function into -> view_interactively()
++ Added queueing to help when dealing with large quantities of data.
++ Histogram plots should work with pandas (0.14.0) & matplotlib (1.3.1).
+
+v0.3.6, 2014-02-11
+
++ Mostly updates in documentation
+
+v0.3.5, 2014-01-19
+
++ Boost in speed for transformations on collections of measurements (like 96-well plates).
++ Much of the documentation has been updated and improved.
++ Improved GUI.
+
+v0.3.0, 2013-10-27 Initial Release
+
+Alternatives
+===================
+
+FlowCytometryTools is not the only open source software for performing data analysis on flow cytometry data.
+
+So if you find that FlowCytometryTools does not suit your needs, take a look at the following software: 
+
+* `fcm <https://pythonhosted.org/fcm/basic.html>`_ : API for python
+* `Bioconductor <http://master.bioconductor.org/>`_ : API for the R programming language
+* `FlowPy <http://flowpy.wikidot.com/>`_ : GUI
+* `cyflogic <http://www.cyflogic.com/>`_ : GUI
+* `Flowing Software <http://www.flowingsoftware.com/>`_ : GUI
 
 LICENSE
 ===================
