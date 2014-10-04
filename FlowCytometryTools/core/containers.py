@@ -228,7 +228,9 @@ class FCMeasurement(Measurement):
         --------
         {FCMeasurement_transform_examples}
         """
-        data = self.get_data()
+        # Create new measurement
+        new = self.copy()
+        data = new.data
 
         channels = to_list(channels)
         if channels is None:
@@ -256,8 +258,7 @@ class FCMeasurement(Measurement):
         else:
             new_data = data.filter(columns)
         new_data[channels] = transformed
-        ## create new Measurement
-        new = self.copy()
+        ## update new Measurement
         new.data = new_data
 
         if ID is not None:
