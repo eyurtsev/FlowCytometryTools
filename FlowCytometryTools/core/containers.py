@@ -56,8 +56,8 @@ class FCMeasurement(Measurement):
     def read_meta(self, **kwargs):
         '''
         '''
-        kwargs['meta_data_only'] = True
-        kwargs['reformat_meta'] = True
+        kwargs.setdefault('meta_data_only', True)
+        kwargs.setdefault('reformat_meta', True)
         meta = parse_fcs(self.datafile, **kwargs)
         return meta
 
