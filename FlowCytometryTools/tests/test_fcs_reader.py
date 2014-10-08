@@ -236,6 +236,57 @@ class TestFCSReader(unittest.TestCase):
             self.assertTrue(meta['_channel_names_'])
             self.assertTrue(len(meta['_channel_names_']) != 0)
 
+    def test_channel_naming_manual(self):
+        """ Checks that channel names correspond to manual setting """
+        pnn_names = ['Time', 'HDR-CE', 'HDR-SE', 'HDR-V', 'FSC-A', 'FSC-H', 'FSC-W',
+        'SSC-A', 'SSC-H', 'SSC-W', 'FL2-A', 'FL2-H', 'FL2-W', 'FL4-A',
+        'FL4-H', 'FL4-W', 'FL7-A', 'FL7-H', 'FL7-W']
+        pns_names = ['HDR-T', 'HDR-CE', 'HDR-SE', 'HDR-V', 'FSC-A', 'FSC-H', 'FSC-W',
+                'SSC-A', 'SSC-H', 'SSC-W', 'V2-A', 'V2-H', 'V2-W', 'Y2-A',
+                'Y2-H', 'Y2-W', 'B1-A', 'B1-H', 'B1-W']
+
+        path = '../tests/data/FlowCytometers/MiltenyiBiotec/FCS3.1/EY_2013-07-19_PBS_FCS_3.1_Well_A1.001.fcs'
+        meta = parse_fcs(path, meta_data_only=True,
+                reformat_meta=True, channel_naming='$PnN')
+        channel_names = list(meta['_channel_names_'])
+
+        self.assertTrue(channel_names == pnn_names)
+
+        #---  Test with data
+
+        meta, data = parse_fcs(path, meta_data_only=False,
+                reformat_meta=True, channel_naming='$PnN')
+        channel_names = list(meta['_channel_names_'])
+
+        self.assertTrue(channel_names == pnn_names)
+        self.assertTrue(list(data.columns.values) == pnn_names)
+
+        #---  Test with data
+
+        meta, data = parse_fcs(path, meta_data_only=False,
+                reformat_meta=True, channel_naming='$PnS')
+        channel_names = list(meta['_channel_names_'])
+
+        self.assertTrue(channel_names == pns_names)
+        self.assertTrue(list(data.columns.values) == pns_names)
+
+    def test_channel_naming_automatic_correction(self):
+        """ Checks that channel names are assigned automatically corrected if duplicate names
+        encountered. """
+        path = '../tests/data/FlowCytometers/MiltenyiBiotec/FCS3.1/SG_2014-09-26_Duplicate_Names.fcs'
+
+        with warnings.catch_warnings(record=True) as w:
+            # Cause all warnings to always be triggered.
+            warnings.simplefilter("always")
+            meta = parse_fcs(path, meta_data_only=True, reformat_meta=True)
+            channel_names = list(meta['_channel_names_'])
+
+            self.assertTrue(channel_names == \
+                ['HDR-CE', 'HDR-SE', 'HDR-V', 'FSC-A', 'FSC-H', 'SSC-A', 'SSC-H', 'FL7-A', 'FL7-H'])
+
+            # Verify some things
+            assert len(w) == 1
+
     def test_speed_of_reading_fcs_files(self):
         """ Testing the speed of loading a FCS files"""
         import timeit
