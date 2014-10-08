@@ -260,8 +260,9 @@ class FCS_Parser(object):
 
         # Read in the data
         if len(set(par_numeric_type_list)) > 1:
-            data = numpy.fromfile(file_handle, dtype=','.join(par_numeric_type_list), count=num_events)
-            raise_parser_feature_not_implemented('The different channels were saved using mixed numeric formats')
+            dtype = ','.join(par_numeric_type_list)
+            data = numpy.fromfile(file_handle, dtype=dtype, count=num_events)
+            data.dtype.names = self.channel_names
         else:
             dtype = par_numeric_type_list[0]
             data = numpy.fromfile(file_handle, dtype=dtype, count=num_events * num_pars)
@@ -269,8 +270,7 @@ class FCS_Parser(object):
         ##
         # Convert to native byte order 
         # This is needed for working with pandas datastructures
-        sys_is_le = sys.byteorder == 'little'
-        native_code = sys_is_le and '<' or '>'
+        native_code = '<' if (sys.byteorder == 'little') else '>'
         if endian != native_code:
             # swaps the actual bytes and also the endianness
             data = data.byteswap().newbyteorder()
