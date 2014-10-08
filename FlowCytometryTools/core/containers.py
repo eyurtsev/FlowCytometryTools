@@ -38,6 +38,7 @@ class FCMeasurement(Measurement):
         """ A DataFrame containing complete channel information """
         if self.meta is not None:
             return self.meta['_channels_']
+
     @property
     def channel_names(self):
         """ A tuple containing the channel names. """
@@ -49,15 +50,29 @@ class FCMeasurement(Measurement):
         Read the datafile specified in Sample.datafile and
         return the resulting object.
         Does NOT assign the data to self.data
+
+        It's advised not to use this method, but instead to access
+        the data through the FCMeasurement.data attribute.
         '''
         meta, data = parse_fcs(self.datafile, **kwargs)
         return data
 
     def read_meta(self, **kwargs):
         '''
+        Read only the annotation of the FCS file (without reading DATA segment).
+
+        It's advised not to use this method, but instead to access
+        the meta data through the FCMeasurement.meta attribute.
         '''
-        kwargs.setdefault('meta_data_only', True)
-        meta = parse_fcs(self.datafile, meta_data_only=True, **kwargs)
+        # TODO Try to rewrite the code to be more logical
+        # The reason the equivalent statement is not in the read_data method
+        # above is because self.readdata_kwargs are passed
+        # as **kwargs to the read_data function.
+        if 'channel_naming' in self.readdata_kwargs:
+            kwargs['channel_naming'] = self.readdata_kwargs['channel_naming']
+        meta = parse_fcs(self.datafile,
+                reformat_meta=True,
+                meta_data_only=True, **kwargs)
         return meta
 
     def get_meta_fields(self, fields, kwargs={}):
