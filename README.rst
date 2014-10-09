@@ -64,6 +64,11 @@ you run into issues, please update the dependencies.
 Changes
 =====================
 
+v0.4.2, 2014-10-08
+
++ FCS parser can handle more formats
++ Updated documentation
+
 v0.4.1, 2014-09-13
 
 + Bug fixes for GUI
