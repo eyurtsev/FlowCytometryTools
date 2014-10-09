@@ -276,9 +276,11 @@ You can launch the GUI for creating the gates, by calling the view_interactively
 
 .. warning::
 
-    You have to install wxpython in order to use the GUI.
+    wxpython must be installed in order to use the GUI. (It may already be installed, so just try it out.)
 
-    Also, keep in mind that the GUI is still in early stages. Expect bugs.
+    Please note that there's no way to apply transformations through the GUI, so
+    view samples through the view_interactively method. (Don't load new FCS files directly from the GUI,
+    if you need those files transformed.)
 
 Plotting Gates
 +++++++++++++++++
@@ -337,7 +339,31 @@ loading single FCS files is silly.
 Instead, we provided you with the awesome `FCPlate <api.html#fcplate>`_ class (also called :class:`FCOrderedCollection`).
 
 Loading Data
-++++++++++++++++++
+++++++++++++++++++++++++++
+
+The code below loads two FCS samples and shows two different methods of placing them on a plate container.
+
+.. ipython:: python
+
+	from FlowCytometryTools import FCPlate
+
+    sample1 = FCMeasurement('B1', datafile=datafile); 
+    sample2 = FCMeasurement('D2', datafile=datafile);
+
+    # Use the samples ID as their position on a plate:
+    plate1 = FCPlate('demo plate', [sample1, sample2], 'name', shape=(4, 3))
+    print plate1
+
+    # Uses the dictionary key to map the position
+    plate2 = FCPlate('demo plate', {'C1' : sample1, 'C2' : sample2}, 'name', shape=(4, 3))
+    print plate2
+
+.. note::
+
+    The method below should be simpler for 99% of the users to use (much less code!!), so keep on reading. :)
+
+Loading Data (better way)
++++++++++++++++++++++++++
 
 What we'd like to do is to construct a flow cytometry plate object by loading all the '\*.fcs' files in a directory.
 
@@ -374,12 +400,9 @@ For the analysis below, we'll be using the 'name' parser since our files match t
 .. ipython:: python
 
 	from FlowCytometryTools import FCPlate
-    plate = FCPlate.from_dir(ID='Demo Plate', path=datadir, parser='name').transform('hlog', channels=['Y2-A', 'B1-A'])
 
-    # The line above is equivalent to the two steps below:
-    # plate = FCPlate.from_dir(ID='Demo Plate', path=datadir, parser='name')
-    # plate = plate.transform('hlog', channels=['Y2-A', 'B1-A'])                                                                 
-
+    plate = FCPlate.from_dir(ID='Demo Plate', path=datadir, parser='name')
+    plate = plate.transform('hlog', channels=['Y2-A', 'B1-A'])                                                                 
 
 Let's see what data got loaded.
 
