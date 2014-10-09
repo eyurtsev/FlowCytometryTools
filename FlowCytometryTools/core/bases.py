@@ -165,8 +165,10 @@ class Measurement(BaseObject):
         self.metafile = metafile
         self._data = None
         self._meta = None
-        if readdata: self.set_data(**readdata_kwargs)
-        if readmeta: self.set_meta(**readmeta_kwargs)
+        self.readdata_kwargs = readdata_kwargs
+        self.readmeta_kwargs = readmeta_kwargs
+        if readdata: self.set_data()
+        if readmeta: self.set_meta()
         self.position = {}
         self.history = []
         self.queue   = []
@@ -267,7 +269,8 @@ class Measurement(BaseObject):
         if current_value is not None:
             value = current_value
         else:
-            value = getattr(self, 'read_%s' %name)(**kwargs)
+            parser_kwargs = getattr(self, 'read%s_kwargs' %name, {})
+            value = getattr(self, 'read_%s' %name)(**parser_kwargs)
         return value
         
     def get_data(self, **kwargs):
@@ -379,7 +382,7 @@ class MeasurementCollection(collections.MutableMapping, BaseObject):
 
     @classmethod
     @doc_replacer
-    def from_files(cls, ID, datafiles, parser, **ID_kwargs):
+    def from_files(cls, ID, datafiles, parser, readdata_kwargs={}, readmeta_kwargs={}, **ID_kwargs):
         """
         Create a Collection of measurements from a set of data files.
 
@@ -394,7 +397,9 @@ class MeasurementCollection(collections.MutableMapping, BaseObject):
         measurements = []
         for sID, dfile in d.iteritems():
             try:
-                measurements.append(cls._measurement_class(sID, datafile=dfile))
+                measurements.append(cls._measurement_class(sID, datafile=dfile, 
+                                                           readdata_kwargs=readdata_kwargs,
+                                                           readmeta_kwargs=readmeta_kwargs))
             except:
                 msg = 'Error occured while trying to parse file: %s' %dfile
                 raise IOError, msg 
@@ -402,7 +407,8 @@ class MeasurementCollection(collections.MutableMapping, BaseObject):
 
     @classmethod
     @doc_replacer
-    def from_dir(cls, ID, datadir, parser, pattern='*.fcs', recursive=False, **ID_kwargs):
+    def from_dir(cls, ID, datadir, parser, pattern='*.fcs', recursive=False, 
+                 readdata_kwargs={}, readmeta_kwargs={}, **ID_kwargs):
         """
         Create a Collection of measurements from data files contained in a directory.
 
@@ -420,7 +426,9 @@ class MeasurementCollection(collections.MutableMapping, BaseObject):
         {_bases_ID_kwargs}
         """
         datafiles = get_files(datadir, pattern, recursive)
-        return cls.from_files(ID, datafiles, parser, **ID_kwargs)
+        return cls.from_files(ID, datafiles, parser, 
+                              readdata_kwargs=readdata_kwargs, readmeta_kwargs=readmeta_kwargs, 
+                              **ID_kwargs)
 
     # ----------------------
     # MutableMapping methods
@@ -720,7 +728,8 @@ class OrderedCollection(MeasurementCollection):
 
     @classmethod
     @doc_replacer
-    def from_files(cls, ID, datafiles, parser='name', position_mapper=None, ID_kwargs={}, **kwargs):
+    def from_files(cls, ID, datafiles, parser='name', position_mapper=None, 
+                   readdata_kwargs={}, readmeta_kwargs={}, ID_kwargs={}, **kwargs):
         """
         Create an OrderedCollection of measurements from a set of data files.
 
@@ -744,7 +753,9 @@ class OrderedCollection(MeasurementCollection):
         measurements = []
         for sID, dfile in d.iteritems():
             try:
-                measurements.append(cls._measurement_class(sID, datafile=dfile))
+                measurements.append(cls._measurement_class(sID, datafile=dfile, 
+                                                           readdata_kwargs=readdata_kwargs,
+                                                           readmeta_kwargs=readmeta_kwargs))
             except:
                 msg = 'Error occured while trying to parse file: %s' %dfile
                 raise IOError, msg 
@@ -753,7 +764,7 @@ class OrderedCollection(MeasurementCollection):
     @classmethod
     @doc_replacer
     def from_dir(cls, ID, path, file_to_key_parser='name', parser='name', position_mapper=None, pattern='*.fcs', recursive=False, 
-                 ID_kwargs={}, **kwargs):
+                 readdata_kwargs={}, readmeta_kwargs={}, ID_kwargs={}, **kwargs):
         """
         Create a Collection of measurements from data files contained in a directory.
 
@@ -774,6 +785,7 @@ class OrderedCollection(MeasurementCollection):
         """
         datafiles = get_files(path, pattern, recursive)
         return cls.from_files(ID, datafiles, parser=parser, position_mapper=position_mapper,
+                              readdata_kwargs=readdata_kwargs, readmeta_kwargs=readmeta_kwargs,
                               ID_kwargs=ID_kwargs, **kwargs)
 
 #     def set_labels(self, labels, axis='rows'):
