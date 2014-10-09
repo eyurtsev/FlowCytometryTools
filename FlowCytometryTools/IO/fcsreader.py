@@ -48,8 +48,9 @@ class FCS_Parser(object):
     self.data holds the parsed DATA segment
     self.analysis holds the ANALYSIS segment as read from the file.
 
-    self.channel_names holds the chosen names of the channels
-    self.channel_names_alternate holds the alternate names of the channels
+    After the data segment is read:
+        self.channel_names holds the chosen names of the channels
+        self.channel_names_alternate holds the alternate names of the channels
     """
     def __init__(self, path, read_data=True, channel_naming='$PnS'):
         """
@@ -166,13 +167,8 @@ class FCS_Parser(object):
         except KeyError:
             names_s = []
 
-        if self._channel_naming == '$PnS':
-            self.channel_names, self.channel_names_alternate = names_s, names_n
-        else:
-            self.channel_names, self.channel_names_alternate = names_n, names_s
-
-        if len(self.channel_names) == 0:
-            self.channel_names = self.channel_names_alternate
+        self.channel_names_s = names_s
+        self.channel_names_n = names_n
 
         # Convert some of the fields into integer values
         keys_encoding_bits  = ['$P{0}B'.format(i) for i in self.channel_numbers]
@@ -184,8 +180,6 @@ class FCS_Parser(object):
         for key in keys_to_convert_to_int:
             value = text[key]
             text[key] = int(value)
-
-        text['_channel_names_'] = self.channel_names
 
         self.annotation.update(text)
 
@@ -229,10 +223,44 @@ class FCS_Parser(object):
 
         # TODO: check logarithmic amplification
 
+
+    def get_channel_names(self):
+        """
+        Figures out which the channel names to use.
+        Raises a warning if the names are not unique.
+        """
+        names_s, names_n = self.channel_names_s, self.channel_names_n
+
+        # Figure out which channel names to use
+        if self._channel_naming == '$PnS':
+            channel_names, channel_names_alternate = names_s, names_n
+        else:
+            channel_names, channel_names_alternate = names_n, names_s
+
+        if len(channel_names) == 0:
+            channel_names = channel_names_alternate
+
+        if len(set(channel_names)) != len(channel_names):
+            msg = ('The default channel names (defined by the {} ' +
+                  'parameter in the FCS file) were not unique. To avoid ' +
+                  'problems in downstream analysis, the channel names ' +
+                  'have been switched to the alternate channel names ' +
+                  'defined in the FCS file. To avoid ' +
+                  'seeing this warning message, explicitly instruct ' +
+                  'the FCS parser to use the alternate channel names by ' +
+                  'specifying the channel_naming parameter.')
+            msg = msg.format(self._channel_naming)
+            warnings.warn(msg)
+            channel_names = channel_names_alternate
+
+        return channel_names
+
     def read_data(self, file_handle):
         """ Reads the DATA segment of the FCS file. """
         self._check_assumptions()
         header, text = self.annotation['__header__'], self.annotation # For convenience
+
+
         num_events = text['$TOT'] # Number of events recorded
         num_pars   = text['$PAR'] # Number of parameters recorded
 
@@ -247,8 +275,6 @@ class FCS_Parser(object):
         if text['$DATATYPE'] not in conversion_dict.keys():
             raise_parser_feature_not_implemented('$DATATYPE = {0} is not yet supported.'.format(text['$DATATYPE']))
 
-        #dtype = '{endian}{numerical_type}'.format(endian=endian, numerical_type=conversion_dict[text['$DATATYPE']])
-
         # Calculations to figure out data types of each of parameters
         bytes_per_par_list   = [text['$P{0}B'.format(i)] / 8  for i in self.channel_numbers] # $PnB specifies the number of bits reserved for a measurement of parameter n
         par_numeric_type_list   = ['{endian}{type}{size}'.format(endian=endian, type=conversion_dict[text['$DATATYPE']], size=bytes_per_par) for bytes_per_par in bytes_per_par_list]
@@ -258,12 +284,15 @@ class FCS_Parser(object):
         # Parser for list mode. Here, the order is a list of tuples. where each tuples stores event related information
         file_handle.seek(header['data start'], 0) # Go to the part of the file where data starts
 
+        ##
         # Read in the data
         if len(set(par_numeric_type_list)) > 1:
+            # values saved in mixed data formats
             dtype = ','.join(par_numeric_type_list)
             data = numpy.fromfile(file_handle, dtype=dtype, count=num_events)
-            data.dtype.names = self.channel_names
+            data.dtype.names = self.get_channel_names()
         else:
+            # values saved in a single data format
             dtype = par_numeric_type_list[0]
             data = numpy.fromfile(file_handle, dtype=dtype, count=num_events * num_pars)
             data = data.reshape((num_events, num_pars))
@@ -295,9 +324,9 @@ class FCS_Parser(object):
 
     def reformat_meta(self):
         """ Collects the meta data information in a more user friendly format.
-        Function looks throught the meta data, collecting the channel related information into a dataframe and moving it into the _channels_ key
+        Function looks through the meta data, collecting the channel related information into a dataframe and moving it into the _channels_ key
         """
-        meta = self.annotation
+        meta = self.annotation # For shorthand (passed by reference)
         channel_properties = []
 
         for key, value in meta.items():
@@ -325,9 +354,7 @@ class FCS_Parser(object):
 
         df.index.name = 'Channel Number'
         meta['_channels_'] = df
-
-
-
+        meta['_channel_names_'] = self.get_channel_names()
 
 def parse_fcs(path, meta_data_only=False, output_format='DataFrame', compensate=False, channel_naming='$PnS', reformat_meta=False):
     """
@@ -362,7 +389,6 @@ def parse_fcs(path, meta_data_only=False, output_format='DataFrame', compensate=
     if meta_data_only is True:
         meta_data : dict
             Contains a dictionary with the meta data information
-            meta_data also contains the channel_names under the '_channel_names_' key
     Otherwise:
         a 2-tuple with
             the first element the meta_data (dictionary)
@@ -378,7 +404,6 @@ def parse_fcs(path, meta_data_only=False, output_format='DataFrame', compensate=
     if compensate == True:
         raise_parser_feature_not_implemented('Compensation has not been implemented yet.')
 
-
     read_data = not meta_data_only
 
     parsed_FCS = FCS_Parser(path, read_data=read_data, channel_naming=channel_naming)
@@ -387,7 +412,6 @@ def parse_fcs(path, meta_data_only=False, output_format='DataFrame', compensate=
         parsed_FCS.reformat_meta()
 
     meta = parsed_FCS.annotation
-    channel_names = parsed_FCS.channel_names
 
     if meta_data_only:
         return meta
@@ -396,7 +420,8 @@ def parse_fcs(path, meta_data_only=False, output_format='DataFrame', compensate=
         if pandas_found == False:
             raise ImportError('You do not have pandas installed.')
         data = parsed_FCS.data
-        data = pandas.DataFrame(data, columns=parsed_FCS.channel_names)
+        channel_names = parsed_FCS.get_channel_names()
+        data = pandas.DataFrame(data, columns=channel_names)
         return meta, data
     elif output_format == 'ndarray':
         """ Constructs numpy matrix """
@@ -411,7 +436,6 @@ if __name__ == '__main__':
     meta = parse_fcs(fname, meta_data_only=True)
     meta, data_pandas = parse_fcs(fname, meta_data_only=False, output_format='DataFrame')
     meta, data_numpy = parse_fcs(fname, meta_data_only=False, output_format='ndarray', reformat_meta=True)
-    print meta['_channel_names_']
     print meta
     print meta['_channels_']
 
