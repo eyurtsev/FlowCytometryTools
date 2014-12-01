@@ -1,16 +1,16 @@
 #!/usr/bin/env python
-# A script to read FCS 3.0 formatted file (and potentially FCS 2.0 and 3.1)
 # Eugene Yurtsev 07/20/2013
-# (I do not promise this works)
 # Distributed under the MIT License
-# TODO: Throw an error if there is logarithmic amplification (or else implement support for it)
 
+# Thanks to:
+# - Ben Roth : adding a fix for Accuri C6 fcs files.
+
+## 
 # Useful documentation for dtypes in numpy
-
-# Bytes swap may be faster?
 # http://docs.scipy.org/doc/numpy/reference/generated/numpy.ndarray.byteswap.html?highlight=byteswap#numpy.ndarray.byteswap
 # http://docs.scipy.org/doc/numpy/user/basics.types.html
 # http://docs.scipy.org/doc/numpy/reference/arrays.dtypes.html
+
 
 
 import sys, warnings, re, string
@@ -20,10 +20,10 @@ try:
     import pandas
     pandas_found = True
 except ImportError:
-    print('You do not have pandas installed, so the parse_fcs function can only be used together with numpy.')
+    print('pandas is not installed, so the parse_fcs function can only be used together with numpy.')
     pandas_found = False
 except Exception as e:
-    print('Your pandas is improperly configured. It raised the following error {0}'.format(e))
+    print('pandas installation is improperly configured. It raised the following error {0}'.format(e))
     pandas_found = False
 
 def raise_parser_feature_not_implemented(message):
@@ -99,20 +99,27 @@ class FCS_Parser(object):
         header = {}
         header['FCS format'] = file_handle.read(6)
 
-        #if header['FCS format'] != 'FCS3.0':
-            #warnings.warn("""This parser was designed with the FCS 3.0 format in mind. It may or may not work for other FCS formats.""")
-
         file_handle.read(4) # 4 space characters after the FCS format
 
         for field in ['text start', 'text end', 'data start', 'data end', 'analysis start', 'analysis end']:
-            header[field] = int(file_handle.read(8))
+            s = file_handle.read(8)
+            try:
+                ival = int(s)
+            except ValueError as e:
+                ival = 0
+            header[field] = ival
+
+        for k in ['text start', 'text end', 'data start', 'data end']:
+            if header[k] == 0:
+                raise ValueError("The FCS file '{}' seems corrupted. (Parser cannot locate information " \
+                "about the '{}' segment.)".format(self.path, k))
 
         if header['data start'] == 0 or header['data end'] == 0:
             raise_parser_feature_not_implemented("""The locations of data start and end are located in the TEXT section of the data. However,
             this parser cannot handle this case yet. Please send the sample fcs file to the developer. """)
 
         if header['analysis start'] != 0:
-            warnings.warn('There appears to be some information in the ANALYSIS segment of file {0}. However, might be unable to read it correctly.'.format(self.path))
+            warnings.warn('There appears to be some information in the ANALYSIS segment of file {0}. However, it might not be read correctly.'.format(self.path))
 
         self.annotation['__header__'] = header
 
@@ -220,9 +227,6 @@ class FCS_Parser(object):
 
         if text['$BYTEORD'] not in ["1,2,3,4", "4,3,2,1", "1,2", "2,1"]:
             raise_parser_feature_not_implemented('$BYTEORD {} not implemented'.format(text['$BYTEORD']))
-
-        # TODO: check logarithmic amplification
-
 
     def get_channel_names(self):
         """

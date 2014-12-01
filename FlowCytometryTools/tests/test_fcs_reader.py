@@ -7,8 +7,6 @@ import unittest
 import numpy
 from numpy import array
 from FlowCytometryTools import parse_fcs
-
-#from numpy.testing import assert_almost_equal, assert_equal
 import warnings
 
 file_formats = {
@@ -287,6 +285,7 @@ class TestFCSReader(unittest.TestCase):
             # Verify some things
             assert len(w) == 1
 
+
     def test_speed_of_reading_fcs_files(self):
         """ Testing the speed of loading a FCS files"""
         import timeit
@@ -304,6 +303,11 @@ class TestFCSReader(unittest.TestCase):
 
         time = timeit.timeit(lambda : parse_fcs(fname, meta_data_only=False, output_format='DataFrame', reformat_meta=False), number=number)
         print "Loading fcs file {0} times both meta and data but without reformatting of meta takes {1} per loop".format(time/number, number)
+
+    def test_reading_corrupted_fcs_file(self):
+        """ Raising exception when reading a corrupted fcs file. """
+        path = '../tests/data/FlowCytometers/Corrupted/corrupted.fcs'
+        self.assertRaises(ValueError, parse_fcs, path)
 
 if __name__ == '__main__':
     import nose
