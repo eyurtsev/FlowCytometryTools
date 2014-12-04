@@ -523,7 +523,7 @@ class FCOrderedCollection(OrderedCollection, FCCollection):
     def plot(self, channel_names,  kind='histogram',
              gates=None, gate_colors=None,
              ids=None, row_labels=None, col_labels=None,
-             xlim=None, ylim=None,
+             xlim='auto', ylim='auto',
              autolabel=True,
              **kwargs):
         """

@@ -36,7 +36,7 @@ def plotFCM(data, channel_names, kind='histogram', ax=None,
     channel_names = to_list(channel_names)
 
     if len(channel_names) == 1:
-        # 1d so histogram plot
+        # 1D so histogram plot
         kwargs.setdefault('color', 'gray')
         kwargs.setdefault('histtype', 'stepfilled')
         kwargs.setdefault('bins', 200)
