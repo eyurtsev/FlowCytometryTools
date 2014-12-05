@@ -7,7 +7,7 @@ TODO:
 '''
 from FlowCytometryTools import parse_fcs
 from bases import Measurement, MeasurementCollection, OrderedCollection, queueable
-from GoreUtilities.util import to_list as to_iter
+from GoreUtilities.util import to_list
 from GoreUtilities.graph import plot_ndpanel
 from itertools import cycle
 import graph
@@ -18,14 +18,6 @@ from FlowCytometryTools.core.transforms import Transformation
 from common_doc import doc_replacer
 from random import sample
 import matplotlib
-
-def to_list(obj):
-    """ This is a quick fix to make sure indexing of DataFrames
-    takes place with lists instead of tuples. """
-    obj = to_iter(obj)
-    if isinstance(obj, tuple):
-        obj = list(obj)
-    return obj
 
 class FCMeasurement(Measurement):
     """
@@ -547,6 +539,8 @@ class FCOrderedCollection(OrderedCollection, FCCollection):
         >>> plate.plot(['SSC-A', 'FSC-A'], kind='histogram', autolabel=True)
         >>> plate.plot(['SSC-A', 'FSC-A'], xlim=(0, 10000))
         >>> plate.plot(['B1-A', 'Y2-A'], kind='scatter', color='red', s=1, alpha=0.3)
+        >>> plate.plot(['B1-A', 'Y2-A'], bins=100, alpha=0.3)
+        >>> plate.plot(['B1-A', 'Y2-A'], bins=[linspace(-1000, 10000, 100), linspace(-1000, 10000, 100)], alpha=0.3)
 
         .. note::
 
@@ -574,6 +568,39 @@ class FCOrderedCollection(OrderedCollection, FCCollection):
             if key in grid_arg_list:
                 kwargs.pop(key)
                 grid_plot_kwargs[key] = value
+
+        ##
+        # Make sure channel names is a list to make the code simpler below
+        channel_names = to_list(channel_names)
+
+        ##
+        # Determine data limits for binning
+        #
+
+        nbins = kwargs.get('bins', 200)
+
+        if isinstance(nbins, int):
+            min_list = []
+            max_list = []
+            for sample in self:
+                min_list.append(self[sample].data[channel_names].min().values)
+                max_list.append(self[sample].data[channel_names].max().values)
+
+            min_list = zip(*min_list)
+            max_list = zip(*max_list)
+
+            bins = []
+
+            for i, c in enumerate(channel_names):
+                min_v = min(min_list[i])
+                max_v = max(max_list[i])
+                bins.append(np.linspace(min_v, max_v, nbins))
+
+            # Check if 1d 
+            if len(channel_names) == 1:
+                bins = bins[0] # bins should be an ndarray, not a list of ndarrays
+
+            kwargs['bins'] = bins
 
         ##########
         # Defining the plotting function that will be used.
