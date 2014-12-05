@@ -77,11 +77,16 @@ So if you find that FlowCytometryTools does not suit your needs, take a look at 
 Changes
 =====================
 
-v0.4.2, 2014-12-05
+v0.4.3, 2014-12-05
 
 + ENHC: Automatically determine bin location when plotting plates. 
 + Fix for Accuri V6 FCS (Ben Roth)
 + Fix for xlim/ylim when plotting 2d histograms
+
+v0.4.2, 2014-10-08
+
++ FCS parser can handle more formats
++ Updated documentation
 
 v0.4.1, 2014-09-13
 
