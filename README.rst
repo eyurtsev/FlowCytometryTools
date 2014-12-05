@@ -61,8 +61,27 @@ you run into issues, please update the dependencies.
 
 #. `wx-python <http://wiki.wxpython.org/How%20to%20install%20wxPython>`__ : Used for the FlowCytometryTools GUI.
 
+Alternatives
+===================
+
+FlowCytometryTools is not the only open source software for performing data analysis on flow cytometry data.
+
+So if you find that FlowCytometryTools does not suit your needs, take a look at the following software: 
+
+* `fcm <https://pythonhosted.org/fcm/basic.html>`_ : API for python
+* `Bioconductor <http://master.bioconductor.org/>`_ : API for the R programming language
+* `FlowPy <http://flowpy.wikidot.com/>`_ : GUI
+* `cyflogic <http://www.cyflogic.com/>`_ : GUI
+* `Flowing Software <http://www.flowingsoftware.com/>`_ : GUI
+
 Changes
 =====================
+
+v0.4.2, 2014-12-05
+
++ ENHC: Automatically determine bin location when plotting plates. 
++ Fix for Accuri V6 FCS (Ben Roth)
++ Fix for xlim/ylim when plotting 2d histograms
 
 v0.4.1, 2014-09-13
 
@@ -90,19 +109,6 @@ v0.3.5, 2014-01-19
 
 v0.3.0, 2013-10-27 Initial Release
 
-Alternatives
-===================
-
-FlowCytometryTools is not the only open source software for performing data analysis on flow cytometry data.
-
-So if you find that FlowCytometryTools does not suit your needs, take a look at the following software: 
-
-* `fcm <https://pythonhosted.org/fcm/basic.html>`_ : API for python
-* `Bioconductor <http://master.bioconductor.org/>`_ : API for the R programming language
-* `FlowPy <http://flowpy.wikidot.com/>`_ : GUI
-* `cyflogic <http://www.cyflogic.com/>`_ : GUI
-* `Flowing Software <http://www.flowingsoftware.com/>`_ : GUI
-
 LICENSE
 ===================
 
@@ -127,3 +133,4 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
+
