@@ -7,11 +7,12 @@ import numpy
 import pylab as pl
 import matplotlib
 from common_doc import doc_replacer
+import warnings
 
 @doc_replacer
 def plotFCM(data, channel_names, kind='histogram', ax=None,
                 autolabel=True, xlabel_kwargs={}, ylabel_kwargs={},
-                colorbar=False,
+                colorbar=False, grid=False,
                 **kwargs):
     """
     Plots the sample on the current axis.
@@ -32,6 +33,7 @@ def plotFCM(data, channel_names, kind='histogram', ax=None,
 
     xlabel_kwargs.setdefault('size', 16)
     ylabel_kwargs.setdefault('size', 16)
+    kwargs.setdefault('bins', 200)
 
     channel_names = to_list(channel_names)
 
@@ -39,10 +41,16 @@ def plotFCM(data, channel_names, kind='histogram', ax=None,
         # 1D so histogram plot
         kwargs.setdefault('color', 'gray')
         kwargs.setdefault('histtype', 'stepfilled')
-        kwargs.setdefault('bins', 200)
 
         x = data[channel_names[0]].values
-        if len(x):
+        if len(x) >= 1:
+            if (len(x) == 1) and isinstance(kwargs['bins'], int):
+                # Only needed for hist (not hist2d) due to hist function doing
+                # excessive input checking
+                warnings.warn("One of the data sets only has a single event. "\
+                        "This event won't be plotted unless the bin locations"\
+                        " are explicitely provided to the plotting function. ")
+                return None
             plot_output = ax.hist(x, **kwargs)
         else:
             return None
@@ -51,6 +59,9 @@ def plotFCM(data, channel_names, kind='histogram', ax=None,
         x = data[channel_names[0]].values # value of first channel
         y = data[channel_names[1]].values # value of second channel
 
+        if len(x) == 0:
+            # Don't draw a plot if there's no data
+            return None
         if kind == 'scatter':
             kwargs.setdefault('edgecolor', 'none')
             plot_output = ax.scatter(x, y, **kwargs)
@@ -58,13 +69,14 @@ def plotFCM(data, channel_names, kind='histogram', ax=None,
             kwargs.setdefault('cmin', 1)
             kwargs.setdefault('cmap', pl.cm.copper)
             kwargs.setdefault('norm', matplotlib.colors.LogNorm())
-            kwargs.setdefault('bins', 200)
             plot_output = ax.hist2d(x, y, **kwargs)
 
             if colorbar:
                 pl.colorbar(p)
         else:
-            raise Exception("Not a valid plot type. Must be 'scatter', 'histogram'")
+            raise ValueError("Not a valid plot type. Must be 'scatter', 'histogram'")
+
+    pl.grid(grid)
 
     if autolabel:
         y_label_text = 'Counts' if len(channel_names) == 1 else channel_names[1]
