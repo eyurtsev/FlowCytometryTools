@@ -33,7 +33,6 @@ def plotFCM(data, channel_names, kind='histogram', ax=None,
 
     xlabel_kwargs.setdefault('size', 16)
     ylabel_kwargs.setdefault('size', 16)
-    kwargs.setdefault('bins', 200)
 
     channel_names = to_list(channel_names)
 
@@ -41,6 +40,7 @@ def plotFCM(data, channel_names, kind='histogram', ax=None,
         # 1D so histogram plot
         kwargs.setdefault('color', 'gray')
         kwargs.setdefault('histtype', 'stepfilled')
+        kwargs.setdefault('bins', 200) # Do not move above
 
         x = data[channel_names[0]].values
         if len(x) >= 1:
@@ -66,6 +66,7 @@ def plotFCM(data, channel_names, kind='histogram', ax=None,
             kwargs.setdefault('edgecolor', 'none')
             plot_output = ax.scatter(x, y, **kwargs)
         elif kind == 'histogram':
+            kwargs.setdefault('bins', 200) # Do not move above
             kwargs.setdefault('cmin', 1)
             kwargs.setdefault('cmap', pl.cm.copper)
             kwargs.setdefault('norm', matplotlib.colors.LogNorm())

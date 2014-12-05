@@ -577,30 +577,31 @@ class FCOrderedCollection(OrderedCollection, FCCollection):
         # Determine data limits for binning
         #
 
-        nbins = kwargs.get('bins', 200)
+        if kind == 'histogram':
+            nbins = kwargs.get('bins', 200)
 
-        if isinstance(nbins, int):
-            min_list = []
-            max_list = []
-            for sample in self:
-                min_list.append(self[sample].data[channel_names].min().values)
-                max_list.append(self[sample].data[channel_names].max().values)
+            if isinstance(nbins, int):
+                min_list = []
+                max_list = []
+                for sample in self:
+                    min_list.append(self[sample].data[channel_names].min().values)
+                    max_list.append(self[sample].data[channel_names].max().values)
 
-            min_list = zip(*min_list)
-            max_list = zip(*max_list)
+                min_list = zip(*min_list)
+                max_list = zip(*max_list)
 
-            bins = []
+                bins = []
 
-            for i, c in enumerate(channel_names):
-                min_v = min(min_list[i])
-                max_v = max(max_list[i])
-                bins.append(np.linspace(min_v, max_v, nbins))
+                for i, c in enumerate(channel_names):
+                    min_v = min(min_list[i])
+                    max_v = max(max_list[i])
+                    bins.append(np.linspace(min_v, max_v, nbins))
 
-            # Check if 1d 
-            if len(channel_names) == 1:
-                bins = bins[0] # bins should be an ndarray, not a list of ndarrays
+                # Check if 1d 
+                if len(channel_names) == 1:
+                    bins = bins[0] # bins should be an ndarray, not a list of ndarrays
 
-            kwargs['bins'] = bins
+                kwargs['bins'] = bins
 
         ##########
         # Defining the plotting function that will be used.
