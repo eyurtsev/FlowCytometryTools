@@ -73,7 +73,7 @@ class FCMeasurement(Measurement):
         '''
         fields = to_list(fields)
         meta = self.get_meta()
-        return dict( ((field, meta.get(field)) for field in fields ) )
+        return { field : meta.get(field) for field in fields }
 
     def ID_from_data(self, ID_field='$SRC'):
         '''
@@ -82,8 +82,8 @@ class FCMeasurement(Measurement):
         in which case this function will raise an exception.
         '''
         try:
-            return self.get_meta_fields(ID_field)[0]
-        except:
+            return self.get_meta_fields(ID_field)[ID_field]
+        except KeyError:
             raise Exception("The keyword '{}' does not exist in the following FCS file: {}".format(ID_field, self.datafile))
 
 
