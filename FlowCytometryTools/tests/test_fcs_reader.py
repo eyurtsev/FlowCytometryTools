@@ -306,7 +306,7 @@ class TestFCSReader(unittest.TestCase):
 
     def test_reading_corrupted_fcs_file(self):
         """ Raising exception when reading a corrupted fcs file. """
-        path = '../tests/data/FlowCytometers/Corrupted/corrupted.fcs'
+        path = '../tests/data/FlowCytometers/corrupted/corrupted.fcs'
         self.assertRaises(ValueError, parse_fcs, path)
 
 if __name__ == '__main__':
