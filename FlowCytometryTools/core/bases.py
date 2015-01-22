@@ -52,7 +52,7 @@ def _assign_IDS_to_datafiles(datafiles, parser, measurement_class=None, **kwargs
         kwargs.setdefault('pre', 'Well_')
         kwargs.setdefault('post', ['_', '\.', '$'])
         kwargs.setdefault('tagtype', str)
-        fparse = lambda x : get_tag_value(x, **kwargs)
+        fparse = lambda x : get_tag_value(os.path.basename(x), **kwargs)
     elif parser == 'number':
         fparse = lambda x: int(x.split('.')[-2])
     elif parser == 'read':
