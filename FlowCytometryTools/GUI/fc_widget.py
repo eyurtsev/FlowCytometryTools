@@ -815,17 +815,21 @@ class FCGateManager(EventGenerator):
         self.fig.canvas.draw()
 
     def get_generation_code(self):
-        """
-        Returns python code that generates all drawn gates.
+        """Returns python code that generates all drawn gates.
         """
         if len(self.gates) < 1:
-            return ''
-        import_list = set([gate._gencode_gate_class for gate in self.gates])
-        import_list = 'from FlowCytometryTools import ' + ', '.join(import_list)
-        code_list = [gate.get_generation_code() for gate in self.gates]
-        code_list.sort()
-        code_list = '\n'.join(code_list)
-        return import_list + 2 * '\n' + code_list
+            code = ''
+        else:
+            import_list = set([gate._gencode_gate_class for gate in self.gates])
+            import_list = 'from FlowCytometryTools import ' + ', '.join(import_list)
+            code_list = [gate.get_generation_code() for gate in self.gates]
+            code_list.sort()
+            code_list = '\n'.join(code_list)
+            code = import_list + 2 * '\n' + code_list
+
+        self.callback(Event('generated_code',
+                                {'code': code}))
+        return code
 
 
 def key_press_handler(event, canvas, toolbar=None):
@@ -852,7 +856,6 @@ def key_press_handler(event, canvas, toolbar=None):
     elif key in ['c']:
         toolbar.set_axis(('d1', 'd3'), pl.gca())
     elif key in ['8']:
-        print
         toolbar.get_generation_code()
 
 
