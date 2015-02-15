@@ -140,6 +140,8 @@ class MyApplication(tornado.web.Application):
                     fc_manager.remove_active_gate()
                 elif message['name'] == 'change_axis':
                     fc_manager.change_axis(message['axis_num'], message['value'])
+                elif message['name'] == 'generate_code':
+                    fc_manager.get_generation_code()
             else:
                 manager = self.application.manager
                 manager.handle_json(message)
