@@ -10,10 +10,7 @@ The framework being used must support web sockets.
 
 import io
 
-try:
-    import tornado
-except ImportError:
-    raise RuntimeError("This example requires tornado.")
+import tornado
 import tornado.web
 import tornado.httpserver
 import tornado.ioloop
@@ -23,25 +20,14 @@ import tornado.websocket
 from matplotlib.backends.backend_webagg_core import (
     FigureManagerWebAgg, new_figure_manager_given_figure)
 from matplotlib.figure import Figure
+import pylab
 
 import numpy as np
 import json
 
-
 from FlowCytometryTools.GUI import fc_widget
 import os
 import tkFileDialog
-
-def create_figure():
-    """
-    Creates a simple example figure.
-    """
-    #fig = Figure()
-    import pylab as pl
-    fig = Figure()
-    ax = fig.add_subplot(111)
-    fc_manager = fc_widget.FCToolBar(ax)
-    return fig, fc_manager
 
 class MyApplication(tornado.web.Application):
     class MainPage(tornado.web.RequestHandler):
@@ -138,20 +124,22 @@ class MyApplication(tornado.web.Application):
             if message['type'] == 'supports_binary':
                 self.supports_binary = message['value']
             elif message['type'] == 'app_control':
-                manager = self.application.fc_manager
+                fc_manager = self.application.fc_manager
 
                 if message['name'] == 'open_file':
                     filename = tkFileDialog.askopenfilename(initialdir=os.path.curdir, defaultextension='.fcs')
                     if len(filename) != 0:
-                        manager.load_fcs(filename)
+                        fc_manager.load_fcs(filename)
                 elif message['name'] == 'draw_poly_gate':
-                    manager.create_gate_widget('poly')
+                    fc_manager.create_gate_widget('poly')
                 elif message['name'] == 'draw_horizontal_gate':
-                    manager.create_gate_widget('horizontal threshold')
+                    fc_manager.create_gate_widget('horizontal threshold')
                 elif message['name'] == 'draw_vertical_gate':
-                    manager.create_gate_widget('vertical threshold')
+                    fc_manager.create_gate_widget('vertical threshold')
                 elif message['name'] == 'delete_gate':
-                    manager.remove_active_gate()
+                    fc_manager.remove_active_gate()
+                elif message['name'] == 'change_axis':
+                    fc_manager.change_axis(message['axis_num'], message['value'])
             else:
                 manager = self.application.manager
                 manager.handle_json(message)
@@ -167,18 +155,10 @@ class MyApplication(tornado.web.Application):
                     blob.encode('base64').replace('\n', ''))
                 self.write_message(data_uri)
 
-    def __init__(self, figure, fc_manager):
-        self.figure = figure
-        self.fc_manager = fc_manager
-        self.manager = new_figure_manager_given_figure(
-            id(figure), figure)
+    def load_fcs(self, path):
+        return self.fc_manager.load_fcs(path)
 
-        # Route callbacks from the widget directly to javascript
-        #self.fc_manager.add_callback(lambda event : self.WebSocket.send_json(['hello']))
-        def x(*args, **kwargs):
-            print(args, kwargs)
-        fc_manager.add_callback(x)
-
+    def __init__(self):
         super(MyApplication, self).__init__([
             # Static files for the CSS and JS
             (r'/_static/(.*)',
@@ -198,13 +178,25 @@ class MyApplication(tornado.web.Application):
             (r'/download.([a-z0-9.]+)', self.Download),
         ])
 
+        figure = Figure()
+
+        self.manager = new_figure_manager_given_figure(
+                id(figure), figure)
+
+        ax = figure.add_subplot(1, 1, 1)
+
+        def f(event):
+            event.info.pop('caller', None)
+            self.manager._send_event(event.type, **event.info)
+        self.fc_manager = fc_widget.FCGateManager(ax, callback_list=f)
 
 if __name__ == "__main__":
-    figure, fc_manager = create_figure()
-    application = MyApplication(figure, fc_manager)
+    application = MyApplication()
 
     http_server = tornado.httpserver.HTTPServer(application)
     http_server.listen(8080)
+
+    application.load_fcs('../../tests/data/Plate01/CFP_Well_A4.fcs')
 
     print("http://127.0.0.1:8080/")
     print("Press Ctrl+C to quit")
