@@ -107,8 +107,8 @@
         menu.menu();
 
         fig.handle_axis_click = function(fig, msg) {
-            menu.css('left', fig.last_mouse_event.pageX);
-            menu.css('top', fig.last_mouse_event.pageY);
+            menu.css('left', msg['pageX']);
+            menu.css('top', msg['pageY']);
             create_selection_menu(menu, msg['options'],
              function (value) {
                 msg['name'] = 'change_axis';

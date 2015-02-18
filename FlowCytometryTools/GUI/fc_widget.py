@@ -599,16 +599,20 @@ class FCGateManager(EventGenerator):
 
     def pick_event_handler(self, event):
         """ Handles pick events """
+        info = {'options': self.get_available_channels()}
+
+        for key in ['pageX', 'pageY']:
+            info[key] = event.mouseevent.guiEvent[key]
+
+
         if hasattr(self, 'xlabel_artist') and (event.artist == self.xlabel_artist):
-            self.callback(Event('axis_click',
-                                {'options': self.get_available_channels(),
-                                 'axis_num': 0,
-                                }))
+            info['axis_num'] = 0
+            self.callback(Event('axis_click', info))
+
         if hasattr(self, 'ylabel_artist') and (event.artist == self.ylabel_artist):
-            self.callback(Event('axis_click',
-                                {'options': self.get_available_channels(),
-                                 'axis_num': 1,
-                            }))
+            info['axis_num'] = 1
+            self.callback(Event('axis_click', info))
+
 
     def add_gate(self, gate):
         self.gates.append(gate)
