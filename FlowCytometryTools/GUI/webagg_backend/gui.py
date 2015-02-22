@@ -1,13 +1,3 @@
-"""
-This example demonstrates how to embed matplotlib WebAgg interactive
-plotting in your own web application and framework.  It is not
-necessary to do all this if you merely want to display a plot in a
-browser or use matplotlib's built-in Tornado-based server "on the
-side".
-
-The framework being used must support web sockets.
-"""
-
 import io
 
 import tornado
@@ -15,19 +5,18 @@ import tornado.web
 import tornado.httpserver
 import tornado.ioloop
 import tornado.websocket
-
+import os
 
 from matplotlib.backends.backend_webagg_core import (
     FigureManagerWebAgg, new_figure_manager_given_figure)
 from matplotlib.figure import Figure
 import pylab
-
 import numpy as np
 import json
 
-from FlowCytometryTools.GUI import fc_widget
-import os
 import tkFileDialog
+
+from FlowCytometryTools.GUI import fc_widget
 
 class MyApplication(tornado.web.Application):
     class MainPage(tornado.web.RequestHandler):
@@ -36,7 +25,7 @@ class MyApplication(tornado.web.Application):
         """
         def get(self):
             # Load HTML template
-            with open('./app_template.html', 'r') as f:
+            with open('app_template.html', 'r') as f:
                 html_content = f.read()
 
             manager = self.application.manager

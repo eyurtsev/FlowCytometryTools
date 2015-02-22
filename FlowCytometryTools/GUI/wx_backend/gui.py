@@ -3,14 +3,14 @@
 import wx
 import matplotlib
 from wireframe import GeneratedWireframe
-import fc_widget
+from FlowCytometryTools.GUI import fc_widget
 
 class GUIEmbedded(GeneratedWireframe):
     def __init__(self, *args, **kwargs):
         GeneratedWireframe.__init__(self, *args, **kwargs)
         self.fig = self.canvas.figure
         self.ax = self.fig.add_subplot(111)
-        self.fc_toolbar = fc_widget.FCToolBar(self.ax)
+        self.fc_toolbar = fc_widget.FCGateManager(self.ax)
         self._update_axes()
 
     def load_measurement(self, measurement):
