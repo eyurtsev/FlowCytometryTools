@@ -602,8 +602,10 @@ class FCGateManager(EventGenerator):
         info = {'options': self.get_available_channels()}
 
         for key in ['pageX', 'pageY']:
-            info[key] = event.mouseevent.guiEvent[key]
-
+            if event.mouseevent.guiEvent is not None:
+                info[key] = event.mouseevent.guiEvent[key]
+            else:
+                info[key] = 1 # put at top left part
 
         if hasattr(self, 'xlabel_artist') and (event.artist == self.xlabel_artist):
             info['axis_num'] = 0
