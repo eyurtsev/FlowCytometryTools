@@ -601,7 +601,7 @@ class FCGateManager(EventGenerator):
         info = {'options': self.get_available_channels()}
 
         for key in ['pageX', 'pageY']:
-            if event.mouseevent.guiEvent is not None:
+            if event.mouseevent.guiEvent and hasattr(event.mouseevent.guiEvent, key):
                 info[key] = event.mouseevent.guiEvent[key]
             else:
                 info[key] = 1 # put at top left part
