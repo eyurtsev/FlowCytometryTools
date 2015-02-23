@@ -11,15 +11,15 @@ class GUIEmbedded(GeneratedWireframe):
         self.fig = self.canvas.figure
         self.ax = self.fig.add_subplot(111)
         self.fcgatemanager = fc_widget.FCGateManager(self.ax)
-        self._update_axes()
+        self._update_available_channels()
 
     def load_measurement(self, measurement):
         self.fcgatemanager.load_measurement(measurement)
-        self._update_axes()
+        self._update_available_channels()
 
     def load_fcs(self, filepath=None):
         self.fcgatemanager.load_fcs(filepath=filepath, parent=self)
-        self._update_axes()
+        self._update_available_channels()
 
     def btnLoadFCS(self, event):
         self.load_fcs()
@@ -28,39 +28,11 @@ class GUIEmbedded(GeneratedWireframe):
         self.fcgatemanager.close()
         self.Close(1)
 
-    def _change_channel(self, event, axis):
-        """
-        Parameters
-        -------------
-        axis : 'x' or 'y'
-        event : pick of list text
-        """
-        if event.GetExtraLong(): # Quick hack
-            sel = event.GetString().encode("UTF-8")
-            current_channels = self.fcgatemanager.current_channels
-
-            if len(current_channels) == 1:
-                ch = current_channels[0] # Current channel
-            else:
-                if axis == 'x':
-                    ch = current_channels[1]
-                elif axis == 'y':
-                    ch = current_channels[0]
-
-            if sel == ch:
-                new_channels = ch,
-            elif axis == 'x':
-                new_channels = sel, ch
-            else:
-                new_channels = ch, sel
-
-            self.fcgatemanager.set_axes(new_channels, self.ax)
-
     def btn_choose_x_channel(self, event):
-        self._change_channel(event, 'x')
+        self.update_widget_channels()
 
     def btn_choose_y_channel(self, event):
-        self._change_channel(event, 'y')
+        self.update_widget_channels()
 
     def btn_create_poly_gate(self, event):
         self.fcgatemanager.create_gate_widget('poly')
@@ -81,16 +53,33 @@ class GUIEmbedded(GeneratedWireframe):
         generated_code = self.fcgatemanager.get_generation_code()
         self.tb_gen_code.SetValue(generated_code)
 
-    def _update_axes(self):
+    def _update_available_channels(self):
         if self.fcgatemanager.sample is not None:
             options = list(self.fcgatemanager.sample.channel_names)
         else:
-            options = list(['d1', 'd2', 'd3']) # Just a seed
+            options = list(['d1', 'd2', 'd3']) # For testing
         self.x_axis_list.Clear()
         self.x_axis_list.InsertItems(options, 0)
         self.y_axis_list.Clear()
         self.y_axis_list.InsertItems(options, 0)
-        self.fcgatemanager.current_channels = options[0], options[1]
+        self.x_axis_list.Select(0)
+        self.y_axis_list.Select(1)
+        self.update_widget_channels()
+
+    def update_widget_channels(self):
+        """
+        Parameters
+        -------------
+        axis : 'x' or 'y'
+        event : pick of list text
+        """
+        sel1 = self.x_axis_list.GetSelection()
+        sel2 = self.y_axis_list.GetSelection()
+
+        if sel1 >= 0 and sel2 >= 0:
+            channel_1 = self.x_axis_list.GetString(sel1).encode('UTF-8')
+            channel_2 = self.y_axis_list.GetString(sel2).encode('UTF-8')
+            self.fcgatemanager.set_axes((channel_1, channel_2), self.ax)
 
 class GUILauncher(object):
     """ Use this to launch the wx-based fdlow cytometry app """
@@ -113,5 +102,5 @@ class GUILauncher(object):
         self.app.MainLoop()
 
 if __name__ == "__main__":
-    #app = GUILauncher('../tests/data/FlowCytometers/FACSCaliburHTS/Sample_Well_A02.fcs')
-    app = GUILauncher()
+    app = GUILauncher('../../tests/data/FlowCytometers/FACSCaliburHTS/Sample_Well_A02.fcs')
+    #app = GUILauncher()
