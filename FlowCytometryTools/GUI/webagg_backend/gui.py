@@ -1,31 +1,35 @@
+import os
 import io
+import webbrowser
 
 import tornado
 import tornado.web
 import tornado.httpserver
 import tornado.ioloop
 import tornado.websocket
-import os
 
 from matplotlib.backends.backend_webagg_core import (
     FigureManagerWebAgg, new_figure_manager_given_figure)
 from matplotlib.figure import Figure
-import pylab
-import numpy as np
 import json
 
 import tkFileDialog
 
 from FlowCytometryTools.GUI import fc_widget
 
+
 class MyApplication(tornado.web.Application):
     class MainPage(tornado.web.RequestHandler):
         """
         Serves the main HTML page.
         """
+
         def get(self):
             # Load HTML template
-            with open('app_template.html', 'r') as f:
+            path = os.path.realpath(__file__)
+            path = os.path.split(path)[0]
+            app_path = os.path.join(path, 'app_template.html')
+            with open(app_path, 'r') as f:
                 html_content = f.read()
 
             manager = self.application.manager
@@ -41,6 +45,7 @@ class MyApplication(tornado.web.Application):
         user has defined.  Call `FigureManagerWebAgg` to get its
         content.
         """
+
         def get(self):
             self.set_header('Content-Type', 'application/javascript')
             js_content = FigureManagerWebAgg.get_javascript()
@@ -51,6 +56,7 @@ class MyApplication(tornado.web.Application):
         """
         Handles downloading of the figure in various file formats.
         """
+
         def get(self, fmt):
             manager = self.application.manager
 
@@ -131,6 +137,9 @@ class MyApplication(tornado.web.Application):
                     fc_manager.change_axis(message['axis_num'], message['value'])
                 elif message['name'] == 'generate_code':
                     fc_manager.get_generation_code()
+                elif message['name'] == 'quit':
+                    if hasattr(self.application.stop_callback, '__call__'):
+                        self.application.stop_callback()
             else:
                 manager = self.application.manager
                 manager.handle_json(message)
@@ -149,7 +158,10 @@ class MyApplication(tornado.web.Application):
     def load_fcs(self, path):
         return self.fc_manager.load_fcs(path)
 
-    def __init__(self):
+    def load_measurement(self, measurement):
+        return self.fc_manager.load_measurement(measurement)
+
+    def __init__(self, stop_callback=None):
         super(MyApplication, self).__init__([
             # Static files for the CSS and JS
             (r'/_static/(.*)',
@@ -172,24 +184,64 @@ class MyApplication(tornado.web.Application):
         figure = Figure()
 
         self.manager = new_figure_manager_given_figure(
-                id(figure), figure)
+            id(figure), figure)
 
         ax = figure.add_subplot(1, 1, 1)
 
-        def f(event):
-            event.info.pop('caller', None)
+        def callback(event):
+            '''Sends event to front end'''
+            event.info.pop('caller', None)  # HACK: popping caller b/c it's not JSONizable.
             self.manager._send_event(event.type, **event.info)
-        self.fc_manager = fc_widget.FCGateManager(ax, callback_list=f)
+
+        self.fc_manager = fc_widget.FCGateManager(ax, callback_list=callback)
+        self.stop_callback = stop_callback
+
+
+class GUILauncher(object):
+    """ Use this to launch the wx-based fdlow cytometry app """
+
+    def __init__(self, filepath=None, measurement=None):
+        if filepath is not None and measurement is not None:
+            raise ValueError('You can only specify either filepath or measurement, but not both.')
+
+
+        # Not sure if this is the appropriate way to deal with IOLoop
+        # The question is what to do if launched from within ipython notebook, which is
+        # already running a tornado server.
+        self.ioloop_initiator = not tornado.ioloop.IOLoop.initialized()
+
+        self.app = MyApplication(stop_callback=self.stop)
+
+        if filepath is not None:
+            self.app.load_fcs(filepath)
+        if measurement is not None:
+            self.app.load_measurement(measurement)
+
+        self.http_server = tornado.httpserver.HTTPServer(self.app)
+
+        port = 8080
+        try:
+            self.http_server.listen(port)
+        except:
+            msg = 'Could not open port {}. Please make sure sure you have no open tabs using that port.'.format(port)
+            print(msg)
+            raise
+        self.run()
+
+    def run(self):
+        url = r'http://127.0.0.1:8080/'
+        print("The application should have opened a new tab in the webbrowser at address: {}".format(url))
+        webbrowser.open_new_tab(url)
+
+        if self.ioloop_initiator:
+            tornado.ioloop.IOLoop.current().start()
+
+    def stop(self):
+        self.http_server.stop()
+
+        if self.ioloop_initiator:
+            tornado.ioloop.IOLoop.current().stop()
 
 if __name__ == "__main__":
-    application = MyApplication()
-
-    http_server = tornado.httpserver.HTTPServer(application)
-    http_server.listen(8080)
-
-    application.load_fcs('../../tests/data/Plate01/CFP_Well_A4.fcs')
-
-    print("http://127.0.0.1:8080/")
-    print("Press Ctrl+C to quit")
-
-    tornado.ioloop.IOLoop.instance().start()
+    # print io.running()
+    gui = GUILauncher('../../tests/data/Plate01/CFP_Well_A4.fcs')

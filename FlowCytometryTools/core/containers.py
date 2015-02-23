@@ -1,22 +1,19 @@
-'''
-Created on Jun 14, 2013
+import inspect
+from random import sample
 
-@author: jonathanfriedman
+from itertools import cycle
+from pandas import DataFrame
+import numpy as np
+import matplotlib
 
-TODO:
-'''
-from FlowCytometryTools import parse_fcs
-from bases import Measurement, MeasurementCollection, OrderedCollection, queueable
 from GoreUtilities.util import to_list as to_iter
 from GoreUtilities.graph import plot_ndpanel
-from itertools import cycle
-import graph
-from pandas import DataFrame
-import inspect
-import numpy as np
+
+from FlowCytometryTools import parse_fcs
 from FlowCytometryTools.core.transforms import Transformation
+from bases import Measurement, MeasurementCollection, OrderedCollection, queueable
+import graph
 from common_doc import doc_replacer
-from random import sample
 
 def to_list(obj):
     """ This is a quick fix to make sure indexing of DataFrames
@@ -164,23 +161,50 @@ class FCMeasurement(Measurement):
         return plot_ndpanel(channel_mat, plot_region, **kwargs)
 
 
-    def view_interactively(self):
-        '''
-        Loads the current FCS sample viewer
+    def view_interactively(self, backend='auto'):
+        '''Loads the current sample in a graphical interface for drawing gates.
 
-        .. warning::
-
-            You must have wxpython installed in order for the GUI to work.
+        Parameters
+        ----------
+        backend: 'auto' | 'wx' | 'webagg'
+            Specifies which backend should be used to view the sample.
         '''
-        #if launch_new_subprocess: # This is not finished until I can list the gates somewhere
-            #from FlowCytometryTools import __path__ as p
-            #from subprocess import call
-            #import os
-            #script_path = os.path.join(p[0], 'GUI', 'flomeasurementwGUI.py')
-            #call(["python", script_path, self.datafile])
-        #else:
-        from FlowCytometryTools.GUI import gui
-        return gui.FCGUI(measurement=self)
+        ##
+        # Because this may be called from within ipython notebook inline backend
+        # we should adjust the backend
+        try:
+            from IPython import get_ipython
+        except ImportError:
+            get_ipython = None
+
+        switch_backends = ('inline' in matplotlib.get_backend()) and (get_ipython is not None)
+
+        # Switch from inline to wx if needed/possible
+        if switch_backends:
+            ipython = get_ipython()
+            ipython.magic('matplotlib {}'.format(backend))
+
+        if backend == 'auto':
+            if matplotlib.__version__ >= '1.4.3':
+                backend = 'webagg'
+            else:
+                backend = 'wx'
+
+        if backend == 'wx':
+            from FlowCytometryTools.GUI.wx_backend import gui
+        elif backend == 'webagg':
+            from FlowCytometryTools.GUI.webagg_backend import gui
+        else:
+            raise ValueError('No support for backend {}'.format(backend))
+
+        # Launch GUI
+        output = gui.GUILauncher(measurement=self)
+
+        # Switch back to inline mode if started in inline
+        if switch_backends:
+            ipython.magic('matplotlib inline')
+
+        return output
 
     @queueable
     @doc_replacer

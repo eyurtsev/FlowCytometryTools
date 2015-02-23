@@ -383,7 +383,7 @@ class BaseGate(EventGenerator):
             gate_type_name = 'QuadGate'
         return gate_type_name
 
-    def set_axis(self, ch, ax):
+    def set_axes(self, ch, ax):
         self.remove_spawned_gates()
         sgate = self.spawn(ch, ax)
         self._refresh_activation()
@@ -576,8 +576,7 @@ class PolyDrawer(AxesWidget):
 
 
 class FCGateManager(EventGenerator):
-    """Manages gate creation widgets."""
-
+    """Manages gate creation widgets and gates."""
     def __init__(self, ax, callback_list=None):
         self.gates = []
         self.fig = ax.figure
@@ -725,14 +724,14 @@ class FCGateManager(EventGenerator):
     def _sample_loaded_event(self):
         if self.sample is not None:
             self.current_channels = list(self.sample.channel_names[0:2])
-            self.set_axis(self.current_channels, self.ax)
+            self.set_axes(self.current_channels, self.ax)
 
     def get_available_channels(self):
         return self.sample.channel_names
 
     def change_axis(self, axis_num, channel_name):
         """
-        TODO: refactor that and set_axis
+        TODO: refactor that and set_axes
         what to do with ax?
 
         axis_num: int
@@ -741,15 +740,26 @@ class FCGateManager(EventGenerator):
            new channel to plot on that axis
         """
         new_channels = list(self.current_channels)
-        new_channels[axis_num] = channel_name
-        self.set_axis(new_channels, None)
+        if len(new_channels) == 1:
+            if axis_num == 0:
+                new_channels = channel_name,
+            else:
+                new_channels = new_channels[0], channel_name
+        else:
+            new_channels[axis_num] = channel_name
+        self.set_axes(new_channels, None)
 
-    def set_axis(self, channels, ax):
+    def set_axes(self, channels, ax):
         """
         channels : iterable of string
             each value corresponds to a channel names
             names must be unique
         """
+
+        # To make sure displayed as hist
+        if len(set(channels)) == 1:
+            channels = channels[0],
+
         self.current_channels = channels
         self.plot_data()
 
@@ -795,7 +805,7 @@ class FCGateManager(EventGenerator):
         self._plt_data = sample.plot(self.current_channels, ax=ax)
 
         # Respawn gates
-        [gate.set_axis(self.current_channels, self.ax) for gate in self.gates]
+        [gate.set_axes(self.current_channels, self.ax) for gate in self.gates]
 
         # Set data limits
         if hasattr(self._plt_data, 'get_datalim'):
@@ -856,11 +866,11 @@ def key_press_handler(event, canvas, toolbar=None):
     elif key in ['0']:
         toolbar.load_fcs()
     elif key in ['a']:
-        toolbar.set_axis(('d1', 'd2'), pl.gca())
+        toolbar.set_axes(('d1', 'd2'), pl.gca())
     elif key in ['b']:
-        toolbar.set_axis(('d2', 'd1'), pl.gca())
+        toolbar.set_axes(('d2', 'd1'), pl.gca())
     elif key in ['c']:
-        toolbar.set_axis(('d1', 'd3'), pl.gca())
+        toolbar.set_axes(('d1', 'd3'), pl.gca())
     elif key in ['8']:
         toolbar.get_generation_code()
 

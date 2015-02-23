@@ -98,8 +98,15 @@
             // Initialize GUI elements
             initialize_ui(fig, send_message);
             initialize_toolbar(send_message);
+
+            $(window).bind('beforeunload', function() {
+                send_message('app_control', {name: 'quit'});
+            });
+
         }
       );
+
+
 
     var initialize_ui = function(fig, send_message) {
         var menu = $('#channel-selection-menu');
