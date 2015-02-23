@@ -114,14 +114,23 @@
         menu.menu();
 
         fig.handle_axis_click = function(fig, msg) {
-            menu.css('left', msg['pageX']);
-            menu.css('top', msg['pageY']);
+            if (msg['guiEvent']) {
+                pageX = msg['guiEvent']['pageX'];
+                pageY = msg['guiEvent']['pageY'];
+            } else {
+                pageX = 1;
+                pageY = 1;
+            }
+
+            menu.css('left', pageX);
+            menu.css('top', pageY);
+
             create_selection_menu(menu, msg['options'],
-             function (value) {
-                msg['name'] = 'change_axis';
-                msg['value'] = value;
-                send_message('app_control', msg);
-             }
+                function (value) {
+                    msg['name'] = 'change_axis';
+                    msg['value'] = value;
+                    send_message('app_control', msg);
+                }
             );
         }
 
@@ -159,12 +168,12 @@
 
     var initialize_toolbar = function(send_message) {
         var button_message_mapping = [ 'open_file',
-                'draw_poly_gate',
-                'draw_poly_gate',
-                'draw_vertical_gate',
-                'draw_horizontal_gate',
-                'delete_gate',
-                'generate_code'];
+                                        'draw_poly_gate',
+                                        'draw_poly_gate',
+                                        'draw_vertical_gate',
+                                        'draw_horizontal_gate',
+                                        'delete_gate',
+                                        'generate_code'];
 
         $.each(button_message_mapping, function (index, value) {
             button_id = '#app_' + value;

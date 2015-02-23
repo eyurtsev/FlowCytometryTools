@@ -598,13 +598,9 @@ class FCGateManager(EventGenerator):
 
     def pick_event_handler(self, event):
         """ Handles pick events """
-        info = {'options': self.get_available_channels()}
-
-        for key in ['pageX', 'pageY']:
-            if event.mouseevent.guiEvent and hasattr(event.mouseevent.guiEvent, key):
-                info[key] = event.mouseevent.guiEvent[key]
-            else:
-                info[key] = 1 # put at top left part
+        info = {'options': self.get_available_channels(),
+                'guiEvent': event.mouseevent.guiEvent,
+                }
 
         if hasattr(self, 'xlabel_artist') and (event.artist == self.xlabel_artist):
             info['axis_num'] = 0
