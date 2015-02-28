@@ -87,8 +87,9 @@ class GUILauncher(object):
         if filepath is not None and measurement is not None:
             raise ValueError('You can only specify either filepath or measurement, but not both.')
 
-        self.app = wx.PySimpleApp(0)
-        wx.InitAllImageHandlers()
+        #self.app = wx.PySimpleApp(0)
+        self.app = wx.App(False)
+        #wx.InitAllImageHandlers()
         self.main = GUIEmbedded(None, -1, "")
         self.app.SetTopWindow(self.main)
         if filepath is not None:

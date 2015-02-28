@@ -402,15 +402,23 @@ class CompositeGate(_ComposableMixin):
     Examples
     --------
 
-    You can create the intersection of two gates by combining them with how='and'.
+    You can create the union of two gates by combining them with how='or'.
 
-    >>> union_gate = CompositeGate(gate1, 'and', gate2)
+    >>> union_gate = CompositeGate(gate1, 'or', gate2)
 
     However,
 
     There is a shorthand to do the same operation
 
-    >>> union_gate = gate1 & gate2
+    >>> union_gate = gate1 | gate2
+
+    Similarly, if you wanted the intersection:
+
+    >>> intersection_gate = CompositeGate(gate1, 'and', gate2)
+
+    With the shorthand
+
+    >>> intersection_gate = gate1 & gate2
 
     As another example, let's invert a gate.
 

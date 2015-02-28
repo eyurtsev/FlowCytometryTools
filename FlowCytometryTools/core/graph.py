@@ -8,54 +8,6 @@ import pylab as pl
 import matplotlib
 from common_doc import doc_replacer
 
-def plot_histogram2d(x, y, bins=200, ax=None, colorbar=True, **kwargs):
-    """
-    Plots a 2D histogram given x, y and number of bins.
-
-    Parameters
-    ----------
-    x : array
-        array of x coordinates
-    y : array
-        array of y coordinates
-    bins : int
-        number of bins to break the data into
-    ax : reference to axis
-        axis to plot on
-    kwargs : key word arguments
-        passed to pcolormesh
-
-    Plotting Defaults
-    -----------------
-
-    kwargs.setdefault('cmap', pl.cm.copper)
-    kwargs.setdefault('norm', matplotlib.colors.LogNorm())
-
-    Returns
-    -------
-    output of pcolormesh
-    """
-    if ax == None:
-        ax = pl.gca()
-
-    kwargs.setdefault('cmap', pl.cm.copper)
-    kwargs.setdefault('norm', matplotlib.colors.LogNorm())
-
-    # Estimate the 2D histogram
-    counts_hist, xedges, yedges = numpy.histogram2d(x, y, bins=bins)
-    # counts_hist needs to be rotated and flipped
-    counts_hist = numpy.rot90(counts_hist)
-    counts_hist = numpy.flipud(counts_hist)
-    # Mask zeros with a value of 0
-    masked_hist = numpy.ma.masked_where(counts_hist == 0, counts_hist)
-
-
-    p = ax.pcolormesh(xedges, yedges, masked_hist, **kwargs)
-    if colorbar:
-        pl.colorbar(p)
-    return p
-
-
 @doc_replacer
 def plotFCM(data, channel_names, kind='histogram', ax=None,
                 autolabel=True, xlabel_kwargs={}, ylabel_kwargs={},
@@ -87,6 +39,7 @@ def plotFCM(data, channel_names, kind='histogram', ax=None,
         # 1d so histogram plot
         kwargs.setdefault('color', 'gray')
         kwargs.setdefault('histtype', 'stepfilled')
+        kwargs.setdefault('bins', 200)
 
         x = data[channel_names[0]].values
         if len(x):
@@ -102,7 +55,14 @@ def plotFCM(data, channel_names, kind='histogram', ax=None,
             kwargs.setdefault('edgecolor', 'none')
             plot_output = ax.scatter(x, y, **kwargs)
         elif kind == 'histogram':
-            plot_output = plot_histogram2d(x, y, ax=ax, colorbar=colorbar, **kwargs)
+            kwargs.setdefault('cmin', 1)
+            kwargs.setdefault('cmap', pl.cm.copper)
+            kwargs.setdefault('norm', matplotlib.colors.LogNorm())
+            kwargs.setdefault('bins', 200)
+            plot_output = ax.hist2d(x, y, **kwargs)
+
+            if colorbar:
+                pl.colorbar(p)
         else:
             raise Exception("Not a valid plot type. Must be 'scatter', 'histogram'")
 

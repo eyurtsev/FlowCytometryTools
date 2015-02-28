@@ -26,13 +26,12 @@ to the `tutorial <http://gorelab.bitbucket.org/flowcytometrytools/tutorial.html>
 Features
 ===================
 
-- **Transformations**: hyperlog (hlog), truncated log (tlog)
+- **Transformations**: hyperlog (hlog), truncated log (tlog), or anything you can dream of ;)
 - **Plotting**: 1D, 2D histograms for both single samples and collections (e.g., 96-well plates).
 - **Gating**: threshold, interval, quad, polygon gates
+- **Subsampling**: easy to subsample to examine only part of a measurement and randomize event order
 - **GUI**: simple graphical user interface to draw gates
 - **FCS Formats**: Supports FCS 2.0, 3.0, and 3.1
-
-Note: Compensation matrices are not yet read from FCS files, so currently compensation needs to be done manually.
 
 Resources
 ===================
@@ -64,6 +63,12 @@ you run into issues, please update the dependencies.
 
 Changes
 =====================
+
+v0.4.1, 2014-09-13
+
++ Bug fixes for GUI
++ Now works with matplotlib 1.4.0
++ Added documentation and examples to gallery
 
 v0.4.0, 2014-06-05
 

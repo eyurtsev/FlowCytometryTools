@@ -167,7 +167,6 @@ class BaseVertex(EventGenerator):
                 svertex.update_position(verts[0], verts[1])
         self.callback(Event(Event.BASE_GATE_CHANGED))
 
-
 class SpawnableVertex(AxesWidget, EventGenerator):
     """
     Defines a moveable vertex. The vertex must be associated
@@ -751,13 +750,26 @@ class FCGateManager(EventGenerator):
             each value corresponds to a channel names
             names must be unique
         """
+        if ax is None:
+            ax = self.ax
 
         # To make sure displayed as hist
         if len(set(channels)) == 1:
             channels = channels[0],
 
         self.current_channels = channels
+        # Remove existing gates
+        for gate in self.gates:
+            gate.remove_spawned_gates()
+        ## 
+        # Has a clear axis command inside!!
+        # which will "force kill" spawned gates
         self.plot_data()
+
+        for gate in self.gates:
+            sgate = gate.spawn(channels, ax)
+            gate._refresh_activation()
+
 
     def close(self):
         for gate in self.gates:
@@ -771,52 +783,35 @@ class FCGateManager(EventGenerator):
     def plot_data(self):
         """ Plots the loaded data """
         if self.sample is None: return
+
+        # Clear the axes
+        self.ax.cla()
         sample = self.sample
         ax = self.ax
 
         ###
-        # Old code to clear data (but keep the gates)
-        # Keep for a shortwhile until we make sure that the code below works.
-        # Trying switching to ax.cla() coupled with redrawing of gates below...
-        # if self._plt_data is not None:
-        #if isinstance(self._plt_data, tuple):
-        ## This is the case for histograms which return a tuple
-        #patches = self._plt_data[2]
-        #map(lambda x : x.remove(), patches)
-        #else:
-        #self._plt_data.remove()
-        #del self._plt_data
-        #self._plt_data = None
-
-        # Clear spawned gates
-        [gate.remove_spawned_gates() for gate in self.gates]
-
-        # Clear axis
-        ax.cla()
+        # Potential code to clear axis
+        # will be easier to use in future version
+        # of matplotlib
+        #
+        #    #if self._plt_data is not None:
+        #        ## HARD CODED FOR SPEED NEEDS FIXING
+        #        #if self._plt_data[0] == '1dhist':
+        #            #patches = self._plt_data[1]
+        #            #[p.remove() for p in patches] # removes patches
+        #        #elif self._plt_data[0] == '2dhist':
+        #            #axes_image = self._plt_data[1]
+        #            #print axes_image
+        #            #print type(axes_image)
+        #            #axes_image.remove()
+        #        #self._plt_data = None
 
         if self.current_channels is None:
-            self.current_channels = sample.channel_names[:2]
+            self.current_channels = self.sample.channel_names[:2]
 
-        # Plot the data
-        self._plt_data = sample.plot(self.current_channels, ax=ax)
-
-        # Respawn gates
-        [gate.set_axes(self.current_channels, self.ax) for gate in self.gates]
-
-        # Set data limits
-        if hasattr(self._plt_data, 'get_datalim'):
-            bbox = self._plt_data.get_datalim(self.ax.transData)
-            p0 = bbox.get_points()[0]
-            p1 = bbox.get_points()[1]
-
-            self.ax.set_xlim(p0[0], p1[0])
-            self.ax.set_ylim(p0[1], p1[1])
-        else:
-            # Then it's a histogram?
-            xlims = self._plt_data[1]
-            xlims = (xlims[0], xlims[-1])
-            self.ax.set_xlim(xlims)
-            self.ax.set_ylim(0, max(self._plt_data[0]))
+        channels = self.current_channels
+        channels_to_plot = channels[0] if len(channels) == 1 else channels
+        out = self.sample.plot(channels_to_plot, ax=self.ax)
 
         # Set pickers for x and y axis
         self.xlabel_artist = ax.get_xaxis().get_label()
@@ -868,15 +863,13 @@ def key_press_handler(event, canvas, toolbar=None):
     elif key in ['c']:
         toolbar.set_axes(('d1', 'd3'), pl.gca())
     elif key in ['8']:
-        toolbar.get_generation_code()
-
-
-class Globals():
-    """ Used for testing only """
-    pass
-
+        print toolbar.get_generation_code()
 
 if __name__ == '__main__':
+    class Globals():
+        """ Used for testing only """
+        pass
+
     def example1():
         fig = figure()
         ax = fig.add_subplot(1, 4, 1)

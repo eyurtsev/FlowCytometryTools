@@ -63,4 +63,17 @@ Calculating median fluorescence
 ++++++++++++++++++++++++++++++++++++++++
 
 .. plot:: pyplots/calculations/plate_gated_median_fluorescence.py
-    
+
+
+Compensation
+---------------------------
+
+.. plot:: pyplots/arbitrary_manipulation/compensation.py
+
+
+Custom Transformations
+---------------------------
+
+.. plot:: pyplots/arbitrary_manipulation/transformation.py
+
+
