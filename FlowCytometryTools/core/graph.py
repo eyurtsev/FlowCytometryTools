@@ -71,9 +71,10 @@ def plotFCM(data, channel_names, kind='histogram', ax=None,
             kwargs.setdefault('cmap', pl.cm.copper)
             kwargs.setdefault('norm', matplotlib.colors.LogNorm())
             plot_output = ax.hist2d(x, y, **kwargs)
+            mappable = plot_output[-1]
 
             if colorbar:
-                pl.colorbar(p)
+                pl.colorbar(mappable, ax=ax)
         else:
             raise ValueError("Not a valid plot type. Must be 'scatter', 'histogram'")
 
