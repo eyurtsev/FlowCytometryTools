@@ -52,7 +52,7 @@ def _assign_IDS_to_datafiles(datafiles, parser, measurement_class=None, **kwargs
         kwargs.setdefault('pre', 'Well_')
         kwargs.setdefault('post', ['_', '\.', '$'])
         kwargs.setdefault('tagtype', str)
-        fparse = lambda x : get_tag_value(x, **kwargs)
+        fparse = lambda x : get_tag_value(os.path.basename(x), **kwargs)
     elif parser == 'number':
         fparse = lambda x: int(x.split('.')[-2])
     elif parser == 'read':
@@ -986,7 +986,7 @@ class OrderedCollection(MeasurementCollection):
     @doc_replacer
     def grid_plot(self, func, applyto='measurement', ids=None,
                 row_labels=None, col_labels=None,
-                xlim=None, ylim=None,
+                xlim='auto', ylim='auto',
                 xlabel=None, ylabel=None,
                 colorbar=True,
                 row_label_xoffset=None, col_label_yoffset=None,
@@ -1028,7 +1028,8 @@ class OrderedCollection(MeasurementCollection):
         """
         # Acquire call arguments to be passed to create plate layout
         callArgs = locals().copy() # This statement must remain first. The copy is just defensive.
-        [callArgs.pop(varname) for varname in  ['self', 'func', 'applyto', 'ids', 'colorbar']] # pop args
+        [callArgs.pop(varname) for varname in  ['self', 'func', 'applyto', 'ids', 'colorbar', 'xlim', 'ylim']] # pop args
+
         callArgs['rowNum'] = self.shape[0]
         callArgs['colNum'] = self.shape[1]
 
@@ -1068,17 +1069,9 @@ class OrderedCollection(MeasurementCollection):
                         func(data, ax)
             else:
                 raise ValueError, 'Encountered unsupported value {} for applyto parameter.'.format(applyto)
-        ###
-        # Autoscaling behavior
-        if not xlim and not ylim:
-            axis = 'both'
-        elif not xlim:
-            axis = 'x'
-        elif not ylim:
-            axis = 'y'
-        else:
-            axis = 'none'
-        graph.autoscale_subplots(ax_subplots, axis)
+
+        # Autoscaling axes
+        graph.scale_subplots(ax_subplots, xlim=xlim, ylim=ylim)
 
         ###
         # Test code for adding colorbars

@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 ## get version info
 import re
 VERSIONFILE="FlowCytometryTools/_version.py"
-gore_utilities_version = '0.4.0'
+gore_utilities_version = '0.5.0'
 verstrline = open(VERSIONFILE, "rt").read()
 VSRE = r"^version = ['\"]([^'\"]*)['\"]"
 mo = re.search(VSRE, verstrline, re.M)

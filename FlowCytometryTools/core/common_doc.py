@@ -150,7 +150,22 @@ colorbar : [False | True]
 xlabel_kwargs : dict
     kwargs to be passed to the xlabel() command
 ylabel_kwargs : dict
-    kwargs to be passed to the ylabel() command""",
+    kwargs to be passed to the ylabel() command
+bins : int | ndarray | [ndarray]
+    specifies how to bin histograms.
+
+    * int : number of bins (autopilot!)
+    * ndarray : for 1d histograms, e.g., linspace(-1000, 10000, 100)
+    * [ndarray] : for 2d histograms, e.g., [linspace(-1000, 10000, 100), linspace(-1000, 10000, 100)]
+
+    **CAUTION** when bins=int, the bin locations are determined
+    automatically based on the data. This means that the bins
+    can have different widths, depending on the range of the data.
+    When plotting using FCCollection (FCPlate), the bin locations are set
+    according to minimum and maximum values of data from across all the
+    FCMeasurements. If this is confusing for you, just specify the
+    bin locations explicitely.
+    """,
 
 common_plot_ax="""\
 ax : [None | ax]

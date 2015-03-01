@@ -77,7 +77,7 @@ class FCMeasurement(Measurement):
         '''
         fields = to_list(fields)
         meta = self.get_meta()
-        return dict( ((field, meta.get(field)) for field in fields ) )
+        return { field : meta.get(field) for field in fields }
 
     def ID_from_data(self, ID_field='$SRC'):
         '''
@@ -86,8 +86,8 @@ class FCMeasurement(Measurement):
         in which case this function will raise an exception.
         '''
         try:
-            return self.get_meta_fields(ID_field)[0]
-        except:
+            return self.get_meta_fields(ID_field)[ID_field]
+        except KeyError:
             raise Exception("The keyword '{}' does not exist in the following FCS file: {}".format(ID_field, self.datafile))
 
 
@@ -532,7 +532,7 @@ class FCOrderedCollection(OrderedCollection, FCCollection):
     def plot(self, channel_names,  kind='histogram',
              gates=None, gate_colors=None,
              ids=None, row_labels=None, col_labels=None,
-             xlim=None, ylim=None,
+             xlim='auto', ylim='auto',
              autolabel=True,
              **kwargs):
         """
@@ -556,6 +556,8 @@ class FCOrderedCollection(OrderedCollection, FCCollection):
         >>> plate.plot(['SSC-A', 'FSC-A'], kind='histogram', autolabel=True)
         >>> plate.plot(['SSC-A', 'FSC-A'], xlim=(0, 10000))
         >>> plate.plot(['B1-A', 'Y2-A'], kind='scatter', color='red', s=1, alpha=0.3)
+        >>> plate.plot(['B1-A', 'Y2-A'], bins=100, alpha=0.3)
+        >>> plate.plot(['B1-A', 'Y2-A'], bins=[linspace(-1000, 10000, 100), linspace(-1000, 10000, 100)], alpha=0.3)
 
         .. note::
 
@@ -583,6 +585,40 @@ class FCOrderedCollection(OrderedCollection, FCCollection):
             if key in grid_arg_list:
                 kwargs.pop(key)
                 grid_plot_kwargs[key] = value
+
+        ##
+        # Make sure channel names is a list to make the code simpler below
+        channel_names = to_list(channel_names)
+
+        ##
+        # Determine data limits for binning
+        #
+
+        if kind == 'histogram':
+            nbins = kwargs.get('bins', 200)
+
+            if isinstance(nbins, int):
+                min_list = []
+                max_list = []
+                for sample in self:
+                    min_list.append(self[sample].data[channel_names].min().values)
+                    max_list.append(self[sample].data[channel_names].max().values)
+
+                min_list = zip(*min_list)
+                max_list = zip(*max_list)
+
+                bins = []
+
+                for i, c in enumerate(channel_names):
+                    min_v = min(min_list[i])
+                    max_v = max(max_list[i])
+                    bins.append(np.linspace(min_v, max_v, nbins))
+
+                # Check if 1d 
+                if len(channel_names) == 1:
+                    bins = bins[0] # bins should be an ndarray, not a list of ndarrays
+
+                kwargs['bins'] = bins
 
         ##########
         # Defining the plotting function that will be used.
