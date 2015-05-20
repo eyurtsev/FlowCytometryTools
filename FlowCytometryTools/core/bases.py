@@ -53,7 +53,7 @@ def _assign_IDS_to_datafiles(datafiles, parser, measurement_class=None, **kwargs
         kwargs.setdefault('post', ['_', '\.', '$'])
         kwargs.setdefault('tagtype', str)
         fparse = lambda x : get_tag_value(x, **kwargs)
-    elif parser == 'number':
+    elif parser.startswith('number'):
         fparse = lambda x: int(x.split('.')[-2])
     elif parser == 'read':
         fparse = lambda x: measurement_class(ID='temporary', datafile=x).ID_from_data(**kwargs)
@@ -425,6 +425,7 @@ class MeasurementCollection(collections.MutableMapping, BaseObject):
         {_bases_filename_parser}
         {_bases_ID_kwargs}
         """
+        print "428"
         datafiles = get_files(datadir, pattern, recursive)
         return cls.from_files(ID, datafiles, parser, 
                               readdata_kwargs=readdata_kwargs, readmeta_kwargs=readmeta_kwargs, 
@@ -742,7 +743,7 @@ class OrderedCollection(MeasurementCollection):
         {_bases_ID_kwargs}
         kwargs : dict
             Additional key word arguments to be passed to constructor.
-        """
+        """        
         if position_mapper is None:
             if isinstance(parser, basestring):
                 position_mapper = parser
@@ -782,7 +783,7 @@ class OrderedCollection(MeasurementCollection):
         {_bases_ID_kwargs}
         kwargs : dict
             Additional key word arguments to be passed to constructor.
-        """
+        """        
         datafiles = get_files(path, pattern, recursive)
         return cls.from_files(ID, datafiles, parser=parser, position_mapper=position_mapper,
                               readdata_kwargs=readdata_kwargs, readmeta_kwargs=readmeta_kwargs,
@@ -841,9 +842,15 @@ class OrderedCollection(MeasurementCollection):
             parser = lambda x: parser[x]
         elif parser == 'name':
             parser = lambda x: (x[0], int(x[1:]))
-        elif parser == 'number':
+        elif parser.startswith('number'):
+            by_col = parser.endswith("col")
             def num_parser(x):
-                i,j = unravel_index(int(x-1), self.shape, order='F')
+                w,h = self.shape
+                if by_col:
+                    w,h = h,w
+                i,j = unravel_index(int(x-1), (w,h), order='F')
+                if by_col:
+                    i,j = j,i
                 return (self.row_labels[i], self.col_labels[j])
             parser = num_parser
         else:
