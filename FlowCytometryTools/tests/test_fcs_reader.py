@@ -3,18 +3,22 @@ Created on July 20, 2013
 @author: Eugene Yurtsev
 @email: eyurtsev@gmail.com
 '''
+import warnings
+import timeit
 import unittest
+
 import numpy
 from numpy import array
+
 from FlowCytometryTools import parse_fcs
-import warnings
 
 file_formats = {
                     'mq fcs 2.0' : '../tests/data/FlowCytometers/MiltenyiBiotec/FCS2.0/EY_2013-07-19_PBS_FCS_2.0_Custom_Without_Add_Well_A1.001.fcs',
                     'mq fcs 3.0' : '../tests/data/FlowCytometers/MiltenyiBiotec/FCS3.0/FCS3.0_Custom_Compatible.fcs',
                     'mq fcs 3.1' : '../tests/data/FlowCytometers/MiltenyiBiotec/FCS3.1/EY_2013-07-19_PBS_FCS_3.1_Well_A1.001.fcs',
                     'LSR II fcs 3.0' : '../tests/data/FlowCytometers/HTS_BD_LSR-II/HTS_BD_LSR_II_Mixed_Specimen_001_D6_D06.fcs',
-                    'Fortessa fcs 3.0' : '../tests/data/FlowCytometers/Fortessa/FCS_3.0_Fortessa_PBS_Specimen_001_A1_A01.fcs'
+                    'Fortessa fcs 3.0' : '../tests/data/FlowCytometers/Fortessa/FCS_3.0_Fortessa_PBS_Specimen_001_A1_A01.fcs',
+                    'large fake fcs': '../tests/data/FlowCytometers/fake_large_fcs/fake_large_fcs.fcs'
                }
 
 def check_data_segment(fcs_format, array_values):
@@ -288,8 +292,6 @@ class TestFCSReader(unittest.TestCase):
 
     def test_speed_of_reading_fcs_files(self):
         """ Testing the speed of loading a FCS files"""
-        import timeit
-
         fname = file_formats['mq fcs 3.1']
         number = 1000
 
@@ -308,6 +310,26 @@ class TestFCSReader(unittest.TestCase):
         """ Raising exception when reading a corrupted fcs file. """
         path = '../tests/data/FlowCytometers/corrupted/corrupted.fcs'
         self.assertRaises(ValueError, parse_fcs, path)
+
+    def test_reading_large_fcs_file(self):
+        """ Properly finding data segment of a large FCS file """
+        values = array([[  1.31284998e+03,   5.60000000e+02,   1.53640969e+05,
+                  1.47263989e+03,   1.42400000e+03,   6.77745312e+04,
+                  1.79399986e+01,   8.57999992e+00,   1.37059998e+02,
+                 -3.67200012e+01,   0.00000000e+00],
+               [  9.15529968e+02,   2.97000000e+02,   2.02020781e+05,
+                  3.24479980e+02,   3.49000000e+02,   6.09315781e+04,
+                  2.33999996e+01,   7.79999971e+00,   1.65550003e+02,
+                  2.01599998e+01,   0.00000000e+00],
+               [  2.27150000e+03,   5.49000000e+02,   2.62143000e+05,
+                  8.54099976e+02,   8.65000000e+02,   6.47101641e+04,
+                  2.49599991e+01,   2.65199986e+01,   5.77500000e+01,
+                  1.36800003e+01,   1.00000001e-01],
+               [  2.33232983e+03,   5.83000000e+02,   2.62143000e+05,
+                  6.24000000e+02,   6.27000000e+02,   6.52224297e+04,
+                  2.49599991e+01,   4.91399994e+01,   7.23799973e+01,
+                 -1.29600010e+01,   1.00000001e-01]], dtype=numpy.float32)
+        self.assertTrue(check_data_segment('large fake fcs', values))
 
 if __name__ == '__main__':
     import nose
