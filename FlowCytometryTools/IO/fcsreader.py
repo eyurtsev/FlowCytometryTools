@@ -277,9 +277,6 @@ class FCS_Parser(object):
         text = self.annotation
 
         if (self._data_start > self._file_size) or (self._data_end > self._file_size):
-            print self._data_end
-            print self._data_start
-            print self._file_size
             raise ValueError("The FCS file '{}' is corrupted. Part of the data segment is missing.".format(self.path))
 
         num_events = text['$TOT'] # Number of events recorded
