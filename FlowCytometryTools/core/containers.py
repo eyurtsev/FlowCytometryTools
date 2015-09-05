@@ -175,7 +175,7 @@ class FCMeasurement(Measurement):
         return plot_ndpanel(channel_mat, plot_region, **kwargs)
 
 
-    def view_interactively(self, backend='auto'):
+    def view_interactively(self, backend='wx'):
         '''Loads the current sample in a graphical interface for drawing gates.
 
         Parameters
