@@ -848,9 +848,9 @@ class OrderedCollection(MeasurementCollection):
             mapper = lambda x: position_mapper[x]
         elif position_mapper == 'name':
             mapper = lambda x: (x[0], int(x[1:]))
-        elif position_mapper in ('enumeration_row_first', 'number'):
+        elif position_mapper in ('row_first_enumerator', 'number'):
             mapper = lambda x : num_parser(x, 'F')
-        elif position_mapper == 'enumeration_col_first':
+        elif position_mapper == 'col_first_enumerator':
             mapper = lambda x : num_parser(x, 'C')
         else:
             msg = '"{}" is not a known key_to_position_parser.'.format(position_mapper)

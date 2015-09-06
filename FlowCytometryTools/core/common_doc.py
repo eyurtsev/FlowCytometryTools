@@ -10,8 +10,7 @@ _doc_dict = dict(
 _bases_filename_parser="""\
 parser : ['name' | 'number' | 'read' | mapping | callable]
 
-    Given a filename corresponding to a measurement,
-    the parser extracts a key from the filenmae.
+    Extracts a key from a filename.
 
     Later, this key is used by the position mapper to determine
     the location of the measurement in the measurement collection.
@@ -27,19 +26,19 @@ parser : ['name' | 'number' | 'read' | mapping | callable]
     * callable : takes datafile name and returns key.""",
 
 _bases_position_mapper="""\
-position_mapper : [None, callable, mapping, 'name', 'number']
+position_mapper : [None, callable, mapping, 'name', 'row_first_enumerator', 'col_first_enumerator']
 
-    Accepts a key (which is extracted by the parser), and returns
-    the coordinates in a matrix (measurement collection) that correspond
-    to the key.
+    Returns the coordinates (row, col) which correspond to the key.
+    (The key is the key extracted from the filename by the parser.)
 
-    For example, the key 'A1' corresponds to the matrix coordinate (0, 0).
+    For example, the key 'A1' corresponds to the matrix coordinates (0, 0).
 
-        * None     : use the parser value, if it is a string.
+        * None     : if None, then uses the same value as the parser
         * callable : gets key and returns position
         * mapping  : key:pos
         * 'name'   : parses things like 'A1', 'G12'
-        * 'number' : converts number to positions, going over rows first.""",
+        * 'row_first_enumerator', 'name' : converts number to positions, going over rows first
+        * 'col_first_enumerator' : converts number to positions, going over columns first.""",
 
 _bases_ID= """\
 ID : hashable
