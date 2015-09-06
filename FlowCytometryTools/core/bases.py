@@ -58,7 +58,7 @@ def _assign_IDS_to_datafiles(datafiles, parser, measurement_class=None, **kwargs
     elif parser == 'read':
         fparse = lambda x: measurement_class(ID='temporary', datafile=x).ID_from_data(**kwargs)
     else:
-        raise ValueError,  'Encountered unsupported value "%s" for parser parameter.' %parser 
+        raise ValueError,  'Encountered unsupported value "%s" for parser parameter.' %parser
     d = dict( (fparse(dfile), dfile) for dfile in datafiles )
     return d
 
@@ -407,7 +407,7 @@ class MeasurementCollection(collections.MutableMapping, BaseObject):
 
     @classmethod
     @doc_replacer
-    def from_dir(cls, ID, datadir, parser, pattern='*.fcs', recursive=False, 
+    def from_dir(cls, ID, datadir, parser, pattern='*.fcs', recursive=False,
                  readdata_kwargs={}, readmeta_kwargs={}, **ID_kwargs):
         """
         Create a Collection of measurements from data files contained in a directory.
@@ -426,7 +426,7 @@ class MeasurementCollection(collections.MutableMapping, BaseObject):
         {_bases_ID_kwargs}
         """
         datafiles = get_files(datadir, pattern, recursive)
-        return cls.from_files(ID, datafiles, parser, 
+        return cls.from_files(ID, datafiles, parser,
                               readdata_kwargs=readdata_kwargs, readmeta_kwargs=readmeta_kwargs, 
                               **ID_kwargs)
 
@@ -572,7 +572,7 @@ class MeasurementCollection(collections.MutableMapping, BaseObject):
             return meta_df
         else:
             msg = ("The output_format must be either 'dict' or 'DataFrame'. " +
-                   "Encounterd unsupported value %s." %repr(output_format))
+                   "Encountered unsupported value %s." %repr(output_format))
             raise Exception(msg)
 
     # ----------------------
@@ -713,7 +713,7 @@ class OrderedCollection(MeasurementCollection):
         self.col_labels = col_labels
         ##set positions
         self._positions = {}
-        self.set_positions(positions, parser=position_mapper)
+        self.set_positions(positions, position_mapper=position_mapper)
         ## check that all positions have been set
         for k in self.iterkeys():
             if k not in self._positions:
@@ -728,7 +728,8 @@ class OrderedCollection(MeasurementCollection):
 
     @classmethod
     @doc_replacer
-    def from_files(cls, ID, datafiles, parser='name', position_mapper=None, 
+    def from_files(cls, ID, datafiles, parser='name',
+                   position_mapper=None,
                    readdata_kwargs={}, readmeta_kwargs={}, ID_kwargs={}, **kwargs):
         """
         Create an OrderedCollection of measurements from a set of data files.
@@ -763,7 +764,9 @@ class OrderedCollection(MeasurementCollection):
 
     @classmethod
     @doc_replacer
-    def from_dir(cls, ID, path, file_to_key_parser='name', parser='name', position_mapper=None, pattern='*.fcs', recursive=False, 
+    def from_dir(cls, ID, path,
+                 parser='name',
+                 position_mapper=None, pattern='*.fcs', recursive=False,
                  readdata_kwargs={}, readmeta_kwargs={}, ID_kwargs={}, **kwargs):
         """
         Create a Collection of measurements from data files contained in a directory.
@@ -813,17 +816,17 @@ class OrderedCollection(MeasurementCollection):
         else:
             return  range(1, 1+shape[1])
 
-    def _is_valid_position(self, position):
-        '''
-        check if given position is valid for this collection
-        '''
-        row, col = position
-        valid_r = row in self.row_labels
-        valid_c = col in self.col_labels
-        return valid_r and valid_c
+    # def _is_valid_position(self, position):
+    #     '''
+    #     check if given position is valid for this collection
+    #     '''
+    #     row, col = position
+    #     valid_r = row in self.row_labels
+    #     valid_c = col in self.col_labels
+    #     return valid_r and valid_c
 
     @doc_replacer
-    def _get_ID2position_mapper(self, parser):
+    def _get_ID2position_mapper(self, position_mapper):
         '''
         Defines a position parser that is used
         to map between sample IDs and positions.
@@ -835,28 +838,33 @@ class OrderedCollection(MeasurementCollection):
         TODO: Fix the name to work with more than 26 letters
         of the alphabet.
         '''
-        if hasattr(parser, '__call__'):
-            pass
-        elif isinstance(parser, collections.Mapping):
-            parser = lambda x: parser[x]
-        elif parser == 'name':
-            parser = lambda x: (x[0], int(x[1:]))
-        elif parser == 'number':
-            def num_parser(x):
-                i,j = unravel_index(int(x-1), self.shape, order='F')
-                return (self.row_labels[i], self.col_labels[j])
-            parser = num_parser
-        else:
-            msg = '"{}" is not a supported value for the parser parameter.'.format(parser)
-            raise ValueError(msg)
-        return parser
+        def num_parser(x, order):
+            i, j = unravel_index(int(x-1), self.shape, order=order)
+            return (self.row_labels[i], self.col_labels[j])
 
-    def set_positions(self, positions=None, parser='name', ids=None):
+        if hasattr(position_mapper, '__call__'):
+            mapper = position_mapper
+        elif isinstance(position_mapper, collections.Mapping):
+            mapper = lambda x: position_mapper[x]
+        elif position_mapper == 'name':
+            mapper = lambda x: (x[0], int(x[1:]))
+        elif position_mapper in ('enumeration_row_first', 'number'):
+            mapper = lambda x : num_parser(x, 'F')
+        elif position_mapper == 'enumeration_col_first':
+            mapper = lambda x : num_parser(x, 'C')
+        else:
+            msg = '"{}" is not a known key_to_position_parser.'.format(position_mapper)
+            raise ValueError(msg)
+        return mapper
+
+    def set_positions(self, positions=None, position_mapper='name', ids=None):
         '''
         checks for position validity & collisions,
         but not that all measurements are assigned.
 
-        pos is dict-like of measurement_key:(row,col)
+        Parameters
+        -----------
+        positions : is dict-like of measurement_key:(row,col)
         parser :
             callable - gets key and returns position
             mapping  - key:pos
@@ -865,6 +873,7 @@ class OrderedCollection(MeasurementCollection):
         ids :
             parser will be applied to specified ids only. 
             If None is given, parser will be applied to all measurements.
+
         TODO: output a more informative message for position collisions
         '''
         if positions is None:
@@ -872,8 +881,8 @@ class OrderedCollection(MeasurementCollection):
                 ids = self.keys()
             else:
                 ids = to_list(ids)
-            parser = self._get_ID2position_mapper(parser)
-            positions = dict( (ID, parser(ID)) for ID in ids )
+            mapper = self._get_ID2position_mapper(position_mapper)
+            positions = dict( (ID, mapper(ID)) for ID in ids )
         else:
             pass
         # check that resulting assignment is unique (one measurement per position)
@@ -884,9 +893,9 @@ class OrderedCollection(MeasurementCollection):
             raise Exception, msg
 
         for k, pos in positions.iteritems():
-            if not self._is_valid_position(pos):
-                msg = 'Position {} is not supported for this collection'.format(pos)
-                raise ValueError, msg
+            # if not self._is_valid_position(pos):
+            #     msg = 'Position {} is not supported for this collection'.format(pos)
+            #     raise ValueError, msg
             self._positions[k] = pos
             self[k]._set_position(self.ID, pos)
 
@@ -980,7 +989,7 @@ class OrderedCollection(MeasurementCollection):
             return result
         else:
             msg = ("output_format must be either 'dict' or 'DataFrame'. " +
-                   "Encounterd unsupported value %s." %repr(output_format))
+                   "Encountered unsupported value %s." %repr(output_format))
             raise Exception(msg)
 
     @doc_replacer
