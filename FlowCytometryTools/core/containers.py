@@ -97,7 +97,7 @@ class FCMeasurement(Measurement):
 
     @doc_replacer
     def plot(self, channel_names, kind='histogram',
-             gates=None, gate_colors=None, **kwargs):
+             gates=None, gate_colors=None, gate_lw=None, **kwargs):
         """
         Plots the flow cytometry data associated with the sample on the current axis.
 
@@ -133,8 +133,12 @@ class FCMeasurement(Measurement):
         if gates is not None:
             if gate_colors is None:
                 gate_colors = cycle(('b', 'g', 'r', 'm', 'c', 'y'))
-            for (g, c) in zip(gates, gate_colors):
-                g.plot(ax=ax, ax_channels=channel_names, color=c)
+            if gate_lw is None:
+                gate_lw = [1] * len(gates)
+            elif not isinstance(gate_lw, iterable):
+                gate_lw = [gate_lw] * len(gates)
+            for (g, c, lw) in zip(gates, gate_colors, gate_lw):
+                g.plot(ax=ax, ax_channels=channel_names, color=c, lw=lw)
 
         return plot_output
 
