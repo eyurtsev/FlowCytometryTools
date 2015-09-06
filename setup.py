@@ -20,7 +20,7 @@ setup(
     author = 'Jonathan Friedman, Eugene Yurtsev',
     author_email = 'eyurtsev@gmail.com',
     url = 'https://gorelab.bitbucket.org/flowcytometrytools',
-    download_url = 'https://bitbucket.org/gorelab/flowcytometrytools/get/v{0}.zip'.format(version),
+    download_url = 'https://github.com/eyurtsev/FlowCytometryTools/archive/v{0}.zip'.format(version),
     keywords = ['flow cytometry', 'data analysis', 'cytometry', 'single cell'],
     license='MIT',
     #dependency_links = ['https://bitbucket.org/gorelab/goreutilities/get/v{0}.zip#egg=GoreUtilities-{0}'.format(gore_utilities_version)],
