@@ -13,7 +13,7 @@
 
 
 
-import sys, warnings, re, string
+import sys, warnings, string, os
 import numpy
 
 try:
@@ -27,11 +27,11 @@ except Exception as e:
     pandas_found = False
 
 def raise_parser_feature_not_implemented(message):
-    print """ Some of the parser features have not yet been implemented.
+    print(""" Some of the parser features have not yet been implemented.
               If you would like to see this feature implemented, please send a sample FCS file
               to the developers.
               The following problem was encountered with your FCS file:
-              {0} """.format(message)
+              {0} """.format(message))
     raise NotImplementedError(message)
 
 class FCS_Parser(object):
@@ -79,6 +79,8 @@ class FCS_Parser(object):
         self._data = None
         self._channel_naming = channel_naming
 
+        self._file_size = os.path.getsize(path)
+
         if channel_naming not in ('$PnN', '$PnS'):
             raise ValueError("channel_naming must be either '$PnN' or '$PnS")
 
@@ -109,14 +111,17 @@ class FCS_Parser(object):
                 ival = 0
             header[field] = ival
 
-        for k in ['text start', 'text end', 'data start', 'data end']:
+        # Checking that the location of the TEXT segment is specified
+        for k in ['text start', 'text end']:
             if header[k] == 0:
                 raise ValueError("The FCS file '{}' seems corrupted. (Parser cannot locate information " \
                 "about the '{}' segment.)".format(self.path, k))
+            elif header[k] > self._file_size:
+                raise ValueError("The FCS file '{}' is corrupted. '{}' segment " \
+                                 "is larger than file size".format(self.path, k))
 
-        if header['data start'] == 0 or header['data end'] == 0:
-            raise_parser_feature_not_implemented("""The locations of data start and end are located in the TEXT section of the data. However,
-            this parser cannot handle this case yet. Please send the sample fcs file to the developer. """)
+        self._data_start = header['data start']
+        self._data_end = header['data start']
 
         if header['analysis start'] != 0:
             warnings.warn('There appears to be some information in the ANALYSIS segment of file {0}. However, it might not be read correctly.'.format(self.path))
@@ -144,10 +149,10 @@ class FCS_Parser(object):
         if raw_text[-1] != delimiter:
             raw_text = raw_text.strip()
             if raw_text[-1] != delimiter:
-                print 'The first two characters were: '
-                print repr(raw_text[:2])
-                print 'The last two characters were: '
-                print repr(raw_text[-2:])
+                print('The first two characters were: ')
+                print(repr(raw_text[:2]))
+                print('The last two characters were: ')
+                print(repr(raw_text[-2:]))
                 raise_parser_feature_not_implemented('Parser expects the same delimiter character in beginning and end of TEXT segment')
 
         raw_text_segments = raw_text[1:-1].split(delimiter) # Using 1:-1 to remove first and last characters which should be reserved for delimiter
@@ -189,6 +194,13 @@ class FCS_Parser(object):
             text[key] = int(value)
 
         self.annotation.update(text)
+
+        # Update data start segments if needed
+
+        if self._data_start == 0:
+            self._data_start = int(text['$BEGINDATA'])
+        if self._data_end == 0:
+            self._data_end = int(text['$ENDDATA'])
 
         ### Keep for debugging
         #key_list = self.header['text'].keys()
@@ -262,8 +274,10 @@ class FCS_Parser(object):
     def read_data(self, file_handle):
         """ Reads the DATA segment of the FCS file. """
         self._check_assumptions()
-        header, text = self.annotation['__header__'], self.annotation # For convenience
+        text = self.annotation
 
+        if (self._data_start > self._file_size) or (self._data_end > self._file_size):
+            raise ValueError("The FCS file '{}' is corrupted. Part of the data segment is missing.".format(self.path))
 
         num_events = text['$TOT'] # Number of events recorded
         num_pars   = text['$PAR'] # Number of parameters recorded
@@ -286,7 +300,7 @@ class FCS_Parser(object):
         total_bytes = bytes_per_event * num_events
 
         # Parser for list mode. Here, the order is a list of tuples. where each tuples stores event related information
-        file_handle.seek(header['data start'], 0) # Go to the part of the file where data starts
+        file_handle.seek(self._data_start, 0) # Go to the part of the file where data starts
 
         ##
         # Read in the data
