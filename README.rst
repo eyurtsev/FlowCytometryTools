@@ -37,8 +37,8 @@ Resources
 ===================
 
 - **Documentation:** http://gorelab.bitbucket.org/flowcytometrytools/
-- **Source Repository:** https://bitbucket.org/gorelab/flowcytometrytools
-- **Comments or questions:** https://bitbucket.org/gorelab/flowcytometrytools/issues
+- **Source Repository:** https://github.com/eyurtsev/FlowCytometryTools
+- **Comments or questions:** https://github.com/eyurtsev/FlowCytometryTools/issues
 
 Dependencies
 ===================
@@ -76,6 +76,20 @@ So if you find that FlowCytometryTools does not suit your needs, take a look at 
 
 Changes
 =====================
+
+v0.4.4, 2015-09-06
+
+** Repository moved moved to github **
+
+Enhancements:
+
++ added an experimental web-based backend for drawing gates. (FCMeasurement.view_inteactively(backend='webagg'))
++ col first enumerator for forming an ordered fcs file collection (Yoav Ram)
+
+Bug fixes:
+
++ FCPlate.from_dir ID_kwargs match against full path, not just filename (Nick Bolten)
++ fcs parser can read larger fcs files and handles blank headers (Ben Roth)
 
 v0.4.3, 2014-12-05
 
