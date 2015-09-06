@@ -1,5 +1,6 @@
 import inspect
 from random import sample
+import collections
 
 from itertools import cycle
 from pandas import DataFrame
@@ -93,7 +94,7 @@ class FCMeasurement(Measurement):
 
     @doc_replacer
     def plot(self, channel_names, kind='histogram',
-             gates=None, gate_colors=None, gate_lw=None, **kwargs):
+             gates=None, gate_colors=None, gate_lw=1, **kwargs):
         """
         Plots the flow cytometry data associated with the sample on the current axis.
 
@@ -106,6 +107,10 @@ class FCMeasurement(Measurement):
         {common_plot_ax}
         gates : [None, Gate, list of Gate]
             Gate must be of type {_gate_available_classes}.
+        gate_lw: float | iterable
+            line width to use when drawing gates
+            if float, uses the same line width for all gates
+            if iterable, then cycles between the values
         kwargs : dict
             Additional keyword arguments to be passed to graph.plotFCM
 
@@ -129,10 +134,12 @@ class FCMeasurement(Measurement):
         if gates is not None:
             if gate_colors is None:
                 gate_colors = cycle(('b', 'g', 'r', 'm', 'c', 'y'))
-            if gate_lw is None:
-                gate_lw = [1] * len(gates)
-            elif not isinstance(gate_lw, iterable):
-                gate_lw = [gate_lw] * len(gates)
+
+            if not isinstance(gate_lw, collections.Iterable):
+                gate_lw = [gate_lw]
+
+            gate_lw = cycle(gate_lw)
+
             for (g, c, lw) in zip(gates, gate_colors, gate_lw):
                 g.plot(ax=ax, ax_channels=channel_names, color=c, lw=lw)
 
