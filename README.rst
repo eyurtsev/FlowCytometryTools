@@ -79,11 +79,11 @@ Changes
 
 v0.4.4, 2015-09-06
 
-** Repository moved moved to github **
+** Repository moved to github **
 
 Enhancements:
 
-+ added an experimental web-based backend for drawing gates. (FCMeasurement.view_inteactively(backend='webagg'))
++ added an experimental web-based backend for drawing gates. Use FCMeasurement.view_inteactively(backend='webagg').
 + col first enumerator for forming an ordered fcs file collection (Yoav Ram)
 
 Bug fixes:
