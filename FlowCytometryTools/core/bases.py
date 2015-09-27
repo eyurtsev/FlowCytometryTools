@@ -117,7 +117,8 @@ class BaseObject(object):
     Used for inheritance. 
     '''
 
-    def __repr__(self): return repr(self.ID)
+    def __repr__(self):
+        return '<{0} {1}>'.format(type(self).__name__, repr(self.ID))
 
     def save(self, path):
         """ Saves objec to a pickled file. """
