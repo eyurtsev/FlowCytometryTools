@@ -1,3 +1,17 @@
+v0.4.4, 2015-09-06
+
+** Repository moved to github **
+
+Enhancements:
+
++ added an experimental web-based backend for drawing gates. Use FCMeasurement.view_inteactively(backend='webagg').
++ col first enumerator for forming an ordered fcs file collection (Yoav Ram)
+
+Bug fixes:
+
++ FCPlate.from_dir ID_kwargs match against full path, not just filename (Nick Bolten)
++ fcs parser can read larger fcs files and handles blank headers (Ben Roth)
+
 v0.4.3, 2014-12-05
 
 + ENHC: Automatically determine bin location when plotting plates. 
