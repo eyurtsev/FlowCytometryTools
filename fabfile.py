@@ -49,9 +49,8 @@ def html():
 def upload_doc():
     with lcd(os.path.abspath(os.path.dirname(__file__))):
         #local('git push origin :gh-pages')
-        local('git stash')
         local('git checkout gh-pages')
-        local('git add doc/build/html & git commit -m "{}"'.format(__version__))
+        local('git add doc/build/html && git commit -m "{}"'.format(__version__))
         local('git subtree push --prefix doc/build/html origin gh-pages')
 
 @task
