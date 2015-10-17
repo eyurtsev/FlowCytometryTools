@@ -6,7 +6,7 @@ import urllib2
 
 from contextlib import contextmanager
 
-from fabric.api import local, lcd, abort
+from fabric.api import local, lcd, abort, settings
 from fabric.decorators import task
 
 from FlowCytometryTools import __version__
@@ -48,10 +48,12 @@ def html():
 @task
 def upload_doc():
     with lcd(os.path.abspath(os.path.dirname(__file__))):
-        #local('git push origin :gh-pages')
         local('git checkout gh-pages')
-        local('git add doc/build/html && git commit -m "{}"'.format(__version__))
-        local('git subtree push --prefix doc/build/html origin gh-pages')
+        local('git add doc/build/html')
+
+        with settings(warn_only=True):
+            local('git commit -m "{}"'.format(__version__))
+            local('git subtree push --prefix doc/build/html origin gh-pages')
 
 @task
 def serve(port="8000"):
