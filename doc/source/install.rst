@@ -27,7 +27,7 @@ A simple way of obtaining the dependencies is by installing either `canopy <http
 
 If you intend to use the GUI, you'll still need to install `wx-python <http://wiki.wxpython.org/How%20to%20install%20wxPython>`_.
 
-Debian/Ubuntu users
+Debian / Ubuntu users
 =================================
 
 You have at least two options:
@@ -59,9 +59,6 @@ Installing FlowCytometryTools
 
 **IMPORTANT** Make sure all required dependencies are installed before you proceed to install the package!
 
-Using pip (recommended)
-====================================
-
 #. `Install pip <http://www.pip-installer.org/en/latest/installing.html>`_ if you do not already have it.
 
 #. Go to your command terminal and enter the following:
@@ -71,54 +68,3 @@ Using pip (recommended)
     sudo pip install flowcytometrytools
 
 You should be all set.
-
-Using git
-========================================
-
-This option is recommended if you intend to contribute to developing the FlowCytometryTools library.
-
-.. note:
-
-    The source code is hosted at bitbucket at the following URLs:
-    * Required dependency: https://bitbucket.org/gorelab/goreutilities 
-    * Package: https://bitbucket.org/gorelab/flowcytometrytools
-
-#. Install `git <http://git-scm.com/downloads>`_ on your machine. Please give git access to the command line. If you don't, the git commands below won't work.
-
-#. Open your command terminal
-
-#. In your command terminal enter::
-    
-    ipython -c 'import os, matplotlib; print os.path.split(matplotlib.__path__[0])[0];'
-
-#. The printed path will be your site-packages path!
-
-#. In the command terminal navigate to that path::
-
-    cd (enter here the path you got above)
-
-#. Enter the commands below::
-
-    git clone https://bitbucket.org/gorelab/goreutilities.git GoreUtilities
-    git clone https://bitbucket.org/gorelab/flowcytometrytools.git FlowCytometryTools
-    cd FlowCytometryTools
-    git checkout [version number]
-
-
-**Updating using git**
-
-If you've installed the package using git, you can also use git to update the package when new releases are available. To update::
-
-    cd (enter here the path you got above)
-
-    cd GoreUtilities
-    git fetch origin
-    git pull
-    git checkout [needed version/branch]
-
-    cd ..
-
-    cd FlowCytometryTools
-    git fetch origin
-    git pull
-    git checkout [needed version/branch]
