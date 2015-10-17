@@ -48,11 +48,13 @@ def html():
 @task
 def upload_doc():
     with lcd(os.path.abspath(os.path.dirname(__file__))):
-        local('git checkout gh-pages')
-        local('git add doc/build/html')
+        #local('git branch -D gh-pages')
+        #local('git checkout -b gh-pages')
+        local('git add -f doc/build/html')
 
         with settings(warn_only=True):
             local('git commit -m "{}"'.format(__version__))
+            #local('git push origin :gh-pages')
             local('git subtree push --prefix doc/build/html origin gh-pages')
 
 @task
