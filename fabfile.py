@@ -38,7 +38,8 @@ def clean():
 @task
 def html():
     """Make html files."""
-    with lcd("doc"):
+    base_path = os.path.abspath(os.path.dirname(__file__))
+    with lcd(os.path.join(base_path, 'doc')):
         local("make html")
 
 @task
