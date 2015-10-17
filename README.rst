@@ -18,10 +18,10 @@ The package is specifically tailored for high-throughput analysis. It provides a
 
 Basic familiarity with the python programming languages is recommended.
 
-You can find a few example scripts that load and plot flow cytometry data in the `gallery <http://gorelab.bitbucket.org/flowcytometrytools/gallery.html>`_ page.
+You can find a few example scripts that load and plot flow cytometry data in the `gallery <http://eyurtsev.github.io/FlowCytometryTools/gallery.html>`_ page.
 
-If you like what you see, then proceed to the `installation <http://gorelab.bitbucket.org/flowcytometrytools/install.html>`_ page and then
-to the `tutorial <http://gorelab.bitbucket.org/flowcytometrytools/tutorial.html>`_.
+If you like what you see, then proceed to the `installation <http://eyurtsev.github.io/FlowCytometryTools/install.html>`_ page and then
+to the `tutorial <http://eyurtsev.github.io/FlowCytometryTools/tutorial.html>`_.
 
 Features
 ===================
@@ -36,7 +36,7 @@ Features
 Resources
 ===================
 
-- **Documentation:** http://gorelab.bitbucket.org/flowcytometrytools/
+- **Documentation:** http://eyurtsev.github.io/FlowCytometryTools/
 - **Source Repository:** https://github.com/eyurtsev/FlowCytometryTools
 - **Comments or questions:** https://github.com/eyurtsev/FlowCytometryTools/issues
 
@@ -44,7 +44,7 @@ Dependencies
 ===================
 
 For more information about how to obtain these, please see the `installation
-<http://gorelab.bitbucket.org/flowcytometrytools/install.html>`_ page.
+<http://eyurtsev.github.io/FlowCytometryTools/install.html>`_ page.
 
 FlowCytometryTools may work with older versions of some of these dependencies, but if
 you run into issues, please update the dependencies.
