@@ -9,6 +9,8 @@ from contextlib import contextmanager
 from fabric.api import local, lcd, abort
 from fabric.decorators import task
 
+from FlowCytometryTools import __version__
+
 DL_DIR = "doc/source/_static/downloads"
 
 BUILD_DIRS = (
@@ -41,6 +43,16 @@ def html():
     base_path = os.path.abspath(os.path.dirname(__file__))
     with lcd(os.path.join(base_path, 'doc')):
         local("make html")
+        local("touch build/html/.nojekyll")
+
+@task
+def upload_doc():
+    with lcd(os.path.abspath(os.path.dirname(__file__))):
+        #local('git push origin :gh-pages')
+        local('git stash')
+        local('git checkout gh-pages')
+        local('git add doc/build/html & git commit -m "{}"'.format(__version__))
+        local('git subtree push --prefix doc/build/html origin gh-pages')
 
 @task
 def serve(port="8000"):
