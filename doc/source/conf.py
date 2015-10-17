@@ -102,7 +102,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'FlowCytometryTools'
-copyright = u'2013-2014, Jonathan Friedman & Eugene Yurtsev'
+copyright = u'2013-2015, Jonathan Friedman & Eugene Yurtsev'
 
 import FlowCytometryTools
 
@@ -229,8 +229,8 @@ html_theme_options = {
     # such as "amelia" or "cosmo".
     #
     # Note that this is served off CDN, so won't be available offline.
-    'bootswatch_theme': "yeti",
-    #'bootswatch_theme': "flatly",
+    #'bootswatch_theme': "yeti",
+    'bootswatch_theme': "flatly",
     #'bootswatch_theme': "united",
     #'bootswatch_theme': "spacelab",
     #'bootswatch_theme' : 'simplex',
@@ -413,13 +413,12 @@ intersphinx_mapping = {'http://docs.python.org/': None}
 import inspect
 from os.path import relpath, dirname
 import FlowCytometryTools
+from git import Repo
 
-
-from git import *
-import FlowCytometryTools
-repo = Repo(FlowCytometryTools.__path__[0])
+repo_path = os.path.dirname(os.path.abspath(FlowCytometryTools.__path__[0]))
+repo = Repo(repo_path)
 current_commit = repo.commit()
-current_branch = repo.active_branch
+commit_hash = current_commit.hexsha
 
 def linkcode_resolve(domain, info):
     """
@@ -463,10 +462,15 @@ def linkcode_resolve(domain, info):
         lineno = None
 
     if lineno:
-        linespec = "#cl-%d" % (lineno + 1)
+        linespec = "#L%d" % (lineno + 1)
     else:
         linespec = ""
 
     fn = relpath(fn, start=dirname(FlowCytometryTools.__file__))
 
-    return "//bitbucket.org/gorelab/flowcytometrytools/src/{}/FlowCytometryTools/{}?at={}{}".format(current_commit, fn, current_branch, linespec)
+
+    uri_to_doc = r'//github.com/eyurtsev/FlowCytometryTools/blob/{hexsha}/FlowCytometryTools/{file_name}{line_number}'
+
+    return uri_to_doc.format(hexsha=commit_hash, file_name=fn, 
+            line_number=linespec)
+
