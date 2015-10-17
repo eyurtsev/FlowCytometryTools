@@ -68,8 +68,7 @@ Using pip (recommended)
 
    .. code-block:: bash
 
-    sudo pip install setuptools
-    sudo pip install git+https://bitbucket.org/gorelab/flowcytometrytools.git
+    sudo pip install flowcytometrytools
 
 You should be all set.
 
