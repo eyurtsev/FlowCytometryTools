@@ -47,9 +47,9 @@ def html():
 
 @task
 def upload_doc():
-    with lcd(os.path.abspath(os.path.dirname(__file__))):
-        local('git subtree push --prefix output origin gh-pages')
-
+    with lcd(os.path.abspath(os.path.dirname(__file__))): 
+        local('git subtree split --prefix=doc/build/html --squash --branch gh-pages')
+        local('git push origin -f gh-pages:gh-pages')
 
 @task
 def serve(port="8000"):
