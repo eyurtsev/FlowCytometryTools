@@ -1,6 +1,6 @@
 .. _install:
 
-Installing Dependencies
+Required Dependencies
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The FlowCytometryTools is a python package. As such, it requires a python
@@ -20,42 +20,16 @@ dependencies on the different operating systems.
 
 #. `wx-python <http://wiki.wxpython.org/How%20to%20install%20wxPython>`__ : Used for the FlowCytometryTools GUI.
 
-Windows / MacOS users
-=================================
+Installing the dependencies (Windows / MacOS / Linux)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 A simple way of obtaining the dependencies is by installing either `canopy <https://www.enthought.com/products/canopy/>`_ or `anaconda <https://store.continuum.io/cshop/anaconda/>`_.
 
-If you intend to use the GUI, you'll still need to install `wx-python <http://wiki.wxpython.org/How%20to%20install%20wxPython>`_.
+If you intend to use the Flow Cytometry Tools GUI for drawing gates you'll also need to install `wx-python <http://wiki.wxpython.org/How%20to%20install%20wxPython>`_.
 
-Debian / Ubuntu users
-=================================
-
-You have at least two options:
-
-#. Installing using the command line (this is the better option if you're comfortable with the command line). 
-
-   Open a terminal window and enter the following:: 
-
-        sudo apt-get build-dep python-matplotlib  # Dependencies of matplotlib
-        sudo apt-get install python-pip python-dev
-        sudo apt-get install python-wxgtk2.8 # Optional dependency for FlowCytometryTools GUI
-        sudo pip install --upgrade pip
-        sudo pip install setuptools 
-        sudo apt-get install gfortran libopenblas-dev liblapack-dev # Dependencies for scipy
-        sudo pip install pyzmq jinja2 tornado # Dependencies for ipython notebook
-        sudo pip install numpy scipy matplotlib ipython ipython-notebook pandas sympy 
-
-   This should install both optional and required the dependencies.  Please shoot us an email if we forgot to include something. (Or if you have specific instructions for a different flavor of unix.)
-
-#. Alternatively, you can install a distribution like `canopy <https://www.enthought.com/products/canopy/>`_ or `anaconda <https://store.continuum.io/cshop/anaconda/>`_.
-
-   .. note:: 
-
-        canopy/anaconda may not come with wx-python. In this case, in order to use the GUI, you'll still need to install wx-python.
-        Also, after installing it make sure that canopy/anaconda know how to find your installation of wx-python.
 
 Installing FlowCytometryTools
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 **IMPORTANT** Make sure all required dependencies are installed before you proceed to install the package!
 
@@ -67,4 +41,4 @@ Installing FlowCytometryTools
 
     sudo pip install flowcytometrytools
 
-You should be all set.
+Congratulations! Proceed to the tutorial!
