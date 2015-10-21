@@ -85,7 +85,7 @@ format specifications (google for the specification).
     
     print type(sample.meta)
     print sample.meta.keys()
-    print sample.meta.['$SRC']
+    print sample.meta['$SRC']
 
 Accessing Raw Data
 +++++++++++++++++++++++++++
