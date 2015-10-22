@@ -1,6 +1,11 @@
 Fabric==1.10.2
 argparse==1.2.1
+docutils==0.12
 ecdsa==0.13
+Jinja2==2.8
+MarkupSafe==0.23
+Pygments==2.0.2
+Sphinx==1.2.2
 numpy==1.10.1
 pandas==0.17.0
 paramiko==1.15.3
