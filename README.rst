@@ -68,7 +68,7 @@ FlowCytometryTools is not the only open source software for performing data anal
 
 So if you find that FlowCytometryTools does not suit your needs, take a look at the following software: 
 
-* `https://github.com/bpteague/cytoflow`_: API for python with a GUI
+* `cytoflow <https://github.com/bpteague/cytoflow>`_: API for python with a GUI
 * `fcm <https://pythonhosted.org/fcm/basic.html>`_ : API for python
 * `Bioconductor <http://master.bioconductor.org/>`_ : API for the R programming language
 * `FlowPy <http://flowpy.wikidot.com/>`_ : GUI
