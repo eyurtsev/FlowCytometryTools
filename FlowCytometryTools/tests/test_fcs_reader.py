@@ -1,24 +1,22 @@
-'''
-Created on July 20, 2013
-@author: Eugene Yurtsev
-@email: eyurtsev@gmail.com
-'''
-import warnings
+import os
 import timeit
 import unittest
+import warnings
 
 import numpy
 from numpy import array
 
 from FlowCytometryTools import parse_fcs
 
+base_path = os.path.dirname(os.path.realpath(__file__))
+
 file_formats = {
-                    'mq fcs 2.0' : '../tests/data/FlowCytometers/MiltenyiBiotec/FCS2.0/EY_2013-07-19_PBS_FCS_2.0_Custom_Without_Add_Well_A1.001.fcs',
-                    'mq fcs 3.0' : '../tests/data/FlowCytometers/MiltenyiBiotec/FCS3.0/FCS3.0_Custom_Compatible.fcs',
-                    'mq fcs 3.1' : '../tests/data/FlowCytometers/MiltenyiBiotec/FCS3.1/EY_2013-07-19_PBS_FCS_3.1_Well_A1.001.fcs',
-                    'LSR II fcs 3.0' : '../tests/data/FlowCytometers/HTS_BD_LSR-II/HTS_BD_LSR_II_Mixed_Specimen_001_D6_D06.fcs',
-                    'Fortessa fcs 3.0' : '../tests/data/FlowCytometers/Fortessa/FCS_3.0_Fortessa_PBS_Specimen_001_A1_A01.fcs',
-                    'large fake fcs': '../tests/data/FlowCytometers/fake_large_fcs/fake_large_fcs.fcs'
+                    'mq fcs 2.0' :       os.path.join(base_path, 'data/FlowCytometers/MiltenyiBiotec/FCS2.0/EY_2013-07-19_PBS_FCS_2.0_Custom_Without_Add_Well_A1.001.fcs'),
+                    'mq fcs 3.0' :       os.path.join(base_path, 'data/FlowCytometers/MiltenyiBiotec/FCS3.0/FCS3.0_Custom_Compatible.fcs'),
+                    'mq fcs 3.1' :       os.path.join(base_path, 'data/FlowCytometers/MiltenyiBiotec/FCS3.1/EY_2013-07-19_PBS_FCS_3.1_Well_A1.001.fcs'),
+                    'LSR II fcs 3.0' :   os.path.join(base_path, 'data/FlowCytometers/HTS_BD_LSR-II/HTS_BD_LSR_II_Mixed_Specimen_001_D6_D06.fcs'),
+                    'Fortessa fcs 3.0' : os.path.join(base_path, 'data/FlowCytometers/Fortessa/FCS_3.0_Fortessa_PBS_Specimen_001_A1_A01.fcs'),
+                    'large fake fcs':    os.path.join(base_path, 'data/FlowCytometers/fake_large_fcs/fake_large_fcs.fcs'),
                }
 
 def check_data_segment(fcs_format, array_values):
@@ -247,7 +245,7 @@ class TestFCSReader(unittest.TestCase):
                 'SSC-A', 'SSC-H', 'SSC-W', 'V2-A', 'V2-H', 'V2-W', 'Y2-A',
                 'Y2-H', 'Y2-W', 'B1-A', 'B1-H', 'B1-W']
 
-        path = '../tests/data/FlowCytometers/MiltenyiBiotec/FCS3.1/EY_2013-07-19_PBS_FCS_3.1_Well_A1.001.fcs'
+        path = os.path.join(base_path, 'data/FlowCytometers/MiltenyiBiotec/FCS3.1/EY_2013-07-19_PBS_FCS_3.1_Well_A1.001.fcs')
         meta = parse_fcs(path, meta_data_only=True,
                 reformat_meta=True, channel_naming='$PnN')
         channel_names = list(meta['_channel_names_'])
@@ -275,7 +273,7 @@ class TestFCSReader(unittest.TestCase):
     def test_channel_naming_automatic_correction(self):
         """ Checks that channel names are assigned automatically corrected if duplicate names
         encountered. """
-        path = '../tests/data/FlowCytometers/MiltenyiBiotec/FCS3.1/SG_2014-09-26_Duplicate_Names.fcs'
+        path = os.path.join(base_path, 'data/FlowCytometers/MiltenyiBiotec/FCS3.1/SG_2014-09-26_Duplicate_Names.fcs')
 
         with warnings.catch_warnings(record=True) as w:
             # Cause all warnings to always be triggered.
@@ -308,7 +306,7 @@ class TestFCSReader(unittest.TestCase):
 
     def test_reading_corrupted_fcs_file(self):
         """ Raising exception when reading a corrupted fcs file. """
-        path = '../tests/data/FlowCytometers/corrupted/corrupted.fcs'
+        path = os.path.join(base_path, 'data/FlowCytometers/corrupted/corrupted.fcs')
         self.assertRaises(ValueError, parse_fcs, path)
 
     def test_reading_large_fcs_file(self):
