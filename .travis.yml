@@ -1,7 +1,26 @@
 language: python
-env:
-    - TOXENV=py27
+
+sudo: false
+
+addons:
+  apt:
+    packages:
+    - g++
+    - gfortran
+    - swig
+    - python-qt4
+    - libblas-dev
+    - liblapack-dev
+    - libatlas-dev
+
+python:
+- '2.7'
+
+before_install:
+- pip install --quiet --upgrade pip
+
 install:
-    - pip install tox
-script:
-    - tox
+- pip install --quiet --upgrade numpy
+- python setup.py develop
+
+script: nosetests FlowCytometryTools
