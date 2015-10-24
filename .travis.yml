@@ -21,4 +21,4 @@ install:
 - pip install --quiet --upgrade numpy
 - python setup.py develop
 
-script: nosetests FlowCytometryTools
+script: py.test FlowCytometryTools
