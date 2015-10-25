@@ -1,3 +1,8 @@
+v0.4.5, 2015-10-31
+
++ Sample fcs files now included with installation
++ Mostly maintenance (tests, configuration files, etc.)
+
 v0.4.4, 2015-09-06
 
 ** Repository moved to github **

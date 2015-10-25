@@ -3,6 +3,10 @@ FlowCytometryTools
 
 **Authors**: Jonathan Friedman and `Eugene Yurtsev <http://eyurtsev.mit.edu>`_
 
+.. image:: https://travis-ci.org/eyurtsev/FlowCytometryTools.svg?branch=master
+    :target: https://travis-ci.org/eyurtsev/FlowCytometryTools
+|
+
 FlowCytometryTools is a python package for visualization and analysis of high-throughput flow cytometry data.
 
 * **Intuitive**: provides a simple programmatic interface to work with flow cytometry data
@@ -77,6 +81,11 @@ So if you find that FlowCytometryTools does not suit your needs, take a look at 
 
 Changes
 =====================
+
+v0.4.5, 2015-10-31
+
++ Sample fcs files now included with installation
++ Mostly maintenance (tests, configuration files, etc.)
 
 v0.4.4, 2015-09-06
 
