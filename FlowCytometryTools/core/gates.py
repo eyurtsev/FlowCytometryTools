@@ -11,32 +11,12 @@ Gates:
     IntervalGate
     QuadGate
     PolyGate
-
-TODO
-----------
-* Update documentation.
-* Add checks for correct user input:
-        if self.__class__ is isinstance(PolyGate):
-            if len(vert) < 2:
-                raise Exception('vert must be a list of 2-tuples [(x1, y1), (x2, y2), (x3, y3)]')
-            if len(channels) != 2 or channel[0] == channel[1]:
-                raise Exception('You must define 2 unique channels to operate on.')
-            self.path = Path(vert)
-        else:
-            if len(channels) != 1:
-                raise Exception('You must define 1 unique channel to operate on.')
-
-            if self.__class__ is isinstance(ThresholdGate) and len(vert) != 2:
-                raise Exception('vert must be a single number (x_threshold)')
-            elif self.__class__ is isinstance(IntervalGate) and len(vert) != 2:
-                raise Exception('vert must be a single number (x_threshold)')
 """
-import graph
-from matplotlib.path import Path
 from GoreUtilities.util import to_list
-import pylab as pl
+from matplotlib.path import Path
 import numpy
-from matplotlib import docstring
+import pylab as pl
+
 from common_doc import doc_replacer
 
 doc_replacer.update(_gate_pars_name="""\
@@ -47,34 +27,42 @@ channel : str
     Defines the channel name.""")
 
 doc_replacer.update(_gate_pars_2_channels=
-"""channels : ['channel 1 name', 'channel 2 name']
-    Defines the names of the channels""")
+                    """channels : ['channel 1 name', 'channel 2 name']
+                        Defines the names of the channels""")
 
 doc_replacer.update(_gate_plot_doc=
-"""Plots the gate.
+                    """Plots the gate.
 
-.. warning:
-    The plot function does not check that your
-    axis correspond to the correct channels.
+                    .. warning:
+                        The plot function does not check that your
+                        axis correspond to the correct channels.
 
-Parameters
-----------
-ax : axes to use for plotting the gate on
-flip : boolean
-    If True, draws the interval
-    along the y-axis instead of along the x-axis
+                    Parameters
+                    ----------
+                    ax : axes to use for plotting the gate on
+                    flip : boolean
+                        If True, draws the interval
+                        along the y-axis instead of along the x-axis
 
-Returns
--------
-Reference to created artists.""")
+                    Returns
+                    -------
+                    Reference to created artists.""")
 
 
 class _ComposableMixin(object):
     """ A mixin' class that enables to compose gates using logic elements. """
-    def __and__(self, other): return CompositeGate(self, 'and', other)
-    def __xor__(self, other): return CompositeGate(self, 'xor', other)
-    def __or__(self, other): return CompositeGate(self, 'or', other)
-    def __invert__(self): return CompositeGate(self, 'invert')
+
+    def __and__(self, other):
+        return CompositeGate(self, 'and', other)
+
+    def __xor__(self, other):
+        return CompositeGate(self, 'xor', other)
+
+    def __or__(self, other):
+        return CompositeGate(self, 'or', other)
+
+    def __invert__(self):
+        return CompositeGate(self, 'invert')
 
 
 class Gate(_ComposableMixin):
@@ -93,9 +81,9 @@ class Gate(_ComposableMixin):
             self.name = name
 
         self.region = region
-        self.validiate_input()
+        self.validate_input()
 
-    def validiate_input(self):
+    def validate_input(self):
         """ Optional method to be defined by derived class
         to check whether user input was valid. """
         pass
@@ -125,7 +113,9 @@ class Gate(_ComposableMixin):
 
         for c in self.channels:
             if c not in dataframe:
-                raise ValueError('Trying to filter based on channel {channel}, which is not present in the data.'.format(channel=c))
+                raise ValueError(
+                    'Trying to filter based on channel {channel}, which is not present in the data.'.format(
+                        channel=c))
 
         idx = self._identify(dataframe)
 
@@ -143,12 +133,14 @@ class Gate(_ComposableMixin):
                     flip = True
             except ValueError:
                 raise Exception("""Trying to plot gate that is defined on channel {0},
-                                but figure axis correspond to channels {1}""".format(c, ax_channels))
+                                but figure axis correspond to channels {1}""".format(c,
+                                                                                     ax_channels))
         if len(self.channels) == 2:
             c = self.channels[1]
             if c not in ax_channels:
                 raise Exception("""Trying to plot gate that is defined on channel {0},
-                                but figure axis correspond to channels {1}""".format(c, ax_channels))
+                                but figure axis correspond to channels {1}""".format(c,
+                                                                                     ax_channels))
         return flip
 
     def plot(self, **kwargs):
@@ -169,7 +161,9 @@ class Gate(_ComposableMixin):
         if value.lower() in self._region_options:
             self._region = value.lower()
         else:
-            raise ValueError("region must be one of the following: {0}".format(self._region_options))
+            raise ValueError(
+                "region must be one of the following: {0}".format(self._region_options))
+
 
 class ThresholdGate(Gate):
     @doc_replacer
@@ -194,7 +188,7 @@ class ThresholdGate(Gate):
 
     def _identify(self, dataframe):
         """ Identifies which of the data points in the dataframe pass the gate. """
-        idx = dataframe[self.channels[0]] >= self.vert # Get indexes that are above threshold
+        idx = dataframe[self.channels[0]] >= self.vert  # Get indexes that are above threshold
 
         if self.region == 'below':
             idx = ~idx
@@ -217,6 +211,7 @@ class ThresholdGate(Gate):
         kwargs.setdefault('color', 'black')
         return plot_func(self.vert, *args, **kwargs)
 
+
 class IntervalGate(Gate):
     @doc_replacer
     def __init__(self, vert, channel, region, name=None):
@@ -235,14 +230,14 @@ class IntervalGate(Gate):
         self._region_options = ('in', 'out')
         super(IntervalGate, self).__init__(vert, channel, region, name)
 
-    def validiate_input(self):
+    def validate_input(self):
         if self.vert[1] <= self.vert[0]:
             raise Exception('vert[1] must be larger than vert[0]')
 
     def _identify(self, dataframe):
         """ Identifies which data points in the dataframe pass the gate. """
         ##
-        # Let's get the indecies that are within the interval
+        # Let's get the indexes that are within the interval
         idx1 = self.vert[0] <= dataframe[self.channels[0]]
 
         # Should this comparison use a filtered array (using idx1) for optimization? Check
@@ -273,6 +268,7 @@ class IntervalGate(Gate):
         a2 = plot_func(self.vert[1], *args, **kwargs)
 
         return (a1, a2)
+
 
 class QuadGate(Gate):
     @doc_replacer
@@ -318,7 +314,6 @@ class QuadGate(Gate):
 
         return idx
 
-
     @doc_replacer
     def plot(self, flip=False, ax_channels=None, ax=None, *args, **kwargs):
         """
@@ -340,6 +335,7 @@ class QuadGate(Gate):
             a2 = ax.axes.axhline(self.vert[0], *args, **kwargs)
 
         return (a1, a2)
+
 
 class PolyGate(Gate):
     @doc_replacer
@@ -395,6 +391,7 @@ class PolyGate(Gate):
         poly = pl.Polygon(vert, *args, **kwargs)
         return ax.add_artist(poly)
 
+
 class CompositeGate(_ComposableMixin):
     """
     Defines a composite gate that is generated by the logical addition of one or more gates.
@@ -435,6 +432,7 @@ class CompositeGate(_ComposableMixin):
         When using the shorthand notation you must use the syntax '~', '&', '|'.
         Do **NOT** use 'and', 'or', 'not'.
     """
+
     def __init__(self, gate1, how, gate2=None):
         """
         Instead of using this class directly to create composite gates, it is recommended
@@ -479,7 +477,8 @@ class CompositeGate(_ComposableMixin):
             function = numpy.logical_xor
         else:
             supported_values = ('and', 'or', 'invert', 'xor')
-            raise ValueError("Unsupported value for how. how must be in ({0})".format(supported_values))
+            raise ValueError(
+                "Unsupported value for how. how must be in ({0})".format(supported_values))
 
         return function(*idx)
 
@@ -494,20 +493,3 @@ class CompositeGate(_ComposableMixin):
         """
         for gate in self.gates:
             gate.plot(flip=flip, ax_channels=ax_channels, ax=ax, *args, **kwargs)
-
-if __name__ == '__main__':
-    size_gate = PolyGate([(8.530e+02, 1.593e+03), (1.419e+03, 1.306e+02), (8.429e+03, 4.299e+03), (6.051e+03, 5.966e+03)], ('FSC-A', 'SSC-A'), region='in', name='gate1')
-
-    from copy import deepcopy
-    deepcopy(size_gate)
-
-#     print Gate.__init__.__doc__
-#     print PolyGate.__init__.__doc__
-#     print QuadGate.__init__.__doc__
-#     print ThresholdGate.__init__.__doc__
-#     print IntervalGate.__init__.__doc__
-# 
-#     print PolyGate.plot.__doc__
-#     print QuadGate.plot.__doc__
-#     print ThresholdGate.plot.__doc__
-#     print IntervalGate.plot.__doc__
