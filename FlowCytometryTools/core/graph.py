@@ -9,11 +9,12 @@ import matplotlib
 from common_doc import doc_replacer
 import warnings
 
+
 @doc_replacer
 def plotFCM(data, channel_names, kind='histogram', ax=None,
-                autolabel=True, xlabel_kwargs={}, ylabel_kwargs={},
-                colorbar=False, grid=False,
-                **kwargs):
+            autolabel=True, xlabel_kwargs={}, ylabel_kwargs={},
+            colorbar=False, grid=False,
+            **kwargs):
     """
     Plots the sample on the current axis.
 
@@ -40,24 +41,24 @@ def plotFCM(data, channel_names, kind='histogram', ax=None,
         # 1D so histogram plot
         kwargs.setdefault('color', 'gray')
         kwargs.setdefault('histtype', 'stepfilled')
-        kwargs.setdefault('bins', 200) # Do not move above
+        kwargs.setdefault('bins', 200)  # Do not move above
 
         x = data[channel_names[0]].values
         if len(x) >= 1:
             if (len(x) == 1) and isinstance(kwargs['bins'], int):
                 # Only needed for hist (not hist2d) due to hist function doing
                 # excessive input checking
-                warnings.warn("One of the data sets only has a single event. "\
-                        "This event won't be plotted unless the bin locations"\
-                        " are explicitely provided to the plotting function. ")
+                warnings.warn("One of the data sets only has a single event. " \
+                              "This event won't be plotted unless the bin locations" \
+                              " are explicitely provided to the plotting function. ")
                 return None
             plot_output = ax.hist(x, **kwargs)
         else:
             return None
 
     elif len(channel_names) == 2:
-        x = data[channel_names[0]].values # value of first channel
-        y = data[channel_names[1]].values # value of second channel
+        x = data[channel_names[0]].values  # value of first channel
+        y = data[channel_names[1]].values  # value of second channel
 
         if len(x) == 0:
             # Don't draw a plot if there's no data
@@ -66,7 +67,7 @@ def plotFCM(data, channel_names, kind='histogram', ax=None,
             kwargs.setdefault('edgecolor', 'none')
             plot_output = ax.scatter(x, y, **kwargs)
         elif kind == 'histogram':
-            kwargs.setdefault('bins', 200) # Do not move above
+            kwargs.setdefault('bins', 200)  # Do not move above
             kwargs.setdefault('cmin', 1)
             kwargs.setdefault('cmap', pl.cm.copper)
             kwargs.setdefault('norm', matplotlib.colors.LogNorm())
@@ -86,8 +87,3 @@ def plotFCM(data, channel_names, kind='histogram', ax=None,
         ax.set_ylabel(y_label_text, **ylabel_kwargs)
 
     return plot_output
-
-if __name__ == '__main__':
-    #print docstring.interpd.params.keys()
-    #print plot_histogram2d.__doc__
-    print plotFCM.__doc__
