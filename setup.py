@@ -27,7 +27,11 @@ setup(
 
     install_requires=[
         "pandas",
+        "matplotlib",
+        "scipy",
+        "numpy",
         "setuptools",
+        "fcsparser>=0.1.1",
         "decorator",
         "GoreUtilities == {0}".format(gore_utilities_version),
     ],
