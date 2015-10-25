@@ -14,7 +14,8 @@ from FlowCytometryTools.core.transforms import Transformation
 
 base_path = os.path.dirname(os.path.realpath(__file__))
 
-test_path = os.path.join(base_path,'data/FlowCytometers/HTS_BD_LSR-II/HTS_BD_LSR_II_Mixed_Specimen_001_D6_D06.fcs')
+test_path = os.path.join(base_path,'data', 'FlowCytometers', 
+        'HTS_BD_LSR-II', 'HTS_BD_LSR_II_Mixed_Specimen_001_D6_D06.fcs')
 
 n = 1000
 _xmax = 2 ** 18  # max machine value
