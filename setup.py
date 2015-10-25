@@ -45,8 +45,8 @@ setup(
     license='MIT',
 
     install_requires=[
-        "pandas",
-        "matplotlib",
+        "pandas>=0.12.0",
+        "matplotlib>=1.3.1",
         "scipy",
         "numpy",
         "setuptools",
