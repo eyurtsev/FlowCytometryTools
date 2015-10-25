@@ -1,17 +1,36 @@
-from setuptools import setup, find_packages
+import fnmatch
 import re
+from setuptools import setup, find_packages
+import os
 
-VERSIONFILE = "FlowCytometryTools/_version.py"
+def get_package_version(path):
+    '''Extracts the version'''
+    with open(VERSION_FILE, "rt") as f:
+        verstrline = f.read()
+
+    VERSION = r"^version = ['\"]([^'\"]*)['\"]"
+    results = re.search(VERSION, verstrline, re.M)
+
+    if results:
+        version = results.group(1)
+    else:
+        raise RuntimeError("Unable to find version string in {}.".format(path))
+
+    return version
+
+def get_fcs_files():
+    matches = []
+    for root, dirnames, filenames in os.walk('FlowCytometryTools'):
+      for filename in fnmatch.filter(filenames, '*.fcs'):
+        matches.append(os.path.join(root, filename))
+    return matches
+
+VERSION_FILE = "FlowCytometryTools/_version.py"
 gore_utilities_version = '0.5.0'
+version = get_package_version(VERSION_FILE)
 
-verstrline = open(VERSIONFILE, "rt").read()
-VSRE = r"^version = ['\"]([^'\"]*)['\"]"
-mo = re.search(VSRE, verstrline, re.M)
-
-if mo:
-    version = mo.group(1)
-else:
-    raise RuntimeError("Unable to find version string in %s." % (VERSIONFILE,))
+with open('README.rst', 'r') as f:
+    README_content = f.read()
 
 setup(
     name='FlowCytometryTools',
@@ -43,5 +62,10 @@ setup(
         'Topic :: Scientific/Engineering :: Medical Science Apps.',
     ],
 
-    long_description=open('README.rst').read(),
+    long_description=README_content,
+    include_package_data = True,
+
+    package_data={
+        'FlowCytometryTools': get_fcs_files(),
+    },
 )
