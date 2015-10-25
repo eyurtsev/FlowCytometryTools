@@ -6,7 +6,7 @@ import warnings
 import numpy
 from numpy import array
 
-from FlowCytometryTools import parse_fcs
+from fcsparser import parse as parse_fcs
 
 base_path = os.path.dirname(os.path.realpath(__file__))
 

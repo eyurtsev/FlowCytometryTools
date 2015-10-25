@@ -1,8 +1,9 @@
-import inspect
-from random import sample
 import collections
-
+import inspect
 from itertools import cycle
+from random import sample
+
+from fcsparser import parse as parse_fcs
 from pandas import DataFrame
 import numpy as np
 import matplotlib
@@ -10,7 +11,6 @@ import matplotlib
 from GoreUtilities.util import to_list as to_iter
 from GoreUtilities.graph import plot_ndpanel
 
-from FlowCytometryTools import parse_fcs
 from FlowCytometryTools.core.transforms import Transformation
 from bases import Measurement, MeasurementCollection, OrderedCollection, queueable
 import graph

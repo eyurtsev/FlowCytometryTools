@@ -20,20 +20,20 @@ To use these files, enter the following in your ipython terminal:
 
 .. ipython:: python
 
-    import os, FlowCytometryTools;
-    datadir = os.path.join(FlowCytometryTools.__path__[0], 'tests', 'data', 'Plate01');
-    datafile = os.path.join(datadir, 'RFP_Well_A3.fcs');
+    import FlowCytometryTools
+    from FlowCytometryTools import test_data_dir, test_data_file
 
+    datadir = test_data_dir
+    datafile = test_data_file
 
-.. note::
+``datadir`` will point to a directory containing flow cytometry data while ``datafile`` will point
+to a specific FCS file. 
 
-    To analyze your own data, simply set the 'datafile' variable to the path of your .fcs file:
+To analyze your own data, simply set the 'datafile' variable to the path of your .fcs file:
 
     >>> datafile=r'C:\data\my_very_awesome_data.fcs'
 
-    ** Windows Users **
-
-    Windows uses the backslash character ('\') for paths. However, the backslash character is a special character in python that is used for formatting strings. In order to specify paths correctly, you must precede the path with the character 'r'.
+** Windows Users ** Windows uses the backslash character ('\') for paths. However, the backslash character is a special character in python that is used for formatting strings. In order to specify paths correctly, you must precede the path with the character 'r'.
 
     Good: 
 
