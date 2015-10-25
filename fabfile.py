@@ -1,4 +1,3 @@
-"""Fabric file."""
 import base64
 import os
 import json
@@ -16,6 +15,7 @@ DL_DIR = "doc/source/_static/downloads"
 BUILD_DIRS = (
     "dist",
     "doc/build",
+    "doc/source/API",
     "build",
     "FlowCytometryTools.egg-info",
 )
@@ -26,6 +26,8 @@ SDIST_RST_FILES = (
 
 SDIST_TXT_FILES = [os.path.splitext(x)[0] + ".txt" for x in SDIST_RST_FILES]
 
+BASE_PATH = os.path.abspath(os.path.dirname(__file__))
+
 
 ###############################################################################
 # Misc.
@@ -33,20 +35,20 @@ SDIST_TXT_FILES = [os.path.splitext(x)[0] + ".txt" for x in SDIST_RST_FILES]
 @task
 def clean():
     """Clean build files."""
-    for build_dir in list(BUILD_DIRS):
-        local("rm -rf %s" % build_dir)
+    with lcd(BASE_PATH):
+        for build_dir in list(BUILD_DIRS):
+            local("rm -rf %s" % build_dir)
 
 @task
 def html():
     """Make html files."""
-    base_path = os.path.abspath(os.path.dirname(__file__))
-    with lcd(os.path.join(base_path, 'doc')):
+    with lcd(os.path.join(BASE_PATH, 'doc')):
         local("make html")
         local("touch build/html/.nojekyll")
 
 @task
 def upload_doc():
-    with lcd(os.path.abspath(os.path.dirname(__file__))): 
+    with lcd(): 
         local('git branch -D gh-pages')
         local('git checkout -b gh-pages')
         local('git add -f doc/build/html')
