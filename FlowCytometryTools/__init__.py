@@ -4,7 +4,6 @@ from _doc import __doc__
 import os
 from fcsparser.api import parse as parse_fcs
 
-from IO.fcsreader import parse_fcs
 from core.containers import FCMeasurement, FCCollection, FCOrderedCollection, FCPlate
 from core.gates import ThresholdGate, IntervalGate, QuadGate, PolyGate
 import core.graph as graph
