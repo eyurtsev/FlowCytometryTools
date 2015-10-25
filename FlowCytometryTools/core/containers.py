@@ -2,6 +2,7 @@ import collections
 import inspect
 from itertools import cycle
 from random import sample
+import warnings
 
 from fcsparser import parse as parse_fcs
 from pandas import DataFrame
@@ -16,6 +17,7 @@ from bases import Measurement, MeasurementCollection, OrderedCollection, queueab
 import graph
 from common_doc import doc_replacer
 
+
 def to_list(obj):
     """ This is a quick fix to make sure indexing of DataFrames
     takes place with lists instead of tuples. """
@@ -23,6 +25,7 @@ def to_list(obj):
     if isinstance(obj, tuple):
         obj = list(obj)
     return obj
+
 
 class FCMeasurement(Measurement):
     """
@@ -68,8 +71,8 @@ class FCMeasurement(Measurement):
         if 'channel_naming' in self.readdata_kwargs:
             kwargs['channel_naming'] = self.readdata_kwargs['channel_naming']
         meta = parse_fcs(self.datafile,
-                reformat_meta=True,
-                meta_data_only=True, **kwargs)
+                         reformat_meta=True,
+                         meta_data_only=True, **kwargs)
         return meta
 
     def get_meta_fields(self, fields, kwargs={}):
@@ -78,7 +81,7 @@ class FCMeasurement(Measurement):
         '''
         fields = to_list(fields)
         meta = self.get_meta()
-        return { field : meta.get(field) for field in fields }
+        return {field: meta.get(field) for field in fields}
 
     def ID_from_data(self, ID_field='$SRC'):
         '''
@@ -89,8 +92,9 @@ class FCMeasurement(Measurement):
         try:
             return self.get_meta_fields(ID_field)[ID_field]
         except KeyError:
-            raise Exception("The keyword '{}' does not exist in the following FCS file: {}".format(ID_field, self.datafile))
-
+            msg = "The keyword '{}' does not exist in the following FCS file: {}"
+            msg = msg.format(ID_field, self.datafile)
+            raise Exception(msg)
 
     @doc_replacer
     def plot(self, channel_names, kind='histogram',
@@ -127,9 +131,9 @@ class FCMeasurement(Measurement):
         ax = kwargs.get('ax')
 
         channel_names = to_list(channel_names)
-        gates         = to_list(gates)
+        gates = to_list(gates)
 
-        plot_output  = graph.plotFCM(self.data, channel_names, kind=kind, **kwargs)
+        plot_output = graph.plotFCM(self.data, channel_names, kind=kind, **kwargs)
 
         if gates is not None:
             if gate_colors is None:
@@ -176,7 +180,7 @@ class FCMeasurement(Measurement):
             kind = 'histogram'
 
             self.plot(channels, kind=kind, gates=gates,
-                    gate_colors=gate_colors, autolabel=False)
+                      gate_colors=gate_colors, autolabel=False)
 
         channel_list = np.array(list(channel_names), dtype=object)
         channel_mat = [[(x, y) for x in channel_list] for y in channel_list]
@@ -184,7 +188,6 @@ class FCMeasurement(Measurement):
         kwargs.setdefault('wspace', 0.1)
         kwargs.setdefault('hspace', 0.1)
         return plot_ndpanel(channel_mat, plot_region, **kwargs)
-
 
     def view_interactively(self, backend='wx'):
         '''Loads the current sample in a graphical interface for drawing gates.
@@ -235,14 +238,15 @@ class FCMeasurement(Measurement):
     @doc_replacer
     def transform(self, transform, direction='forward',
                   channels=None, return_all=True, auto_range=True,
-                  use_spln=True, get_transformer=False, ID = None,
+                  use_spln=True, get_transformer=False, ID=None,
                   apply_now=True,
                   args=(), **kwargs):
         """
         Applies a transformation to the specified channels.
 
         The transformation parameters are shared between all transformed channels.
-        If different parameters need to be applied to different channels, use several calls to `transform`.
+        If different parameters need to be applied to different channels,
+        use several calls to `transform`.
 
         Parameters
         ----------
@@ -273,16 +277,22 @@ class FCMeasurement(Measurement):
         if isinstance(transform, Transformation):
             transformer = transform
         else:
-            if auto_range: #determine transformation range
+            if auto_range:  # determine transformation range
                 if 'd' in kwargs:
-                    warnings.warn('Encountered both auto_range=True and user-specified range value in parameter d.\n Range value specified in parameter d is used.')
+                    warnings.warn(
+                        'Encountered both auto_range=True and user-specified range value in '
+                        'parameter d.\n Range value specified in parameter d is used.')
                 else:
                     channel_meta = self.channels
-                    # the -1 below because the channel numbers begin from 1 instead of 0 (this is fragile code)
-                    ranges = [float(r['$PnR']) for i, r in channel_meta.iterrows() if self.channel_names[i-1] in channels]
+                    # the -1 below because the channel numbers begin from 1 instead of 0
+                    # (this is fragile code)
+                    ranges = [float(r['$PnR']) for i, r in channel_meta.iterrows() if
+                              self.channel_names[i - 1] in channels]
                     if not np.allclose(ranges, ranges[0]):
-                        raise Exception("""Not all specified channels have the same data range, therefore they cannot be transformed together.\
-                                           \nHINT: Try transforming one channel at a time. You'll need to provide the name of the channel in the transform.""")
+                        raise Exception("""Not all specified channels have the same data range,
+                            therefore they cannot be transformed together.\n
+                            HINT: Try transforming one channel at a time.
+                            You'll need to provide the name of the channel in the transform.""")
                     kwargs['d'] = np.log10(ranges[0])
             transformer = Transformation(transform, direction, args, **kwargs)
         ## create new data
@@ -323,21 +333,21 @@ class FCMeasurement(Measurement):
         if isinstance(key, float):
             if (key > 1.0) or (key < 0.0):
                 raise ValueError('If float, key must be between 0.0 and 1.0')
-            key = int(num_events*key)
+            key = int(num_events * key)
         elif isinstance(key, tuple):
             all_float = all([isinstance(x, float) for x in key])
             if (len(key) > 2) or (not all_float):
                 raise ValueError('Tuple must consist of two floats, each between 0.0 and 1.0')
             start = int(num_events * key[0])
-            stop  = int(num_events * key[1])
-            key = slice(start, stop) # Convert to a slice
+            stop = int(num_events * key[1])
+            key = slice(start, stop)  # Convert to a slice
 
         try:
             if isinstance(key, slice):
                 if auto_resize:
                     stop = key.stop if key.stop < num_events else num_events
                     start = key.start if key.start < num_events else num_events
-                    key = slice(start, stop, key.step) # Generate new slice
+                    key = slice(start, stop, key.step)  # Generate new slice
                 newdata = data.iloc[key]
             elif isinstance(key, int):
                 if auto_resize:
@@ -347,7 +357,7 @@ class FCMeasurement(Measurement):
                     # EDGE CAES: Must return an empty sample
                     order = 'start'
                 if order == 'random':
-                    newdata = data.loc[sample(data.index, key)] # Use loc not iloc here!!
+                    newdata = data.loc[sample(data.index, key)]  # Use loc not iloc here!!
                 elif order == 'start':
                     newdata = data.iloc[:key]
                 elif order == 'end':
@@ -357,7 +367,8 @@ class FCMeasurement(Measurement):
             else:
                 raise TypeError("'key' must be of type int, float, tuple or slice.")
         except IndexError:
-            print("If you're encountering an out-of-bounds error, try to setting 'auto_resize' to True.")
+            print("If you're encountering an out-of-bounds error, "
+                  "try to setting 'auto_resize' to True.")
             raise
         newsample = self.copy()
         newsample.set_data(data=newdata)
@@ -391,6 +402,7 @@ class FCMeasurement(Measurement):
         data = self.get_data()
         return data.shape[0]
 
+
 class FCCollection(MeasurementCollection):
     '''
     A dict-like class for holding flow cytometry samples.
@@ -400,7 +412,7 @@ class FCCollection(MeasurementCollection):
     @doc_replacer
     def transform(self, transform, direction='forward', share_transform=True,
                   channels=None, return_all=True, auto_range=True,
-                  use_spln=True, get_transformer=False, ID = None,
+                  use_spln=True, get_transformer=False, ID=None,
                   apply_now=True,
                   args=(), **kwargs):
         '''
@@ -430,7 +442,7 @@ class FCCollection(MeasurementCollection):
         '''
         new = self.copy()
         if share_transform:
-            channel_meta  = self.values()[0].channels
+            channel_meta = self.values()[0].channels
             channel_names = self.values()[0].channel_names
             if channels is None:
                 channels = list(channel_names)
@@ -440,28 +452,35 @@ class FCCollection(MeasurementCollection):
             if isinstance(transform, Transformation):
                 transformer = transform
             else:
-                if auto_range: #determine transformation range
+                if auto_range:  # determine transformation range
                     if 'd' in kwargs:
-                        warnings.warn('Encountered both auto_range=True and user-specified range value in parameter d.\n Range value specified in parameter d is used.')
+                        warnings.warn('Encountered both auto_range=True and user-specified range '
+                                      'value in parameter d.\n '
+                                      'Range value specified in parameter d is used.')
                     else:
                         # the -1 below because the channel numbers begin from 1 instead of 0 (this is fragile code)
-                        ranges = [float(r['$PnR']) for i, r in channel_meta.iterrows() if channel_names[i-1] in channels]
+                        ranges = [float(r['$PnR']) for i, r in channel_meta.iterrows() if
+                                  channel_names[i - 1] in channels]
 
                         if not np.allclose(ranges, ranges[0]):
-                            raise Exception, 'Not all specified channels have the same data range, therefore they cannot be transformed together.'
+                            raise Exception('Not all specified channels have the same '
+                                            'data range, therefore they cannot be '
+                                            'transformed together.')
                         kwargs['d'] = np.log10(ranges[0])
                 transformer = Transformation(transform, direction, args, **kwargs)
                 if use_spln:
-                    xmax = self.apply(lambda x:x[channels].max().max(), applyto='data').max().max()
-                    xmin = self.apply(lambda x:x[channels].min().min(), applyto='data').min().min()
+                    xmax = self.apply(lambda x: x[channels].max().max(), applyto='data').max().max()
+                    xmin = self.apply(lambda x: x[channels].min().min(), applyto='data').min().min()
                     transformer.set_spline(xmin, xmax)
             ## transform all measurements     
-            for k,v in new.iteritems(): 
-                new[k] = v.transform(transformer, channels=channels, return_all=return_all, use_spln=use_spln, apply_now=apply_now)
+            for k, v in new.iteritems():
+                new[k] = v.transform(transformer, channels=channels, return_all=return_all,
+                                     use_spln=use_spln, apply_now=apply_now)
         else:
-            for k,v in new.iteritems(): 
-                new[k] = v.transform(transform, direction=direction, channels=channels, 
-                                     return_all=return_all, auto_range=auto_range, get_transformer=False,
+            for k, v in new.iteritems():
+                new[k] = v.transform(transform, direction=direction, channels=channels,
+                                     return_all=return_all, auto_range=auto_range,
+                                     get_transformer=False,
                                      use_spln=use_spln, apply_now=apply_now, args=args, **kwargs)
         if ID is not None:
             new.ID = ID
@@ -484,8 +503,10 @@ class FCCollection(MeasurementCollection):
         ID : [ str, numeric, None]
             New ID to be given to the output. If None, the ID of the current collection will be used.
         '''
+
         def func(well):
             return well.gate(gate, apply_now=apply_now)
+
         return self.apply(func, output_format='collection', ID=ID)
 
     @doc_replacer
@@ -507,8 +528,10 @@ class FCCollection(MeasurementCollection):
         FCCollection or a subclass
             new collection of subsampled event data.
         """
+
         def func(well):
             return well.subsample(key=key, order=order, auto_resize=auto_resize)
+
         return self.apply(func, output_format='collection', ID=ID)
 
     def counts(self, ids=None, setdata=False, output_format='DataFrame'):
@@ -531,7 +554,7 @@ class FCCollection(MeasurementCollection):
         [DataFrame | Dictionary]
             Dictionary keys correspond to measurement keys.
         """
-        return self.apply(lambda x:x.counts, ids=ids, setdata=setdata, output_format=output_format)
+        return self.apply(lambda x: x.counts, ids=ids, setdata=setdata, output_format=output_format)
 
 
 class FCOrderedCollection(OrderedCollection, FCCollection):
@@ -540,7 +563,7 @@ class FCOrderedCollection(OrderedCollection, FCCollection):
     '''
 
     @doc_replacer
-    def plot(self, channel_names,  kind='histogram',
+    def plot(self, channel_names, kind='histogram',
              gates=None, gate_colors=None,
              ids=None, row_labels=None, col_labels=None,
              xlim='auto', ylim='auto',
@@ -588,9 +611,9 @@ class FCOrderedCollection(OrderedCollection, FCCollection):
 
         grid_arg_list = inspect.getargspec(OrderedCollection.grid_plot).args
 
-        grid_plot_kwargs = { 'ids' :  ids,
-                             'row_labels' :  row_labels,
-                             'col_labels' :  col_labels}
+        grid_plot_kwargs = {'ids': ids,
+                            'row_labels': row_labels,
+                            'col_labels': col_labels}
 
         for key, value in kwargs.items():
             if key in grid_arg_list:
@@ -627,7 +650,7 @@ class FCOrderedCollection(OrderedCollection, FCCollection):
 
                 # Check if 1d 
                 if len(channel_names) == 1:
-                    bins = bins[0] # bins should be an ndarray, not a list of ndarrays
+                    bins = bins[0]  # bins should be an ndarray, not a list of ndarrays
 
                 kwargs['bins'] = bins
 
@@ -652,76 +675,8 @@ class FCOrderedCollection(OrderedCollection, FCCollection):
                 ylabel = cnames[1]
 
         return self.grid_plot(plot_sample, xlim=xlim, ylim=ylim,
-                    xlabel=xlabel, ylabel=ylabel,
-                    **grid_plot_kwargs)
+                              xlabel=xlabel, ylabel=ylabel,
+                              **grid_plot_kwargs)
+
 
 FCPlate = FCOrderedCollection
-
-if __name__ == '__main__':
-    print FCMeasurement.gate.__doc__
-    #print FCMeasurement.plot.__doc__
-#     print FCOrderedCollection.plot.__doc__
-    #print FCMeasurement.transform.__doc__
-    #print FCOrderedCollection.transform.__doc__
-    
-#     from datetime import date, timedelta
-#     from numpy import array
-#     t1 = date(2014,3,15)
-#      
-#     flow_plates = []
-#     for i in range(3):
-#         t = t1 + timedelta(days=i)
-#         datadir = '/home/yonatanf/Dropbox/Gore/invasion/fc_data/%s/EXP_32/'%t.isoformat()
-#         flow_plates.append(FCPlate.from_dir('t%d'%(i+1), datadir, parser='name', pattern='*EXP_32*.fcs').dropna())
-#  
-#     hplates = [p.transform('hlog', apply_now=False, channels=['FSC-A','SSC-A','B1-A'], b=2.5) for p in flow_plates]    
-#     print hplates[-1].counts()
-#     
-#     from FlowCytometryTools import PolyGate
-#     size_gate = PolyGate([(8.530e+02, 1.593e+03), (1.419e+03, 1.306e+02), (8.429e+03, 4.299e+03), (6.051e+03, 5.966e+03)], ('FSC-A', 'SSC-A'), region='in', name='gate1')
-#     yfp_gate = PolyGate([(4.960e+03, 6.597e+02), (1.104e+03, 7.098e+02), (5.613e+03, 8.293e+03), (8.973e+03, 6.732e+03)], ('B1-A', 'FSC-A'), region='in', name='gate2')
-# 
-#     gated_size = [hplate.gate(size_gate, apply_now=False) for hplate in hplates]
-#     size_counts = array([gs.counts().values for gs in gated_size])
-
-    if 0:
-        ## Test for apply now
-
-        import glob
-        datadir = '../tests/data/Plate01/'
-        fname = glob.glob(datadir + '*.fcs')[0]
-        sample = FCMeasurement(1, datafile=fname)
-        from FlowCytometryTools import ThresholdGate
-        g = ThresholdGate(6e3, 'FSC-A', 'above')
-        plate = FCPlate.from_dir('p', datadir).dropna()
-        print plate.counts()
-        queued = plate.transform('hlog', apply_now=False).gate(g, apply_now=False)
-        print queued.counts()
-        print type(queued['A4']._data)
-        in_mem = plate.transform('hlog', apply_now=True).gate(g, apply_now=True)
-        print in_mem.counts()
-        print type(in_mem['A4']._data)
-#
-    #import time
-    #s = time.clock()
-    #hplate = plate.transform('hlog', channels=['FSC-A', 'SSC-A'], use_spln=False)
-    #e = time.clock()
-    #
-    #ss = time.clock()
-    #hplate = plate.transform('hlog', channels=['FSC-A', 'SSC-A'])
-    #es = time.clock()
-    #print e-s, es-ss
-    #print plate.wells 
-    #print plate.well_IDS
-    #plate.apply(lambda x:x.ID, 'ID', applyto='sample', well_ids=['A1','B1'])
-    #plate.apply(lambda x:x.datafile, 'file', applyto='sample')
-    #plate.apply(lambda x:x.shape[0], 'counts', keepdata=True)
-    #plate.get_well_metadata(['date', 'etim'])
-    #print plate.extracted['file'].values
-#     plate.wells['1']['A'].get_metadata()
-#     
-#     well_ids = ['A2' , 'B3']
-#     print plate.get_wells(well_ids)
-#     
-#     plate.clear_well_data()  
-#     plate.clear_well_data(well_ids)             
