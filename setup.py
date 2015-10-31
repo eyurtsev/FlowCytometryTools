@@ -65,7 +65,7 @@ with open('README.rst', 'r') as f:
     README_content = f.read()
 
 install_requires = check_dependencies()
-install_requires.append(["setuptools",
+install_requires.extend(["setuptools",
                         "decorator",
                         "GoreUtilities == 0.5.0", 
                         "fcsparser>=0.1.1"])
