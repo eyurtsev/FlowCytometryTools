@@ -81,6 +81,7 @@ setup(
     download_url='https://github.com/eyurtsev/FlowCytometryTools/archive/v{0}.zip'.format(version),
     keywords=['flow cytometry', 'data analysis', 'cytometry', 'single cell'],
     license='MIT',
+    setup_requires=["numpy"],  # Needed to install numpy
     install_requires=install_requires,
     classifiers=[
         'Intended Audience :: Science/Research',
