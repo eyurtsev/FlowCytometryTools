@@ -630,7 +630,7 @@ class MeasurementCollection(collections.MutableMapping, BaseObject):
         for r in remove:
             del new[r]
         if ID is None:
-            ID = self.ID + '.filtered'
+            ID = self.ID
         new.ID = ID
         return new
 
@@ -641,13 +641,13 @@ class MeasurementCollection(collections.MutableMapping, BaseObject):
         keys = to_list(keys)
         fil = lambda x: x in keys
         if ID is None:
-            ID = self.ID + '.filtered_by_key'
+            ID = self.ID
         return self.filter(fil, applyto='keys', ID=ID)
 
     def filter_by_attr(self, attr, criteria, ID=None):
         applyto = {k: getattr(v, attr) for k, v in self.iteritems()}
         if ID is None:
-            ID = self.ID + '.filtered_by_%s' % attr
+            ID = self.ID
         return self.filter(criteria, applyto=applyto, ID=ID)
 
     def filter_by_IDs(self, ids, ID=None):
@@ -668,7 +668,7 @@ class MeasurementCollection(collections.MutableMapping, BaseObject):
         fil = lambda x: x in rows
         applyto = {k: self._positions[k][0] for k in self.iterkeys()}
         if ID is None:
-            ID = self.ID + '.filtered_by_rows'
+            ID = self.ID
         return self.filter(fil, applyto=applyto, ID=ID)
 
     def filter_by_cols(self, cols, ID=None):
