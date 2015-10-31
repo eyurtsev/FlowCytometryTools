@@ -12,11 +12,7 @@
 Specifying paths to FCS data
 ----------------------------
 
-To get cracking, we need some flow cytometry data (i.e., .fcs files).  
-
-A few FCS data files have been bundled with this python package.
-
-To use these files, enter the following in your ipython terminal:
+To get cracking, we need some flow cytometry data (i.e., .fcs files). A few FCS data files have been bundled with this python package. To use these files, enter the following in your ipython terminal:
 
 .. ipython:: python
 
@@ -33,7 +29,9 @@ To analyze your own data, simply set the 'datafile' variable to the path of your
 
     >>> datafile=r'C:\data\my_very_awesome_data.fcs'
 
-** Windows Users ** Windows uses the backslash character ('\') for paths. However, the backslash character is a special character in python that is used for formatting strings. In order to specify paths correctly, you must precede the path with the character 'r'.
+|
+
+*Windows Users* Windows uses the backslash character ('\') for paths. However, the backslash character is a special character in python that is used for formatting strings. In order to specify paths correctly, you must precede the path with the character 'r'.
 
     Good: 
 
@@ -334,7 +332,7 @@ Working with plates
 ---------------------
 
 For high-throughput analysis of flow cytometery data,
-loading single FCS files is silly.
+loading single FCS files is silly. Don't be silly!
 
 Instead, we provided you with the awesome `FCPlate <api.html#fcplate>`_ class (also called :class:`FCOrderedCollection`).
 
@@ -354,13 +352,28 @@ The code below loads two FCS samples and shows two different methods of placing 
     plate1 = FCPlate('demo plate', [sample1, sample2], 'name', shape=(4, 3))
     print plate1
 
-    # Uses the dictionary key to map the position
-    plate2 = FCPlate('demo plate', {'C1' : sample1, 'C2' : sample2}, 'name', shape=(4, 3))
+Alternatively, one can specify the sample positions independent of the samples IDs using a dictionary:
+
+.. ipython:: python
+
+    plate2 = FCPlate('demo plate', {'C2' : sample1, 'C3' : sample2}, 'name', shape=(4, 3))
     print plate2
+
+    print plate2['C2']
+
+Having overwritten the default mapping based on the samples ID, we now have to access ``sample1`` using the key ``C2``. So the command ``plate['C2']`` should return sample1 (whose ID should still remain ``B1``).
+
+.. ipython:: python
+
+    plate3 = FCPlate('demo plate', {3 : sample1, 4 : sample2}, 'row_first_enumerator', shape=(4, 3))
+    print plate3
+
+    print plate3[3]
+
 
 .. note::
 
-    The method below should be simpler for 99% of the users to use (much less code!!), so keep on reading. :)
+    Below we show a much faster way of loading data into a plate format. This method should make life simpler for most users by removing a bunch of boilerplate code. So keep on reading!
 
 Loading Data (better way)
 +++++++++++++++++++++++++
