@@ -48,7 +48,7 @@ def html():
 
 @task
 def upload_doc():
-    with lcd(): 
+    with lcd(BASE_PATH): 
         local('git branch -D gh-pages')
         local('git checkout -b gh-pages')
         local('git add -f doc/build/html')
@@ -61,8 +61,9 @@ def serve(port="8000"):
     Serve website from localhost.
     @param port  Port to run server on.
     """
-    with lcd("doc/build/html"):
-        local("python -m SimpleHTTPServer %s" % port)
+    with lcd(BASE_PATH):
+        with lcd("doc/build/html"):
+            local("python -m SimpleHTTPServer %s" % port)
 
 
 ###############################################################################
@@ -90,20 +91,40 @@ def sdist():
     with _dist_wrapper():
         local("python setup.py sdist", capture=False)
 
-
 @task
-def pypi_register():
+def pypi_register(server='pypitest'):
     """Register and prep user for PyPi upload.
 
     .. note:: May need to weak ~/.pypirc file per issue:
         http://stackoverflow.com/questions/1569315
     """
-    with _dist_wrapper():
-        local("python setup.py register", capture=False)
+    base_command = 'python setup.py register'
 
+    if server == 'pypitest':
+        command = base_command + ' -r https://testpypi.python.org/pypi'
+    else:
+        command = base_command
+
+    _execute_setup_command(command)
 
 @task
-def pypi_upload():
-    """Upload package."""
-    with _dist_wrapper():
-        local("python setup.py sdist upload", capture=False)
+def upload_to_pypi():
+    _execute_setup_command('python setup.py sdist upload')
+
+@task
+def upload_to_test_pypi():
+    _execute_setup_command('python setup.py sdist upload -r https://testpypi.python.org/pypi')
+
+@task 
+def install_from_pypi():
+    _execute_setup_command('pip install FlowCytometryTools')
+
+@task
+def install_from_test_pypi():
+    _execute_setup_command('pip install -i https://testpypi.python.org/pypi FlowCytometryTools')
+
+def _execute_setup_command(command):
+    with lcd(BASE_PATH):
+        with _dist_wrapper():
+            local(command, capture=False)
+
