@@ -125,7 +125,7 @@ class BaseObject(object):
         return '<{0} {1}>'.format(type(self).__name__, repr(self.ID))
 
     def save(self, path):
-        """ Saves objec to a pickled file. """
+        """ Saves object to a pickled file. """
         save(self, path)
 
     @classmethod
@@ -442,7 +442,7 @@ class MeasurementCollection(collections.MutableMapping, BaseObject):
     # ----------------------
     # MutableMapping methods
     # ----------------------
-    def __repr__(self):
+    def __str__(self):
         return 'ID:\n%s\n\nData:\n%s' % (self.ID, repr(self.data))
 
     def __getitem__(self, key):
@@ -736,10 +736,10 @@ class OrderedCollection(MeasurementCollection):
                        ' but no position was set for measurement %s' % k)
                 raise Exception, msg
 
-    def __repr__(self):
+    def __str__(self):
         layout = self.layout
-        print_layout = layout.fillna('')
-        return 'ID:\n%s\n\nData:\n%s' % (self.ID, repr(print_layout))
+        print_layout = layout.applymap(lambda x: x.ID if hasattr(x, 'ID') else '')
+        return 'ID:\n%s\n\nData:\n%s' % (self.ID, print_layout)
 
     @classmethod
     @doc_replacer
