@@ -1,7 +1,14 @@
 import fnmatch
 import re
-from setuptools import setup, find_packages
 import os
+
+from setuptools import setup, find_packages
+
+# Taken from seaborn's setup file
+# temporarily redirect config directory to prevent matplotlib importing
+# testing that for writeable directory which results in sandbox error in
+# certain easy_install versions
+os.environ["MPLCONFIGDIR"] = "."
 
 def get_package_version(path):
     '''Extracts the version'''
@@ -25,12 +32,43 @@ def get_fcs_files():
         matches.append(os.path.join(root, filename))
     return matches
 
+##
+# Function was taken from seaborn's setup function.
+# This should help when running pip install FlowCytometryTools --upgrade
+# To avoid forcing an upgrade of pandas/matplotlib/scipy/numpy
+def check_dependencies():
+    install_requires = []
+
+    try:
+        import numpy
+    except ImportError:
+        install_requires.append('numpy')
+    try:
+        import scipy
+    except ImportError:
+        install_requires.append('scipy')
+    try:
+        import matplotlib
+    except ImportError:
+        install_requires.append('matplotlib>=1.3.1')
+    try:
+        import pandas
+    except ImportError:
+        install_requires.append('pandas>=0.12.0')
+
+    return install_requires
+
 VERSION_FILE = "FlowCytometryTools/_version.py"
-gore_utilities_version = '0.5.0'
 version = get_package_version(VERSION_FILE)
 
 with open('README.rst', 'r') as f:
     README_content = f.read()
+
+install_requires = check_dependencies()
+install_requires.append(["setuptools",
+                        "decorator",
+                        "GoreUtilities == 0.5.0", 
+                        "fcsparser>=0.1.1"])
 
 setup(
     name='FlowCytometryTools',
@@ -43,21 +81,10 @@ setup(
     download_url='https://github.com/eyurtsev/FlowCytometryTools/archive/v{0}.zip'.format(version),
     keywords=['flow cytometry', 'data analysis', 'cytometry', 'single cell'],
     license='MIT',
-
-    install_requires=[
-        "pandas>=0.12.0",
-        "matplotlib>=1.3.1",
-        "scipy",
-        "numpy",
-        "setuptools",
-        "fcsparser>=0.1.1",
-        "decorator",
-        "GoreUtilities == {0}".format(gore_utilities_version),
-    ],
-
+    install_requires=install_requires,
     classifiers=[
         'Intended Audience :: Science/Research',
-        'Programming Language :: Python :: 2',
+        'Programming Language :: Python :: 2.7',
         'Topic :: Scientific/Engineering :: Bio-Informatics',
         'Topic :: Scientific/Engineering :: Medical Science Apps.',
     ],
