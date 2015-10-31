@@ -5,6 +5,8 @@ FlowCytometryTools
 
 .. image:: https://travis-ci.org/eyurtsev/FlowCytometryTools.svg?branch=master
     :target: https://travis-ci.org/eyurtsev/FlowCytometryTools
+.. image:: https://zenodo.org/badge/doi/10.5281/zenodo.32991.svg
+   :target: http://dx.doi.org/10.5281/zenodo.32991
 |
 
 FlowCytometryTools is a python package for visualization and analysis of high-throughput flow cytometry data.
