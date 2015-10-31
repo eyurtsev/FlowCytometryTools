@@ -410,7 +410,7 @@ class MeasurementCollection(collections.MutableMapping, BaseObject):
                                                            readdata_kwargs=readdata_kwargs,
                                                            readmeta_kwargs=readmeta_kwargs))
             except:
-                msg = 'Error occured while trying to parse file: %s' % dfile
+                msg = 'Error occurred while trying to parse file: %s' % dfile
                 raise IOError, msg
         return cls(ID, measurements)
 
@@ -451,7 +451,7 @@ class MeasurementCollection(collections.MutableMapping, BaseObject):
     def __setitem__(self, key, value):
         if not isinstance(value, self._measurement_class):
             msg = ('Collection of type %s can only contain object of type %s.\n' % (
-            type(self), type(self._measurement_class)) +
+                type(self), type(self._measurement_class)) +
                    'Encountered type %s.' % type(value))
             raise TypeError, msg
         self.data[key] = value
@@ -510,7 +510,7 @@ class MeasurementCollection(collections.MutableMapping, BaseObject):
             if not can_keep_as_collection:
                 raise TypeError(
                     'Cannot turn output into a collection. The provided func must return results of type {}'.format(
-                        _measurement_class))
+                        self._measurement_class))
 
             new_collection = self.copy()
             # Locate IDs to remove
