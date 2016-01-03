@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import os
 import timeit
 import unittest
@@ -225,9 +227,9 @@ class TestFCSReader(unittest.TestCase):
         """
         Makes sure that the API remains consistent.
         """
-        print '\n'
+        print('\n')
         for fname in file_formats.values():
-            print 'Running file {0}'.format(fname)
+            print('Running file {0}'.format(fname))
             meta = parse_fcs(fname, meta_data_only=True)
             meta, data_pandas = parse_fcs(fname, meta_data_only=False, output_format='DataFrame')
             meta, data_pandas = parse_fcs(fname, meta_data_only=False, output_format='DataFrame', reformat_meta=True)
@@ -293,16 +295,16 @@ class TestFCSReader(unittest.TestCase):
         fname = file_formats['mq fcs 3.1']
         number = 1000
 
-        print
+        print()
 
         time = timeit.timeit(lambda : parse_fcs(fname, meta_data_only=True, output_format='DataFrame', reformat_meta=False), number=number)
-        print "Loading fcs file {0} times with meta_data only without reformatting of meta takes {1} per loop".format(time/number, number)
+        print("Loading fcs file {0} times with meta_data only without reformatting of meta takes {1} per loop".format(time/number, number))
 
         time = timeit.timeit(lambda : parse_fcs(fname, meta_data_only=True, output_format='DataFrame', reformat_meta=True), number=number)
-        print "Loading fcs file {0} times with meta_data only with reformatting of meta takes {1} per loop".format(time/number, number)
+        print("Loading fcs file {0} times with meta_data only with reformatting of meta takes {1} per loop".format(time/number, number))
 
         time = timeit.timeit(lambda : parse_fcs(fname, meta_data_only=False, output_format='DataFrame', reformat_meta=False), number=number)
-        print "Loading fcs file {0} times both meta and data but without reformatting of meta takes {1} per loop".format(time/number, number)
+        print("Loading fcs file {0} times both meta and data but without reformatting of meta takes {1} per loop".format(time/number, number))
 
     def test_reading_corrupted_fcs_file(self):
         """ Raising exception when reading a corrupted fcs file. """

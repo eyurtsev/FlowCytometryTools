@@ -6,7 +6,7 @@ from GoreUtilities.util import to_list
 import numpy
 import pylab as pl
 import matplotlib
-from common_doc import doc_replacer
+from FlowCytometryTools.core.common_doc import doc_replacer
 import warnings
 
 

@@ -17,7 +17,7 @@ from matplotlib.path import Path
 import numpy
 import pylab as pl
 
-from common_doc import doc_replacer
+from FlowCytometryTools.core.common_doc import doc_replacer
 
 doc_replacer.update(_gate_pars_name="""\
 name : str

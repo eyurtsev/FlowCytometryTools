@@ -10,8 +10,8 @@
 # http://docs.scipy.org/doc/numpy/reference/generated/numpy.ndarray.byteswap.html?highlight=byteswap#numpy.ndarray.byteswap
 # http://docs.scipy.org/doc/numpy/user/basics.types.html
 # http://docs.scipy.org/doc/numpy/reference/arrays.dtypes.html
-
-
+from __future__ import print_function
+from __future__ import absolute_import
 
 import sys, warnings, string, os
 import numpy
@@ -454,8 +454,8 @@ if __name__ == '__main__':
     meta = parse_fcs(fname, meta_data_only=True)
     meta, data_pandas = parse_fcs(fname, meta_data_only=False, output_format='DataFrame')
     meta, data_numpy = parse_fcs(fname, meta_data_only=False, output_format='ndarray', reformat_meta=True)
-    print meta
-    print meta['_channels_']
+    print(meta)
+    print(meta['_channels_'])
 
 
 

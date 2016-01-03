@@ -1,3 +1,5 @@
+from __future__ import absolute_import
+
 import collections
 import inspect
 from itertools import cycle
@@ -13,9 +15,9 @@ from GoreUtilities.util import to_list as to_iter
 from GoreUtilities.graph import plot_ndpanel
 
 from FlowCytometryTools.core.transforms import Transformation
-from bases import Measurement, MeasurementCollection, OrderedCollection, queueable
-import graph
-from common_doc import doc_replacer
+from FlowCytometryTools.core.bases import Measurement, MeasurementCollection, OrderedCollection, queueable
+import FlowCytometryTools.core.graph as graph
+from FlowCytometryTools.core.common_doc import doc_replacer
 
 
 def to_list(obj):
