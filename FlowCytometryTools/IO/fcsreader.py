@@ -294,7 +294,7 @@ class FCS_Parser(object):
             raise_parser_feature_not_implemented('$DATATYPE = {0} is not yet supported.'.format(text['$DATATYPE']))
 
         # Calculations to figure out data types of each of parameters
-        bytes_per_par_list   = [text['$P{0}B'.format(i)] / 8  for i in self.channel_numbers] # $PnB specifies the number of bits reserved for a measurement of parameter n
+        bytes_per_par_list   = [text['$P{0}B'.format(i)] // 8  for i in self.channel_numbers] # $PnB specifies the number of bits reserved for a measurement of parameter n
         par_numeric_type_list   = ['{endian}{type}{size}'.format(endian=endian, type=conversion_dict[text['$DATATYPE']], size=bytes_per_par) for bytes_per_par in bytes_per_par_list]
         bytes_per_event = sum(bytes_per_par_list)
         total_bytes = bytes_per_event * num_events
