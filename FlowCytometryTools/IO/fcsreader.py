@@ -10,8 +10,8 @@
 # http://docs.scipy.org/doc/numpy/reference/generated/numpy.ndarray.byteswap.html?highlight=byteswap#numpy.ndarray.byteswap
 # http://docs.scipy.org/doc/numpy/user/basics.types.html
 # http://docs.scipy.org/doc/numpy/reference/arrays.dtypes.html
-
-
+from __future__ import print_function
+from __future__ import absolute_import
 
 import sys, warnings, string, os
 import numpy
@@ -294,7 +294,7 @@ class FCS_Parser(object):
             raise_parser_feature_not_implemented('$DATATYPE = {0} is not yet supported.'.format(text['$DATATYPE']))
 
         # Calculations to figure out data types of each of parameters
-        bytes_per_par_list   = [text['$P{0}B'.format(i)] / 8  for i in self.channel_numbers] # $PnB specifies the number of bits reserved for a measurement of parameter n
+        bytes_per_par_list   = [text['$P{0}B'.format(i)] // 8  for i in self.channel_numbers] # $PnB specifies the number of bits reserved for a measurement of parameter n
         par_numeric_type_list   = ['{endian}{type}{size}'.format(endian=endian, type=conversion_dict[text['$DATATYPE']], size=bytes_per_par) for bytes_per_par in bytes_per_par_list]
         bytes_per_event = sum(bytes_per_par_list)
         total_bytes = bytes_per_event * num_events
@@ -454,8 +454,8 @@ if __name__ == '__main__':
     meta = parse_fcs(fname, meta_data_only=True)
     meta, data_pandas = parse_fcs(fname, meta_data_only=False, output_format='DataFrame')
     meta, data_numpy = parse_fcs(fname, meta_data_only=False, output_format='ndarray', reformat_meta=True)
-    print meta
-    print meta['_channels_']
+    print(meta)
+    print(meta['_channels_'])
 
 
 

@@ -76,7 +76,7 @@ def tlog(x, th=1, r=_display_max, d=_l_mmax):
     Array of transformed values.
     '''
     if th <= 0:
-        raise ValueError, 'Threshold value must be positive. %s given.' % th
+        raise ValueError('Threshold value must be positive. %s given.' % th)
     return where(x <= th, log10(th) * 1. * r / d, log10(x) * 1. * r / d)
 
 
@@ -103,7 +103,7 @@ def tlog_inv(y, th=1, r=_display_max, d=_l_mmax):
     Array of transformed values.
     '''
     if th <= 0:
-        raise ValueError, 'Threshold value must be positive. %s given.' % th
+        raise ValueError('Threshold value must be positive. %s given.' % th)
     x = 10 ** (y * 1. * d / r)
     try:
         x[x < th] = th
@@ -266,11 +266,11 @@ def parse_transform(transform, direction='forward'):
     elif hasattr(transform, 'lower'):
         tname = _get_canonical_name(transform)
         if tname is None:
-            raise ValueError, 'Unknown transform: %s' % transform
+            raise ValueError('Unknown transform: %s' % transform)
         else:
             tfun = name_transforms[tname][direction]
     else:
-        raise TypeError, 'Unsupported transform type: %s' % type(transform)
+        raise TypeError('Unsupported transform type: %s' % type(transform))
     return tfun, tname
 
 

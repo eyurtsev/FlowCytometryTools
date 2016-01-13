@@ -1,3 +1,6 @@
+from __future__ import print_function
+from __future__ import absolute_import
+
 import matplotlib
 from matplotlib.widgets import RectangleSelector, Cursor, AxesWidget
 import pylab as pl
@@ -863,7 +866,7 @@ def key_press_handler(event, canvas, toolbar=None):
     elif key in ['c']:
         toolbar.set_axes(('d1', 'd3'), pl.gca())
     elif key in ['8']:
-        print toolbar.get_generation_code()
+        print(toolbar.get_generation_code())
 
 if __name__ == '__main__':
     class Globals():
@@ -904,8 +907,7 @@ if __name__ == '__main__':
         manager = FCGateManager(ax)
 
         def x(*args):
-            print
-            "This gate might not behave properly."
+            print("This gate might not behave properly.")
 
         #verts = (('d1', 0.1))
         #verts = ({'d1' : 0.8}, )#, 'd1' : 0.3}, )

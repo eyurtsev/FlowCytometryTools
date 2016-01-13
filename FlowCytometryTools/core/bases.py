@@ -18,7 +18,7 @@ from pandas import DataFrame as DF
 from numpy import nan, unravel_index
 from GoreUtilities.util import get_files, save, load, to_list, get_tag_value
 from GoreUtilities import graph
-from common_doc import doc_replacer
+from FlowCytometryTools.core.common_doc import doc_replacer
 
 
 @doc_replacer
@@ -58,7 +58,7 @@ def _assign_IDS_to_datafiles(datafiles, parser, measurement_class=None, **kwargs
     elif parser == 'read':
         fparse = lambda x: measurement_class(ID='temporary', datafile=x).ID_from_data(**kwargs)
     else:
-        raise ValueError, 'Encountered unsupported value "%s" for parser parameter.' % parser
+        raise ValueError('Encountered unsupported value "%s" for parser parameter.' % parser)
     d = dict((fparse(dfile), dfile) for dfile in datafiles)
     return d
 
@@ -78,7 +78,7 @@ def int2letters(x, alphabet):
     """
     base = len(alphabet)
     if x < 0:
-        raise ValueError, 'Only non-negative numbers are supported. Encounterd %s' % x
+        raise ValueError('Only non-negative numbers are supported. Encounterd %s' % x)
     letters = []
     quotient = x
     while quotient >= 0:
@@ -96,7 +96,7 @@ _now = 'apply_now'
 def queueable(fun, *args, **kwargs):
     params = inspect.getcallargs(fun, *args, **kwargs)
     if not _now in params:
-        raise ValueError, '"%s" must be a parameter of queued function "%s"' % (_now, fun.__name__)
+        raise ValueError('"%s" must be a parameter of queued function "%s"' % (_now, fun.__name__))
     f_name = fun.__name__
     kw_name = inspect.getargspec(fun).keywords
     kws = params.pop(kw_name, {})
@@ -353,7 +353,7 @@ class Measurement(BaseObject):
         elif applyto == 'measurement':
             return func(self)
         else:
-            raise ValueError, 'Encountered unsupported value "%s" for applyto parameter.' % applyto
+            raise ValueError('Encountered unsupported value "%s" for applyto parameter.' % applyto)
 
 
 Well = Measurement
@@ -411,7 +411,7 @@ class MeasurementCollection(collections.MutableMapping, BaseObject):
                                                            readmeta_kwargs=readmeta_kwargs))
             except:
                 msg = 'Error occurred while trying to parse file: %s' % dfile
-                raise IOError, msg
+                raise IOError(msg)
         return cls(ID, measurements)
 
     @classmethod
@@ -453,7 +453,7 @@ class MeasurementCollection(collections.MutableMapping, BaseObject):
             msg = ('Collection of type %s can only contain object of type %s.\n' % (
                 type(self), type(self._measurement_class)) +
                    'Encountered type %s.' % type(value))
-            raise TypeError, msg
+            raise TypeError(msg)
         self.data[key] = value
 
     def __delitem__(self, key):
@@ -626,7 +626,7 @@ class MeasurementCollection(collections.MutableMapping, BaseObject):
         elif applyto == 'data':
             remove = (k for k, v in self.iteritems() if not fil(v.get_data()))
         else:
-            raise ValueError, 'Unsupported value "%s" for applyto parameter.' % applyto
+            raise ValueError('Unsupported value "%s" for applyto parameter.' % applyto)
         for r in remove:
             del new[r]
         if ID is None:
@@ -734,7 +734,7 @@ class OrderedCollection(MeasurementCollection):
             if k not in self._positions:
                 msg = ('All measurement position must be set,' +
                        ' but no position was set for measurement %s' % k)
-                raise Exception, msg
+                raise Exception(msg)
 
     def __str__(self):
         layout = self.layout
@@ -774,7 +774,7 @@ class OrderedCollection(MeasurementCollection):
                                                            readmeta_kwargs=readmeta_kwargs))
             except:
                 msg = 'Error occured while trying to parse file: %s' % dfile
-                raise IOError, msg
+                raise IOError(msg)
         return cls(ID, measurements, position_mapper, **kwargs)
 
     @classmethod
@@ -816,12 +816,12 @@ class OrderedCollection(MeasurementCollection):
             not_assigned = set(labels) - assigned_pos
             if len(not_assigned) > 0:
                 msg = 'New labels must contain all assigned positions'
-                raise ValueError, msg
+                raise ValueError(msg)
             self.row_labels = labels
         elif axis.lower() in ('cols', 'col', 'c', 1):
             self.col_labels = labels
         else:
-            raise TypeError, 'Unsupported axis value %s' % axis
+            raise TypeError('Unsupported axis value %s' % axis)
 
     def _default_labels(self, axis, shape):
         import string
@@ -905,12 +905,12 @@ class OrderedCollection(MeasurementCollection):
         temp.update(positions)
         if not len(temp.values()) == len(set(temp.values())):
             msg = 'A position can only be occupied by a single measurement'
-            raise Exception, msg
+            raise Exception(msg)
 
         for k, pos in positions.iteritems():
             if not self._is_valid_position(pos):
                 msg = 'Position {} is not supported for this collection'.format(pos)
-                raise ValueError, msg
+                raise ValueError(msg)
             self._positions[k] = pos
             self[k]._set_position(self.ID, pos)
 
@@ -1093,8 +1093,8 @@ class OrderedCollection(MeasurementCollection):
                     else:
                         func(data, ax)
             else:
-                raise ValueError, 'Encountered unsupported value {} for applyto parameter.'.format(
-                    applyto)
+                raise ValueError('Encountered unsupported value {} for applyto parameter.'.format(
+                    applyto))
 
         # Autoscaling axes
         graph.scale_subplots(ax_subplots, xlim=xlim, ylim=ylim)
