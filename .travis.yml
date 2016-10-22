@@ -2,6 +2,15 @@ language: python
 
 sudo: false
 
+cache:
+  directories:
+    - ~/.cache/pip
+
+env:
+  global:
+    - PIP_WHEEL_DIR=$HOME/.cache/pip/wheels
+    - PIP_FIND_LINKS=file://$HOME/.cache/pip/wheels
+
 addons:
   apt:
     packages:
@@ -15,10 +24,12 @@ python:
 - '2.7'
 
 before_install:
-- pip install --quiet --upgrade pip
+  - pip install -U pip
+  - pip install wheel
 
 install:
-- pip install --quiet --upgrade numpy
-- python setup.py develop
+  - pip wheel -r requirements
+  - pip install -r requirements
 
-script: py.test FlowCytometryTools
+script: 
+  - py.test FlowCytometryTools
