@@ -11,18 +11,43 @@ env:
     - PIP_WHEEL_DIR=$HOME/.cache/pip/wheels
     - PIP_FIND_LINKS=file://$HOME/.cache/pip/wheels
 
-python:
-- '2.7'
+matrix:
+  include:
+    - python: 2.6
+      env: PANDAS=0.16.2 MATPLOTLIB=1.2.1
+
+    - python: 2.7
+      env: PANDAS=0.15.2  MATPLOTLIB=1.2.1
+    - python: 2.7
+      env: PANDAS=0.16.2  MATPLOTLIB=1.3.1
+    - python: 2.7
+      env: PANDAS=0.17.1  MATPLOTLIB=1.4.3
+    - python: 2.7
+      env: PANDAS=0.18.1  MATPLOTLIB=1.5.1
+    - python: 2.7
+      env: PANDAS=master  MATPLOTLIB=master
+
+  # matplotlib 2.x (development version) causes a few tests to fail
+  allow_failures:
+    - env: PANDAS=master  MATPLOTLIB=master
 
 before_install:
   - pip install -U pip
   - pip install wheel
 
+
 install:
+  - pip wheel numpy
   - pip wheel -r requirements.txt
   - pip wheel -r requirements.test.txt
+
+  - pip install numpy
+  - if [[ $MATPLOTLIB == 'master' ]]; then pip install git+https://github.com/matplotlib/matplotlib.git; else pip wheel matplotlib==$MATPLOTLIB; pip install matplotlib==$MATPLOTLIB; fi
+
   - pip install -r requirements.txt
   - pip install -r requirements.test.txt
+
+  - if [[ $PANDAS == 'master' ]]; then pip install git+https://github.com/pydata/pandas.git; else pip wheel pandas==$PANDAS; pip install pandas==$PANDAS; fi
 
 script: 
   - py.test FlowCytometryTools/ --cov FlowCytometryTools -v --cov-report term-missing
