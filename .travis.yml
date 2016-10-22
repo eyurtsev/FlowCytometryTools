@@ -11,15 +11,6 @@ env:
     - PIP_WHEEL_DIR=$HOME/.cache/pip/wheels
     - PIP_FIND_LINKS=file://$HOME/.cache/pip/wheels
 
-addons:
-  apt:
-    packages:
-    - g++
-    - gfortran
-    - libblas-dev
-    - liblapack-dev
-    - libatlas-dev
-
 python:
 - '2.7'
 
