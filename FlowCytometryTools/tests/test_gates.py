@@ -39,3 +39,8 @@ class TestGates(unittest.TestCase):
         # Invalid interval definition
         with self.assertRaises(ValueError):
             IntervalGate((1, 0), 'invalid channel', 'in')
+
+        # Check that gate behaves correctly with empty dataframe
+        empty_df = pd.DataFrame({'channel': []}, index=[])
+        gate = IntervalGate((0, 1), 'channel', 'in')
+        self.assertEqual(_get_indexes_where_true(gate._identify(empty_df)), [])
