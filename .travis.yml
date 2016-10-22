@@ -29,7 +29,12 @@ before_install:
 
 install:
   - pip wheel -r requirements.txt
+  - pip wheel -r requirements.test.txt
   - pip install -r requirements.txt
+  - pip install -r requirements.test.txt
 
 script: 
-  - py.test FlowCytometryTools
+  - py.test FlowCytometryTools/ --cov FlowCytometryTools -v --cov-report term-missing
+
+after_success:
+  - coveralls
