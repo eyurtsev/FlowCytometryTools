@@ -295,14 +295,18 @@ class FCMeasurement(Measurement):
                             therefore they cannot be transformed together.\n
                             HINT: Try transforming one channel at a time.
                             You'll need to provide the name of the channel in the transform.""")
-                    kwargs['d'] = np.log10(ranges[0])
+
+                    if transform in {'hlog', 'tlog', 'hlog_inv', 'tlog_inv'}:
+                        # Hacky fix to make sure that 'd' is provided only
+                        # for hlog / tlog transformations
+                        kwargs['d'] = np.log10(ranges[0])
             transformer = Transformation(transform, direction, args, **kwargs)
         ## create new data
         transformed = transformer(data[channels], use_spln)
         if return_all:
             new_data = data
         else:
-            new_data = data.filter(columns)
+            new_data = data.filter(channels)
         new_data[channels] = transformed
         ## update new Measurement
         new.data = new_data
@@ -468,7 +472,11 @@ class FCCollection(MeasurementCollection):
                             raise Exception('Not all specified channels have the same '
                                             'data range, therefore they cannot be '
                                             'transformed together.')
-                        kwargs['d'] = np.log10(ranges[0])
+
+                        if transform in {'hlog', 'tlog', 'hlog_inv', 'tlog_inv'}:
+                            # Hacky fix to make sure that 'd' is provided only
+                            # for hlog / tlog transformations
+                            kwargs['d'] = np.log10(ranges[0])
                 transformer = Transformation(transform, direction, args, **kwargs)
                 if use_spln:
                     xmax = self.apply(lambda x: x[channels].max().max(), applyto='data').max().max()

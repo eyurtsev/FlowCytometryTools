@@ -7,15 +7,14 @@ import unittest
 import numpy as np
 from numpy.testing import assert_almost_equal, assert_equal
 
-from FlowCytometryTools import FCMeasurement
+from FlowCytometryTools import FCMeasurement, FCPlate
 from FlowCytometryTools.core import transforms as trans
 from FlowCytometryTools.core.transforms import Transformation
 
-
 base_path = os.path.dirname(os.path.realpath(__file__))
 
-test_path = os.path.join(base_path,'data', 'FlowCytometers', 
-        'HTS_BD_LSR-II', 'HTS_BD_LSR_II_Mixed_Specimen_001_D6_D06.fcs')
+test_path = os.path.join(base_path, 'data', 'FlowCytometers',
+                         'HTS_BD_LSR-II', 'HTS_BD_LSR_II_Mixed_Specimen_001_D6_D06.fcs')
 
 n = 1000
 _xmax = 2 ** 18  # max machine value
@@ -29,6 +28,12 @@ _yall = np.r_[_yneg, _ypos]
 
 
 class TestTransforms(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.fc_measurement = FCMeasurement(ID='test', datafile=test_path)
+        cls.fc_plate = FCPlate('plate', measurements={'A1': cls.fc_measurement},
+                               position_mapper='name')
+
     def test_tlog(self):
         th = 2
         r = 10 ** 4
@@ -98,8 +103,7 @@ class TestTransforms(unittest.TestCase):
         assert_almost_equal(d, np.zeros(len(d)), decimal=2)
 
     def test_hlog_on_fc_measurement(self):
-        fc_measurement = FCMeasurement(ID='test', datafile=test_path)
-        fc_measurement = fc_measurement.transform(transform='hlog', b=10)
+        fc_measurement = self.fc_measurement.transform(transform='hlog', b=10)
         data = fc_measurement.data.values[:3, :4]
         correct_output = np.array([[-8.22113965e+03, 1.20259949e+03, 1.01216449e-06,
                                     5.21899170e+03],
@@ -110,3 +114,24 @@ class TestTransforms(unittest.TestCase):
         np.testing.assert_array_almost_equal(data, correct_output, 5,
                                              err_msg='the hlog transformation gives '
                                                      'an incorrect result')
+
+    def test_transform_invocations_on_sample(self):
+        """Shallow integration tests -- check that transform methods can be invoked"""
+        test_cases = (
+            # (transformation name, list of channels, dict of kwargs)
+            ('linear', ['FSC-A'], {'old_range': 0.5, 'new_range': 2.5}),
+            ('glog', ['FSC-A', 'SSC-A'], {'l': 10}),
+            ('tlog', ['FSC-A', 'SSC-A'], {}),
+            ('hlog', ['FSC-A'], {'b': 10}),
+            ('hlog', ['FSC-A'], {}),
+
+            # Test inverse invocations
+            ('hlog', ['FSC-A'], {'direction': 'inverse'}),
+            ('glog', ['FSC-A'], {'direction': 'inverse', 'l': 10}),
+            ('tlog', ['FSC-A'], {'direction': 'inverse'}),
+        )
+
+        # Attempt valid invocations
+        for transformation, channels, kwargs in test_cases:
+            self.fc_measurement.transform(transformation, channels=channels, **kwargs)
+            self.fc_plate.transform(transformation, channels=channels, **kwargs)

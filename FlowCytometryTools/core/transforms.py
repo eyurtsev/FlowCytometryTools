@@ -18,8 +18,8 @@ from __future__ import division
 
 import warnings
 
-from numpy import (log, log10, exp, where, sign, vectorize, apply_along_axis,
-                   min, max, linspace, logspace, r_, abs, asarray)
+from numpy import (log, log10, exp, where, sign, vectorize, min, max, linspace, logspace, r_, abs,
+                   asarray)
 from numpy.lib.shape_base import apply_along_axis
 from scipy.optimize import brentq
 from scipy.interpolate import InterpolatedUnivariateSpline
@@ -351,7 +351,7 @@ class Transformation(BaseObject):
         Array of transformed values.
         '''
         x = asarray(x, dtype=float)
-        n = x.shape[0]
+
         if use_spln:
             if self.spln is None:
                 self.set_spline(x.min(), x.max(), **kwargs)
