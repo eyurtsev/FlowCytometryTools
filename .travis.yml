@@ -13,9 +13,6 @@ env:
 
 matrix:
   include:
-    - python: 2.6
-      env: PANDAS=0.16.2 MATPLOTLIB=1.2.1
-
     - python: 2.7
       env: PANDAS=0.15.2  MATPLOTLIB=1.2.1
     - python: 2.7
@@ -24,12 +21,7 @@ matrix:
       env: PANDAS=0.17.1  MATPLOTLIB=1.4.3
     - python: 2.7
       env: PANDAS=0.18.1  MATPLOTLIB=1.5.1
-    - python: 2.7
-      env: PANDAS=master  MATPLOTLIB=master
 
-  # matplotlib 2.x (development version) causes a few tests to fail
-  allow_failures:
-    - env: PANDAS=master  MATPLOTLIB=master
 
 before_install:
   - pip install -U pip
