@@ -233,7 +233,7 @@ class IntervalGate(Gate):
     def validate_input(self):
         """Raise appropriate exception if gate was defined incorrectly."""
         if self.vert[1] <= self.vert[0]:
-            raise ValueError('vert[1] must be larger than vert[0]')
+            raise ValueError(u'{} must be larger than {}'.format(self.vert[1], self.vert[0]))
 
     def _identify(self, dataframe):
         """Return bool series which is True for indexes that 'pass' the gate"""
