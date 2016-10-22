@@ -28,8 +28,8 @@ before_install:
   - pip install wheel
 
 install:
-  - pip wheel -r requirements
-  - pip install -r requirements
+  - pip wheel -r requirements.txt
+  - pip install -r requirements.txt
 
 script: 
   - py.test FlowCytometryTools
