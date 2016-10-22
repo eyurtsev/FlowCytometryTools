@@ -231,16 +231,13 @@ class IntervalGate(Gate):
         super(IntervalGate, self).__init__(vert, channel, region, name)
 
     def validate_input(self):
+        """Raise appropriate exception if gate was defined incorrectly."""
         if self.vert[1] <= self.vert[0]:
-            raise Exception('vert[1] must be larger than vert[0]')
+            raise ValueError('vert[1] must be larger than vert[0]')
 
     def _identify(self, dataframe):
-        """ Identifies which data points in the dataframe pass the gate. """
-        ##
-        # Let's get the indexes that are within the interval
+        """Return bool series which is True for indexes that 'pass' the gate"""
         idx1 = self.vert[0] <= dataframe[self.channels[0]]
-
-        # Should this comparison use a filtered array (using idx1) for optimization? Check
         idx2 = dataframe[self.channels[0]] <= self.vert[1]
 
         idx = idx1 & idx2
