@@ -14,8 +14,6 @@ env:
 matrix:
   include:
     - python: 2.7
-      env: PANDAS=0.15.2  MATPLOTLIB=1.2.1
-    - python: 2.7
       env: PANDAS=0.16.2  MATPLOTLIB=1.3.1
     - python: 2.7
       env: PANDAS=0.17.1  MATPLOTLIB=1.4.3
