@@ -237,10 +237,8 @@ class IntervalGate(Gate):
 
     def _identify(self, dataframe):
         """Return bool series which is True for indexes that 'pass' the gate"""
-        idx1 = self.vert[0] <= dataframe[self.channels[0]]
-        idx2 = dataframe[self.channels[0]] <= self.vert[1]
-
-        idx = idx1 & idx2
+        idx = ((dataframe[self.channels[0]] <= self.vert[1]) &
+               (dataframe[self.channels[0]] >= self.vert[0]))
 
         if self.region == 'out':
             idx = ~idx
