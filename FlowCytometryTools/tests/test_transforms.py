@@ -51,6 +51,7 @@ class TestTransforms(unittest.TestCase):
         assert_almost_equal(result, expected)
 
     def test_x_for_spln(self):
+        self.maxDiff = -1
         result = trans._x_for_spln(_xpos, len(_xpos), True)
         expected = _xpos
         assert_equal(result, expected)
@@ -69,6 +70,29 @@ class TestTransforms(unittest.TestCase):
         assert_equal(result.max(), _xall.max())
         assert_equal(len(np.where(result < 0)[0]),
                      len(np.where(result > 0)[0]))
+
+    def test_x_for_spln_edge_cases(self):
+        # Additional tests around various edge cases
+        test_cases = [
+            # (input data, num_x, log_spacing), (expected_output)
+            (([10, 1], 3, False), [1., 5.5, 10.]),
+            (([-1, 10], 3, False), [-1., 4.5, 10.]),
+            (([2, 3], 3, False), [2., 2.5, 3.]),
+            (([-2, -3], 3, False), [-3., -2.5, -2]),
+            (([0, 1, 10], 3, True), [0., 0.1, 10]),
+            (([0.1, 1, 10], 3, True), [0.1, 1.0, 10]),
+            (([0.1, 0.4], 3, True), [0.1, 0.2, 0.4]),
+            (([-0.1, -0.4], 3, True), [-0.4, -0.2, -0.1]),
+            (([-0.1, 0.1], 3, True), [-0.1, 0, 0.1]),  # Non-logarithmic behavior
+
+            # Edge case below is not totally reasonable. But shouldn't hurt for purposes
+            # of interpolation.
+            (([-0.3, 10], 3, True), [-1, 0.1, 10]),  # Non-logarithmic behavior
+        ]
+
+        for (x, nx, log_spacing), expected_output in test_cases:
+            output = trans._x_for_spln(x, nx, log_spacing)
+            assert_almost_equal(expected_output, output)
 
     def test_hlog(self):
         hlpos = trans.hlog(_xpos)

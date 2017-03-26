@@ -166,22 +166,48 @@ def _x_for_spln(x, nx, log_spacing):
     if xmin == xmax:
         return asarray([xmin] * nx)
     if xmax <= 0:  # all values<=0
-        return -_x_for_spln(-x, nx, True)[::-1]
+        return -_x_for_spln(-x, nx, log_spacing)[::-1]
+
     if not log_spacing:
-        x_spln = linspace(xmin, xmax, nx)
+        return linspace(xmin, xmax, nx)
+
+    # All code below is to handle-log-spacing when x has potentially both negative
+    # and positive values.
+    if xmin > 0:
+        return logspace(log10(xmin), log10(xmax), nx)
     else:
-        lxmax = log10(xmax)
-        lxmin = log10(abs(xmin))
+        lxmax = max([log10(xmax), 0])
+        lxmin = max([log10(abs(xmin)), 0])
+
+        # All the code below is for log-spacing, when xmin < 0 and xmax > 0
+        if lxmax == 0 and lxmin == 0:
+            return linspace(xmin, xmax, nx)  # Use linear spacing as fallback
+
         if xmin > 0:
             x_spln = logspace(lxmin, lxmax, nx)
         elif xmin == 0:
-            x_spln = r_[0, logspace(-1, lxmax, nx)]
-        else:
+            x_spln = r_[0, logspace(-1, lxmax, nx - 1)]
+        else:  # (xmin < 0)
             f = lxmin / (lxmin + lxmax)
             nx_neg = int(f * nx)
             nx_pos = nx - nx_neg
+
+            if nx <= 1:
+                # If triggered fix edge case behavior
+                raise AssertionError(u'nx should never bebe 0 or 1')
+
+            # Work-around various edge cases
+            if nx_neg == 0:
+                nx_neg = 1
+                nx_pos = nx_pos - 1
+
+            if nx_pos == 0:
+                nx_pos = 1
+                nx_neg = nx_neg - 1
+
             x_spln_pos = logspace(-1, lxmax, nx_pos)
-            x_spln_neg = -logspace(-1, lxmin, nx_neg)[::-1]
+            x_spln_neg = -logspace(lxmin, -1, nx_neg)
+
             x_spln = r_[x_spln_neg, x_spln_pos]
     return x_spln
 
