@@ -19,7 +19,8 @@ matrix:
       env: PANDAS=0.17.1  MATPLOTLIB=1.4.3
     - python: 2.7
       env: PANDAS=0.18.1  MATPLOTLIB=1.5.1
-
+    - python: 2.7
+      env: PANDAS=0.19.2  MATPLOTLIB=2.0.0
 
 before_install:
   - pip install -U pip
