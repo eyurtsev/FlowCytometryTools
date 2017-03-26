@@ -77,7 +77,7 @@ setup(
     description='A python package for performing flow cytometry analysis',
     author='Jonathan Friedman, Eugene Yurtsev',
     author_email='eyurtsev@gmail.com',
-    url='https://gorelab.bitbucket.org/flowcytometrytools',
+    url='http://eyurtsev.github.io/FlowCytometryTools/',
     download_url='https://github.com/eyurtsev/FlowCytometryTools/archive/v{0}.zip'.format(version),
     keywords=['flow cytometry', 'data analysis', 'cytometry', 'single cell'],
     license='MIT',
