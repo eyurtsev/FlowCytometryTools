@@ -84,6 +84,13 @@ So if you find that FlowCytometryTools does not suit your needs, take a look at 
 Changes
 =====================
 
+v0.4.6, 2017-03-26
+
++ FIX: edge case for inferring x-range for spline interpolation when doing
+log transforms and with data the contains values in the interval. 
++ FIX: fix linear transform (kwargs weren't being passed correctly).
++ FIX: interval gate was raising exceptions for certain numpy versions (fix by alonyan)
+
 v0.4.5, 2015-10-31
 
 + Sample fcs files now included with installation
