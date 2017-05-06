@@ -1,7 +1,7 @@
 FlowCytometryTools
 -------------------
 
-**Authors**: Jonathan Friedman and `Eugene Yurtsev <http://eyurtsev.mit.edu>`_
+**Authors**: Jonathan Friedman and `Eugene Yurtsev <http://eyurtsev.github.io>`_
 
 .. image:: https://travis-ci.org/eyurtsev/FlowCytometryTools.svg?branch=master
     :target: https://travis-ci.org/eyurtsev/FlowCytometryTools
