@@ -1,5 +1,5 @@
-from GoreUtilities import docstring
-from GoreUtilities.graph import _doc_dict as _gore_doc_dict
+from FlowCytometryTools.lib import string as docstring
+from FlowCytometryTools.lib.graph import _doc_dict as _gore_doc_dict
 
 ###############################
 # Programmable Documentation  #

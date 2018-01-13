@@ -12,7 +12,7 @@ Gates:
     QuadGate
     PolyGate
 """
-from GoreUtilities.util import to_list
+from FlowCytometryTools.lib.util import to_list
 from matplotlib.path import Path
 import numpy
 import pylab as pl
