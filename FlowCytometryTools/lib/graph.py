@@ -1,27 +1,28 @@
 #!/usr/bin/env python
 """
-@author: Eugene Yurtsev
-2013
+The MIT License (MIT)
 
-Contains different graphing routines.
+Copyright (c) 2013 Eugene Yurtsev and Jonathan Friedman
 
-Especially useful routines are:
-    * create_grid_layout
-    * autoscale_subplots (to be called after using create_grid_layout)
-    * increase_linewidth_for_matrix_printing
-    * plot_heat_map
-    * plot_ndpanel_1d
-    * plot_ndpanel
-    * array2colors
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
 
-Notes:
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
 
-plot_ndpanel_1d cycles over the first axes
-plot_ndpanel cycles over the last two axes
-
-In the future, a single function that'll cycle over arbitrary number of axes will be created.
-And both of these functions will get refactored.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
 """
+
 from __future__ import print_function
 
 import pandas
