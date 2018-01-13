@@ -11,13 +11,27 @@ from pandas import DataFrame
 import numpy as np
 import matplotlib
 
-from GoreUtilities.util import to_list as to_iter
-from GoreUtilities.graph import plot_ndpanel
+from FlowCytometryTools.lib.graph import plot_ndpanel
 
 from FlowCytometryTools.core.transforms import Transformation
 from FlowCytometryTools.core.bases import Measurement, MeasurementCollection, OrderedCollection, queueable
 import FlowCytometryTools.core.graph as graph
 from FlowCytometryTools.core.common_doc import doc_replacer
+
+
+
+
+def to_iter(obj):
+    '''
+    Convert an object to a list if it is not already an iterable.
+    Nones are returned unaltered.
+    '''
+    if hasattr(obj, '__iter__'):
+        return obj
+    elif obj is None:
+        return obj
+    else:
+        return [obj]
 
 
 def to_list(obj):
@@ -482,7 +496,7 @@ class FCCollection(MeasurementCollection):
                     xmax = self.apply(lambda x: x[channels].max().max(), applyto='data').max().max()
                     xmin = self.apply(lambda x: x[channels].min().min(), applyto='data').min().min()
                     transformer.set_spline(xmin, xmax)
-            ## transform all measurements     
+            ## transform all measurements
             for k, v in new.iteritems():
                 new[k] = v.transform(transformer, channels=channels, return_all=return_all,
                                      use_spln=use_spln, apply_now=apply_now)
@@ -658,7 +672,7 @@ class FCOrderedCollection(OrderedCollection, FCCollection):
                     max_v = max(max_list[i])
                     bins.append(np.linspace(min_v, max_v, nbins))
 
-                # Check if 1d 
+                # Check if 1d
                 if len(channel_names) == 1:
                     bins = bins[0]  # bins should be an ndarray, not a list of ndarrays
 
@@ -666,7 +680,7 @@ class FCOrderedCollection(OrderedCollection, FCCollection):
 
         ##########
         # Defining the plotting function that will be used.
-        # At the moment grid_plot handles the labeling 
+        # At the moment grid_plot handles the labeling
         # (rather than sample.plot or the base function
         # in GoreUtilities.graph
 

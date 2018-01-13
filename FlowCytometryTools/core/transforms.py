@@ -24,8 +24,8 @@ from numpy.lib.shape_base import apply_along_axis
 from scipy.optimize import brentq
 from scipy.interpolate import InterpolatedUnivariateSpline
 
-from GoreUtilities import BaseObject
-from GoreUtilities.util import to_list
+from FlowCytometryTools.lib.util import BaseObject
+from FlowCytometryTools.lib.util import to_list
 
 _machine_max = 2 ** 18
 _l_mmax = log10(_machine_max)
