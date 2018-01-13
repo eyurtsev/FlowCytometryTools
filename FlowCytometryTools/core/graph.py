@@ -2,7 +2,7 @@
 """
 Modules contains graphing routines common for flow cytometry files.
 """
-from GoreUtilities.util import to_list
+from FlowCytometryTools.lib.util import to_list
 import numpy
 import pylab as pl
 import matplotlib

@@ -16,8 +16,8 @@ import os, inspect, decorator
 import pylab as pl
 from pandas import DataFrame as DF
 from numpy import nan, unravel_index
-from GoreUtilities.util import get_files, save, load, to_list, get_tag_value
-from GoreUtilities import graph
+from FlowCytometryTools.lib.util import get_files, save, load, to_list, get_tag_value
+from FlowCytometryTools.lib import graph
 from FlowCytometryTools.core.common_doc import doc_replacer
 
 
@@ -72,8 +72,8 @@ def int2letters(x, alphabet):
     2 -> 'aa'
     3 -> 'ab'
     4 -> 'ba'
-    
-    Modified from: 
+
+    Modified from:
     http://stackoverflow.com/questions/2267362/convert-integer-to-a-string-in-a-given-numeric-base-in-python
     """
     base = len(alphabet)
@@ -118,7 +118,7 @@ def queueable(fun, *args, **kwargs):
 class BaseObject(object):
     '''
     Object providing common utility methods.
-    Used for inheritance. 
+    Used for inheritance.
     '''
 
     def __repr__(self):
@@ -226,15 +226,15 @@ class Measurement(BaseObject):
     # ----------------------
     def read_data(self, **kwargs):
         '''
-        This function should be overwritten for each 
-        specific data type. 
+        This function should be overwritten for each
+        specific data type.
         '''
         pass
 
     def read_meta(self, **kwargs):
         '''
-        This function should be overwritten for each 
-        specific data type. 
+        This function should be overwritten for each
+        specific data type.
         '''
         pass
 
@@ -251,7 +251,7 @@ class Measurement(BaseObject):
 
     def set_meta(self, meta=None, **kwargs):
         '''
-        Assign values to self.meta. 
+        Assign values to self.meta.
         Meta is not returned
         '''
         if meta is None:
@@ -261,14 +261,14 @@ class Measurement(BaseObject):
     def _get_attr_from_file(self, name, **kwargs):
         '''
         return values of attribute of self.
-        Attribute values can the ones assigned already, or the read for 
+        Attribute values can the ones assigned already, or the read for
         the corresponding file.
-        If read from file: 
+        If read from file:
             i) the method used to read the file is 'self.read_[attr name]'
-            (e.g. for an attribute named 'meta' 'self.read_meta' 
+            (e.g. for an attribute named 'meta' 'self.read_meta'
             will be used).
             ii) the file path will be the one specified in an attribute
-            named: '[attr name]file'. (e.g. for an attribute named 
+            named: '[attr name]file'. (e.g. for an attribute named
             'meta' a 'metafile' attribute will be created).
         '''
         current_value = getattr(self, '_' + name)
@@ -304,8 +304,8 @@ class Measurement(BaseObject):
     def get_meta_fields(self, fields, **kwargs):
         '''
         Get specific fields of associated metadata.
-        
-        This function should be overwritten for each 
+
+        This function should be overwritten for each
         specific data type.
         '''
         pass
@@ -313,8 +313,8 @@ class Measurement(BaseObject):
     def ID_from_data(self):
         '''
         Get measurement ID from loaded data.
-        
-        This function should be overwritten for each 
+
+        This function should be overwritten for each
         specific data type.
         '''
         pass
@@ -476,11 +476,11 @@ class MeasurementCollection(collections.MutableMapping, BaseObject):
 
         Parameters
         ----------
-        func : callable 
-            Accepts a Measurement object or a DataFrame. 
+        func : callable
+            Accepts a Measurement object or a DataFrame.
         ids : hashable| iterable of hashables | None
             Keys of measurements to which func will be applied.
-            If None is given apply to all measurements. 
+            If None is given apply to all measurements.
         applyto :  'measurement' | 'data'
             * 'measurement' : apply to measurements objects themselves.
             * 'data'        : apply to measurement associated data
@@ -555,20 +555,20 @@ class MeasurementCollection(collections.MutableMapping, BaseObject):
                                  output_format='DataFrame'):
         """
         Get the metadata fields of specified measurements (all if None given).
-        
+
         Parameters
         ----------
-        fields : str | iterable of str 
+        fields : str | iterable of str
             Names of metadata fields to be returned.
         ids : hashable| iterable of hashables | None
             Keys of measurements for which metadata will be returned.
-            If None is given return metadata of all measurements. 
+            If None is given return metadata of all measurements.
         noneval : obj
             Value returned if applyto is 'data' but no data is available.
         output_format :  'DataFrame' | 'dict'
             'DataFrame' : return DataFrame,
             'dict'      : return dictionary.
-        
+
         Returns
         -------
         Measurement metadata in specified output_format.
@@ -593,11 +593,11 @@ class MeasurementCollection(collections.MutableMapping, BaseObject):
     # ----------------------
     def filter(self, criteria, applyto='measurement', ID=None):
         """
-        Filter measurements according to given criteria. 
+        Filter measurements according to given criteria.
         Retain only Measurements for which criteria returns True.
-        
+
         TODO: add support for multiple criteria
-        
+
         Parameters
         ----------
         criteria : callable
@@ -606,11 +606,11 @@ class MeasurementCollection(collections.MutableMapping, BaseObject):
              'measurement' : criteria is applied to Measurement objects
              'keys'         : criteria is applied to the keys.
              'data'         : criteria is applied to the Measurement objects' data.
-             mapping        : for each key criteria is applied to mapping value with same key. 
+             mapping        : for each key criteria is applied to mapping value with same key.
         ID : str
-            ID of the filtered collection. 
+            ID of the filtered collection.
             If None is given, append '.filterd' to the current sample ID.
-             
+
         Returns
         -------
         Filtered Collection.
@@ -711,7 +711,7 @@ class OrderedCollection(MeasurementCollection):
             Shape of the 2D array of measurements (rows, cols).
         positions : dict | None
             Mapping of measurement_key:(row,col)
-            If None is given set positions as specified by the position_mapper arg. 
+            If None is given set positions as specified by the position_mapper arg.
         row_labels : iterable of str
             If None is given, rows will be labeled 'A','B','C', ...
         col_labels : iterable of str
@@ -886,7 +886,7 @@ class OrderedCollection(MeasurementCollection):
             'name'   - parses things like 'A1', 'G12'
             'number' - converts number to positions, going over rows first.
         ids :
-            parser will be applied to specified ids only. 
+            parser will be applied to specified ids only.
             If None is given, parser will be applied to all measurements.
 
         TODO: output a more informative message for position collisions
