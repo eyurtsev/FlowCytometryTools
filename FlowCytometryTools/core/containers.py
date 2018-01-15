@@ -462,8 +462,9 @@ class FCCollection(MeasurementCollection):
         '''
         new = self.copy()
         if share_transform:
-            channel_meta = self.values()[0].channels
-            channel_names = self.values()[0].channel_names
+
+            channel_meta = list(self.values())[0].channels
+            channel_names = list(self.values())[0].channel_names
             if channels is None:
                 channels = list(channel_names)
             else:
@@ -497,11 +498,11 @@ class FCCollection(MeasurementCollection):
                     xmin = self.apply(lambda x: x[channels].min().min(), applyto='data').min().min()
                     transformer.set_spline(xmin, xmax)
             ## transform all measurements
-            for k, v in new.iteritems():
+            for k, v in new.items():
                 new[k] = v.transform(transformer, channels=channels, return_all=return_all,
                                      use_spln=use_spln, apply_now=apply_now)
         else:
-            for k, v in new.iteritems():
+            for k, v in new.items():
                 new[k] = v.transform(transform, direction=direction, channels=channels,
                                      return_all=return_all, auto_range=auto_range,
                                      get_transformer=False,

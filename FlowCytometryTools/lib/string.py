@@ -86,7 +86,7 @@ class DocReplacer(object):
                 #m = re.search('[ \t]*(?=){.*}', doc)
                 #indent = m.group(0).split('{')[0]
                 #doc_dict = {}
-                #for k,v in self.doc_dict.iteritems():
+                #for k,v in self.doc_dict.items():
                     #vlines = v.split('\n')
                     #vnew = vlines[0].lstrip() + ('\n'+indent).join(['']+vlines[1:])
                     #doc_dict[k] = vnew
