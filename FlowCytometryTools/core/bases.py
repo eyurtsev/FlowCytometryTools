@@ -21,6 +21,11 @@ from FlowCytometryTools.lib import graph
 from FlowCytometryTools.core.common_doc import doc_replacer
 
 
+try:
+  basestring
+except NameError:
+  basestring = str
+
 @doc_replacer
 def _assign_IDS_to_datafiles(datafiles, parser, measurement_class=None, **kwargs):
     """
@@ -404,7 +409,7 @@ class MeasurementCollection(collections.MutableMapping, BaseObject):
         """
         d = _assign_IDS_to_datafiles(datafiles, parser, cls._measurement_class, **ID_kwargs)
         measurements = []
-        for sID, dfile in d.iteritems():
+        for sID, dfile in d.items():
             try:
                 measurements.append(cls._measurement_class(sID, datafile=dfile,
                                                            readdata_kwargs=readdata_kwargs,
@@ -519,7 +524,7 @@ class MeasurementCollection(collections.MutableMapping, BaseObject):
             for ids in ids_to_remove:
                 new_collection.pop(ids)
             # Update keys with new values
-            for k, v in new_collection.iteritems():
+            for k, v in new_collection.items():
                 new_collection[k] = result[k]
             if ID is not None:
                 new_collection.ID = ID
@@ -618,13 +623,13 @@ class MeasurementCollection(collections.MutableMapping, BaseObject):
         fil = criteria
         new = self.copy()
         if isinstance(applyto, collections.Mapping):
-            remove = (k for k, v in self.iteritems() if not fil(applyto[k]))
+            remove = (k for k, v in self.items() if not fil(applyto[k]))
         elif applyto == 'measurement':
-            remove = (k for k, v in self.iteritems() if not fil(v))
+            remove = (k for k, v in self.items() if not fil(v))
         elif applyto == 'keys':
-            remove = (k for k, v in self.iteritems() if not fil(k))
+            remove = (k for k, v in self.items() if not fil(k))
         elif applyto == 'data':
-            remove = (k for k, v in self.iteritems() if not fil(v.get_data()))
+            remove = (k for k, v in self.items() if not fil(v.get_data()))
         else:
             raise ValueError('Unsupported value "%s" for applyto parameter.' % applyto)
         for r in remove:
@@ -645,7 +650,7 @@ class MeasurementCollection(collections.MutableMapping, BaseObject):
         return self.filter(fil, applyto='keys', ID=ID)
 
     def filter_by_attr(self, attr, criteria, ID=None):
-        applyto = {k: getattr(v, attr) for k, v in self.iteritems()}
+        applyto = {k: getattr(v, attr) for k, v in self.items()}
         if ID is None:
             ID = self.ID
         return self.filter(criteria, applyto=applyto, ID=ID)
@@ -666,7 +671,7 @@ class MeasurementCollection(collections.MutableMapping, BaseObject):
         """
         rows = to_list(rows)
         fil = lambda x: x in rows
-        applyto = {k: self._positions[k][0] for k in self.iterkeys()}
+        applyto = {k: self._positions[k][0] for k in self.keys()}
         if ID is None:
             ID = self.ID
         return self.filter(fil, applyto=applyto, ID=ID)
@@ -677,7 +682,7 @@ class MeasurementCollection(collections.MutableMapping, BaseObject):
         """
         rows = to_list(cols)
         fil = lambda x: x in rows
-        applyto = {k: self._positions[k][1] for k in self.iterkeys()}
+        applyto = {k: self._positions[k][1] for k in self.keys()}
         if ID is None:
             ID = self.ID + '.filtered_by_cols'
         return self.filter(fil, applyto=applyto, ID=ID)
@@ -730,7 +735,7 @@ class OrderedCollection(MeasurementCollection):
         self._positions = {}
         self.set_positions(positions, position_mapper=position_mapper)
         ## check that all positions have been set
-        for k in self.iterkeys():
+        for k in self.keys():
             if k not in self._positions:
                 msg = ('All measurement position must be set,' +
                        ' but no position was set for measurement %s' % k)
@@ -767,7 +772,7 @@ class OrderedCollection(MeasurementCollection):
                 raise ValueError(msg)
         d = _assign_IDS_to_datafiles(datafiles, parser, cls._measurement_class, **ID_kwargs)
         measurements = []
-        for sID, dfile in d.iteritems():
+        for sID, dfile in d.items():
             try:
                 measurements.append(cls._measurement_class(sID, datafile=dfile,
                                                            readdata_kwargs=readdata_kwargs,
@@ -826,7 +831,7 @@ class OrderedCollection(MeasurementCollection):
     def _default_labels(self, axis, shape):
         import string
         if axis == 'rows':
-            return [int2letters(i, string.uppercase) for i in range(shape[0])]
+            return [int2letters(i, string.ascii_uppercase) for i in range(shape[0])]
         else:
             return range(1, 1 + shape[1])
 
@@ -907,7 +912,7 @@ class OrderedCollection(MeasurementCollection):
             msg = 'A position can only be occupied by a single measurement'
             raise Exception(msg)
 
-        for k, pos in positions.iteritems():
+        for k, pos in positions.items():
             if not self._is_valid_position(pos):
                 msg = 'Position {} is not supported for this collection'.format(pos)
                 raise ValueError(msg)
@@ -925,7 +930,7 @@ class OrderedCollection(MeasurementCollection):
 
     def _dict2DF(self, d, noneval, dropna=False):
         df = DF(noneval, index=self.row_labels, columns=self.col_labels, dtype=object)
-        for k, res in d.iteritems():
+        for k, res in d.items():
             i, j = self._positions[k]
             df[j][i] = res
         try:
