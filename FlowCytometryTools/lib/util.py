@@ -115,7 +115,7 @@ def print_dictionary_as_tree(dictionary, indent=0,
     string with formatted output
     """
     out = ''
-    for key, value in dictionary.iteritems():
+    for key, value in dictionary.items():
         if use_title_style:
             out += '\t' * indent + str(key).title()
         else:

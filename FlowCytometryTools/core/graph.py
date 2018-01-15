@@ -30,6 +30,7 @@ def plotFCM(data, channel_names, kind='histogram', ax=None,
     -------
     The output of the plot command used
     """
+
     if ax == None: ax = pl.gca()
 
     xlabel_kwargs.setdefault('size', 16)
