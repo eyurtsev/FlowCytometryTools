@@ -1,11 +1,5 @@
 import FlowCytometryTools
 from FlowCytometryTools import test_data_dir, test_data_file
-from FlowCytometryTools import FCMeasurement
-import matplotlib.pyplot as plt
-import numpy as np
-
-# Deprecated usage, fix this
-from pylab import *
 
 datadir = test_data_dir
 datafile = test_data_file
@@ -13,6 +7,7 @@ datafile = test_data_file
 
 # Working with individual FCS files
 
+from FlowCytometryTools import FCMeasurement
 sample = FCMeasurement(ID='Test Sample', datafile=datafile)
 
 
@@ -57,6 +52,9 @@ tsample = sample.transform('hlog', channels=['Y2-A', 'B1-A', 'V2-A'], b=500.0)
 
 
 # Plotting 1D histograms
+
+# Deprecated usage, fix this
+from pylab import *
 
 figure()
 tsample.plot(['Y2-A'], bins=100)
@@ -128,10 +126,67 @@ plate = FCPlate.from_dir(ID='Demo Plate', path=datadir, parser='name')
 plate = plate.transform('hlog', channels=['Y2-A', 'B1-A'])
 print(plate)
 
+import os
+print(os.path.basename(plate['A3'].datafile))
+
+plate = plate.dropna()
+print(plate)
 
 
+# Plotting
+
+figure()
+plate.plot(['Y2-A'], bins=100)
+
+figure()
+plate.plot(['B1-A', 'Y2-A'], bins=100, wspace=0.2, hspace=0.2)
 
 
+# Accessing single wells
+
+figure()
+print(plate['A3'])
+plate['A3'].plot(['Y2-A'], bins=100)
+
+
+# Counting using the counts method
+
+total_counts = plate.counts()
+print(total_counts)
+
+y2_counts = plate.gate(y2_gate).counts()
+print(y2_counts)
+
+outside_of_y2_counts = plate.gate(~y2_gate).counts()
+print(outside_of_y2_counts)
+
+
+# Counting on our own
+
+def count_events(well):
+    data = well.get_data()
+    count = data.shape[0]
+    return count
+
+print(count_events(plate['A3']))
+print(plate['A3'].apply(count_events))
+
+total_counts_using_our_function = plate.apply(count_events)
+print(type(total_counts_using_our_function))
+print(total_counts_using_our_function)
+
+print(plate.gate(y2_gate).apply(count_events))
+
+
+# Calculating median fluorescence
+
+def calculate_median_rfp(well):
+    data = well.get_data()
+    return data['Y2-A'].median()
+
+print(calculate_median_rfp(plate['A3']))
+print(plate.apply(calculate_median_rfp))
+print(plate.gate(y2_gate).apply(calculate_median_rfp))
 
 
 
