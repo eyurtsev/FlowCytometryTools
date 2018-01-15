@@ -640,7 +640,7 @@ class FCOrderedCollection(OrderedCollection, FCCollection):
                             'row_labels': row_labels,
                             'col_labels': col_labels}
 
-        for key, value in kwargs.items():
+        for key, value in list(kwargs.items()):
             if key in grid_arg_list:
                 kwargs.pop(key)
                 grid_plot_kwargs[key] = value
@@ -663,8 +663,8 @@ class FCOrderedCollection(OrderedCollection, FCCollection):
                     min_list.append(self[sample].data[channel_names].min().values)
                     max_list.append(self[sample].data[channel_names].max().values)
 
-                min_list = zip(*min_list)
-                max_list = zip(*max_list)
+                min_list = list(zip(*min_list))
+                max_list = list(zip(*max_list))
 
                 bins = []
 
