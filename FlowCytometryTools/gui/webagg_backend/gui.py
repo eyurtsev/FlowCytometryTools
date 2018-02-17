@@ -1,19 +1,22 @@
-import os
 import io
+import json
+import os
 import webbrowser
 
 import tornado
-import tornado.web
 import tornado.httpserver
 import tornado.ioloop
+import tornado.web
 import tornado.websocket
-
 from matplotlib.backends.backend_webagg_core import (
     FigureManagerWebAgg, new_figure_manager_given_figure)
 from matplotlib.figure import Figure
-import json
 
-import tkFileDialog
+try:  # Old library
+    import tkFileDialog as filedialog
+except:
+    # New style file dialog import
+    from tkinter import filedialog
 
 from FlowCytometryTools.gui import fc_widget
 
@@ -122,8 +125,8 @@ class MyApplication(tornado.web.Application):
                 fc_manager = self.application.fc_manager
 
                 if message['name'] == 'open_file':
-                    filename = tkFileDialog.askopenfilename(initialdir=os.path.curdir,
-                                                            defaultextension='.fcs')
+                    filename = filedialog.askopenfilename(initialdir=os.path.curdir,
+                                                          defaultextension='.fcs')
                     if len(filename) != 0:
                         fc_manager.load_fcs(filename)
                 elif message['name'] == 'draw_poly_gate':

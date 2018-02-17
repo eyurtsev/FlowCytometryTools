@@ -349,8 +349,9 @@ class BaseGate(EventGenerator):
         Generates python code that can create the gate.
         """
         channels, verts = self.coordinates
-        num_channels = len(channels)
         channels = ', '.join(["'{}'".format(ch) for ch in channels])
+
+        verts = list(verts)
 
         ## Formatting the vertexes
         # List level (must be first), used for gates that may have multiple vertexes like a polygon
