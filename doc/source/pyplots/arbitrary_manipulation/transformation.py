@@ -1,15 +1,18 @@
 """
 Demonstrates how to implement a custom transformation of the data.
 """
-from FlowCytometryTools import FCMeasurement, ThresholdGate
-import os, FlowCytometryTools
+import os
+
+import FlowCytometryTools
+from FlowCytometryTools import FCMeasurement
 from pylab import *
 
 # Locate sample data included with this package
 datadir = os.path.join(FlowCytometryTools.__path__[0], 'tests', 'data', 'Plate01')
 datafile = os.path.join(datadir, 'RFP_Well_A3.fcs')
 
-# datafile = '[insert path to your own fcs file]' 
+
+# datafile = '[insert path to your own fcs file]'
 
 def transform_using_this_method(original_sample):
     """ This function implements a log transformation on the data. """
@@ -19,9 +22,10 @@ def transform_using_this_method(original_sample):
 
     # Our transformation goes here
     new_data['Y2-A'] = log(new_data['Y2-A'])
-    new_data = new_data.dropna() # Removes all NaN entries
+    new_data = new_data.dropna()  # Removes all NaN entries
     new_sample.data = new_data
     return new_sample
+
 
 # Load data
 sample = FCMeasurement(ID='Test Sample', datafile=datafile)
@@ -40,4 +44,4 @@ grid(True)
 
 title('Custom log transformation')
 
-#show() # <-- Uncomment when running as a script.
+# show() # <-- Uncomment when running as a script.
