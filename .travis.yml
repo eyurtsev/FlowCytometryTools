@@ -19,11 +19,11 @@ matrix:
       env: PANDAS=0.22.0  MATPLOTLIB=1.5.3
     - python: 2.7
       env: PANDAS=0.22.0  MATPLOTLIB=2.1.2
-    - python: 3.7
+    - python: 3.6
       env: PANDAS=0.19.0  MATPLOTLIB=1.5.3
-    - python: 3.7
+    - python: 3.6
       env: PANDAS=0.22.0  MATPLOTLIB=1.5.3
-    - python: 3.7
+    - python: 3.6
       env: PANDAS=0.22.0  MATPLOTLIB=2.1.2
 
 
