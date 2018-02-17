@@ -15,8 +15,8 @@ import FlowCytometryTools.core.graph as graph
 from FlowCytometryTools.core.bases import (Measurement, MeasurementCollection, OrderedCollection,
                                            queueable)
 from FlowCytometryTools.core.common_doc import doc_replacer
+from FlowCytometryTools.core.graph import plot_ndpanel
 from FlowCytometryTools.core.transforms import Transformation
-from FlowCytometryTools.utility_lib.graph import plot_ndpanel
 from FlowCytometryTools.utility_lib.util import to_list
 
 

@@ -1,11 +1,39 @@
 from FlowCytometryTools.utility_lib import docstring
-from FlowCytometryTools.utility_lib.graph import _doc_dict as _gore_doc_dict
 
 ###############################
 # Programmable Documentation  #
 ###############################
 
 _doc_dict = dict(
+    _graph_grid_layout="""\
+xlim : None | 2-tuple
+    If None automatic, otherwise specifies the xmin and xmax for the plot
+ylim : None | 2-tuple
+    If None automatic, otherwise specifies the ymin and ymax for the plot
+row_label_xoffset : float
+    Additional offset for the row labels in the x direction.
+col_label_yoffset : float
+    Additional offset for the col labels in the y direction.
+hide_tick_labels : True | False
+    Hides the tick mark labels.
+hide_tick_lines : True | False
+    Hides the tick marks.
+hspace : float
+    Horizontal space between subplots.
+wspace : float
+    Vertical space between subplots.
+row_labels_kwargs : dict
+    This dict is unpacked into the pylab.text function
+    that draws the row labels.
+col_labels_kwargs : dict
+    This dict is unpacked into the pylab.text function
+    that draws the column labels.""",
+
+    _graph_grid_layout_returns="""\
+(ax_main, ax_subplots)
+    ax_main : reference to the main axes
+    ax_subplots : matrix of references to the subplots (e.g., ax_subplots[0, 3] references
+    the subplot in row 0 and column 3.)""",
 
 _bases_filename_parser="""\
 parser : ['name' | 'number' | 'read' | mapping | callable]
@@ -198,8 +226,6 @@ _containers_held_in_memory_warning="""\
     this can be done."""
 )
 
-
-_doc_dict.update(_gore_doc_dict)
 
 doc_replacer = docstring.DocReplacer(**_doc_dict)
 doc_replacer.replace()
