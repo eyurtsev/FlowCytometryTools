@@ -1,9 +1,7 @@
 .. _install:
 
-|
 How to install?
 ----------------
-|
 
 FlowCytometryTools is a python package written in `python 2.7 <https://www.python.org/getit/>`__. FlowCytometryTools depends on a few scientific and data analysis libraries:  `matplotlib (>1.13.1) <https://matplotlib.org/>`__, `pandas (>0.12.0) <https://github.com/pandas-dev/pandas>`__, `scipy <https://www.scipy.org/>`__). 
 
