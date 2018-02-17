@@ -3,12 +3,15 @@ try:
 except ImportError:
     import pickle
 
+import collections
+
 import fnmatch
 import glob
 import os
 import re
 
 import numpy
+import six
 
 
 def save(obj, path):
@@ -50,16 +53,23 @@ def load(path):
 
 
 def to_iter(obj):
-    '''
-    Convert an object to a list if it is not already an iterable.
+    """Convert an object to a list if it is not already an iterable.
+
     Nones are returned unaltered.
-    '''
-    if hasattr(obj, '__iter__'):
-        return obj
-    elif obj is None:
-        return obj
-    else:
+
+    This is an awful function that proliferates an explosion of types, please do not use anymore.
+    """
+    if isinstance(obj, type(None)):
+        return None
+    elif isinstance(obj, six.string_types):
         return [obj]
+    else:
+        # Nesting here since symmetry is broken in isinstance checks.
+        # Strings are iterables in python 3, so the relative order of if statements is important.
+        if isinstance(obj, collections.Iterable):
+            return obj
+        else:
+            return [obj]
 
 
 def to_list(obj):
@@ -86,7 +96,7 @@ def ensure_directory(directory):
 
 
 def get_files(dirname=None, pattern='*.*', recursive=True):
-    '''
+    """
     Get all file names within a given directory those names match a
     given pattern.
 
@@ -105,7 +115,7 @@ def get_files(dirname=None, pattern='*.*', recursive=True):
     -------
     matches: list
        List of file names (including full path).
-    '''
+    """
     # get dirname from user if not given
     if dirname is None:
         import dialogs
@@ -258,10 +268,10 @@ def remove_nans(*data_list):
 #####################
 
 class BaseObject(object):
-    '''
+    """
     Object providing common utility methods.
     Used for inheritance.
-    '''
+    """
 
     def __repr__(self):
         return repr(self.ID)
