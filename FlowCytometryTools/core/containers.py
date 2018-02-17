@@ -17,7 +17,7 @@ from FlowCytometryTools.core.bases import (Measurement, MeasurementCollection, O
 from FlowCytometryTools.core.common_doc import doc_replacer
 from FlowCytometryTools.core.graph import plot_ndpanel
 from FlowCytometryTools.core.transforms import Transformation
-from FlowCytometryTools.utility_lib.util import to_list
+from FlowCytometryTools.core.utils import to_list
 
 
 class FCMeasurement(Measurement):

@@ -16,7 +16,7 @@ from matplotlib import transforms
 from numpy import arange
 
 from FlowCytometryTools.core.common_doc import doc_replacer
-from FlowCytometryTools.utility_lib.util import to_list
+from FlowCytometryTools.core.utils import to_list
 
 
 @doc_replacer

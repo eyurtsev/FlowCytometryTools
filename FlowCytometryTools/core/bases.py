@@ -23,8 +23,7 @@ from pandas import DataFrame as DF
 
 from FlowCytometryTools.core import graph
 from FlowCytometryTools.core.common_doc import doc_replacer
-from FlowCytometryTools.core.utils import get_tag_value, get_files
-from FlowCytometryTools.utility_lib.util import save, load, to_list
+from FlowCytometryTools.core.utils import get_tag_value, get_files, save, load, to_list
 
 
 @doc_replacer
