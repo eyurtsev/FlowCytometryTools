@@ -50,11 +50,11 @@ def check_dependencies():
     try:
         import matplotlib
     except ImportError:
-        install_requires.append('matplotlib>=1.3.1')
+        install_requires.append('matplotlib>=1.5.3')
     try:
         import pandas
     except ImportError:
-        install_requires.append('pandas>=0.12.0')
+        install_requires.append('pandas>=0.19.0')
 
     return install_requires
 
@@ -66,9 +66,8 @@ with open('README.rst', 'r') as f:
 
 install_requires = check_dependencies()
 install_requires.extend(["setuptools",
-                        "decorator",
-                        "GoreUtilities == 0.5.0", 
-                        "fcsparser>=0.1.1"])
+                         "decorator",
+                         "fcsparser>=0.1.1"])
 
 setup(
     name='FlowCytometryTools',
