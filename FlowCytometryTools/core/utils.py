@@ -167,10 +167,10 @@ def to_list(obj):
     """
     obj = to_iter(obj)
 
-    if isinstance(obj, tuple):
-        return list(obj)
+    if isinstance(obj, type(None)):
+        return None
     else:
-        return obj
+        return list(obj)
 
 
 class BaseObject(object):

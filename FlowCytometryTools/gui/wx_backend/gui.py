@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import wx
-import matplotlib
-from wireframe import GeneratedWireframe
+
 from FlowCytometryTools.gui import fc_widget
+from FlowCytometryTools.gui.wx_backend.wireframe import GeneratedWireframe
 
 
 class GUIEmbedded(GeneratedWireframe):
@@ -78,8 +78,8 @@ class GUIEmbedded(GeneratedWireframe):
         sel2 = self.y_axis_list.GetSelection()
 
         if sel1 >= 0 and sel2 >= 0:
-            channel_1 = self.x_axis_list.GetString(sel1).encode('UTF-8')
-            channel_2 = self.y_axis_list.GetString(sel2).encode('UTF-8')
+            channel_1 = self.x_axis_list.GetString(sel1)
+            channel_2 = self.y_axis_list.GetString(sel2)
             self.fcgatemanager.set_axes((channel_1, channel_2), self.ax)
 
 

@@ -1068,7 +1068,8 @@ class OrderedCollection(MeasurementCollection):
         subplots_adjust_args.setdefault('top', 0.85)
         pl.subplots_adjust(**subplots_adjust_args)
 
-        # Uses plate default row/col labels if user does not override them by specifying row/col labels
+        # Uses plate default row/col labels if user does not override them by specifying row/col
+        # labels
         if row_labels == None: callArgs['row_labels'] = self.row_labels
         if col_labels == None: callArgs['col_labels'] = self.col_labels
 

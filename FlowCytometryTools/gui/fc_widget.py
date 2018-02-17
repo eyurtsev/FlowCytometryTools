@@ -783,12 +783,14 @@ class FCGateManager(EventGenerator):
     ####################
 
     def plot_data(self):
-        """ Plots the loaded data """
-        if self.sample is None: return
-
-        # Clear the axes
+        """Plots the loaded data"""
+        # Clear the plot before plotting onto it
+        xaxis = self.ax.get_yaxis()
+        yaxis = self.ax.get_xaxis()
         self.ax.cla()
-        ax = self.ax
+
+        if self.sample is None:
+            return
 
         if self.current_channels is None:
             self.current_channels = self.sample.channel_names[:2]
@@ -797,17 +799,15 @@ class FCGateManager(EventGenerator):
         channels_to_plot = channels[0] if len(channels) == 1 else channels
         self.sample.plot(channels_to_plot, ax=self.ax)
 
-        # Set pickers for x and y axis
-        self.xlabel_artist = ax.get_xaxis().get_label()
-        self.ylabel_artist = ax.get_yaxis().get_label()
+        self.xlabel_artist = xaxis.get_label()
+        self.ylabel_artist = yaxis.get_label()
         self.xlabel_artist.set_picker(5)
         self.ylabel_artist.set_picker(5)
 
         self.fig.canvas.draw()
 
     def get_generation_code(self):
-        """Returns python code that generates all drawn gates.
-        """
+        """Return python code that generates all drawn gates."""
         if len(self.gates) < 1:
             code = ''
         else:

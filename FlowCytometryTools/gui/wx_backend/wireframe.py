@@ -60,10 +60,10 @@ class GeneratedWireframe(wx.Frame):
         self.Hide()
         self.x_axis_list.SetSelection(0)
         self.y_axis_list.SetSelection(0)
-        self.button_load_fcs.SetToolTipString("Launches a file dialog to select an FCS file to load")
+        self.button_load_fcs.SetToolTip("Launches a file dialog to select an FCS file to load")
         self.button_interval_gate.Enable(False)
         self.tb_gen_code.SetMinSize((400, 100))
-        self.tb_gen_code.SetToolTipString("Automatically generates python code that can create the drawn gates")
+        self.tb_gen_code.SetToolTip("Automatically generates python code that can create the drawn gates")
         self.tree_ctrl_1.Enable(False)
         # end wxGlade
 

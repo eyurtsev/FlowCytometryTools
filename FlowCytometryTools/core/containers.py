@@ -189,24 +189,9 @@ class FCMeasurement(Measurement):
         backend: 'auto' | 'wx' | 'webagg'
             Specifies which backend should be used to view the sample.
         '''
-        ##
-        # Because this may be called from within ipython notebook inline backend
-        # we should adjust the backend
-        try:
-            from IPython import get_ipython
-        except ImportError:
-            get_ipython = None
-
-        switch_backends = ('inline' in matplotlib.get_backend()) and (get_ipython is not None)
-
-        # Switch from inline to wx if needed/possible
-        if switch_backends:
-            ipython = get_ipython()
-            ipython.magic('matplotlib {}'.format(backend))
-
         if backend == 'auto':
             if matplotlib.__version__ >= '1.4.3':
-                backend = 'webagg'
+                backend = 'WebAgg'
             else:
                 backend = 'wx'
 
@@ -217,14 +202,7 @@ class FCMeasurement(Measurement):
         else:
             raise ValueError('No support for backend {}'.format(backend))
 
-        # Launch gui
-        output = gui.GUILauncher(measurement=self)
-
-        # Switch back to inline mode if started in inline
-        if switch_backends:
-            ipython.magic('matplotlib inline')
-
-        return output
+        gui.GUILauncher(measurement=self)
 
     @queueable
     @doc_replacer
