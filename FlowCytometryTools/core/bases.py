@@ -12,19 +12,19 @@ factory methods for construction from files.
 - consider always reading in data in measurements, perhaps storing on disk
 using shelve|PyTables|pandas HDFStore
 '''
-import os, inspect, decorator
+import inspect
+import os
+
+import decorator
 import pylab as pl
-from pandas import DataFrame as DF
+import six
 from numpy import nan, unravel_index
-from FlowCytometryTools.lib.util import get_files, save, load, to_list, get_tag_value
-from FlowCytometryTools.lib import graph
+from pandas import DataFrame as DF
+
 from FlowCytometryTools.core.common_doc import doc_replacer
+from FlowCytometryTools.utility_lib import graph
+from FlowCytometryTools.utility_lib.util import get_files, save, load, to_list, get_tag_value
 
-
-try:
-  basestring
-except NameError:
-  basestring = str
 
 @doc_replacer
 def _assign_IDS_to_datafiles(datafiles, parser, measurement_class=None, **kwargs):
@@ -765,7 +765,7 @@ class OrderedCollection(MeasurementCollection):
             Additional key word arguments to be passed to constructor.
         """
         if position_mapper is None:
-            if isinstance(parser, basestring):
+            if isinstance(parser, six.string_types):
                 position_mapper = parser
             else:
                 msg = "When using a custom parser, you must specify the position_mapper keyword."

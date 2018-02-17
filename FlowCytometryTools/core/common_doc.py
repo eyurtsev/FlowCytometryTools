@@ -1,5 +1,5 @@
-from FlowCytometryTools.lib import string as docstring
-from FlowCytometryTools.lib.graph import _doc_dict as _gore_doc_dict
+from FlowCytometryTools.utility_lib import docstring
+from FlowCytometryTools.utility_lib.graph import _doc_dict as _gore_doc_dict
 
 ###############################
 # Programmable Documentation  #

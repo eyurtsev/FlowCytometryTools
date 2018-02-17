@@ -25,28 +25,29 @@ THE SOFTWARE.
 
 from __future__ import print_function
 
-import pandas
-import numpy
-from numpy import arange, linspace
-import matplotlib
-import matplotlib.pyplot as plt
-from matplotlib import transforms
 import os
-import string
-import FlowCytometryTools.lib.string as docstring
 import re
 import time
-import FlowCytometryTools.lib.util as util
+
+import matplotlib
 import matplotlib.cm as cm
+import matplotlib.pyplot as plt
+import numpy
 import numpy as np
+import pandas
 import pylab as pl
+from matplotlib import transforms
+from numpy import arange, linspace
+
+from FlowCytometryTools.utility_lib import docstring
+from FlowCytometryTools.utility_lib import util
 
 ###############################
 #### PLOTTING TO SUBPLOTS #####
 ###############################
 
 _doc_dict = dict(
-_graph_grid_layout="""\
+    _graph_grid_layout="""\
 xlim : None | 2-tuple
     If None automatic, otherwise specifies the xmin and xmax for the plot
 ylim : None | 2-tuple
@@ -70,7 +71,7 @@ col_labels_kwargs : dict
     This dict is unpacked into the pylab.text function
     that draws the column labels.""",
 
-_graph_grid_layout_returns="""\
+    _graph_grid_layout_returns="""\
 (ax_main, ax_subplots)
     ax_main : reference to the main axes
     ax_subplots : matrix of references to the subplots (e.g., ax_subplots[0, 3] references
@@ -78,6 +79,7 @@ _graph_grid_layout_returns="""\
 )
 
 doc_replacer = docstring.DocReplacer(**_doc_dict)
+
 
 @doc_replacer
 def create_grid_layout(rowNum=8, colNum=12, row_labels=None, col_labels=None,
@@ -128,7 +130,7 @@ def create_grid_layout(rowNum=8, colNum=12, row_labels=None, col_labels=None,
     Call autoscale() command after plotting on the subplots in order to adjust their limits properly.
     """
 
-    fig = plt.gcf() # get reference to current open figure
+    fig = plt.gcf()  # get reference to current open figure
 
     # Configure main axis appearance
     ax_main = plt.gca()
@@ -137,25 +139,26 @@ def create_grid_layout(rowNum=8, colNum=12, row_labels=None, col_labels=None,
     for spine in ax_main.spines.values():
         spine.set_visible(False)
     ax_main.patch.set_alpha(0)
-    #ax_main.axison = False # If true, xlabel and ylabel do not work
+    # ax_main.axison = False # If true, xlabel and ylabel do not work
 
     set_tick_lines_visibility(ax_main, False)
     set_tick_labels_visibility(ax_main, False)
 
     # Configure subplot appearance
-    subplot_kw.update(xlim=xlim, ylim=ylim, xscale=xscale, yscale=yscale) # This could potentially confuse a user
+    subplot_kw.update(xlim=xlim, ylim=ylim, xscale=xscale,
+                      yscale=yscale)  # This could potentially confuse a user
 
     plt.subplots_adjust(wspace=wspace, hspace=hspace)
     _, ax_subplots = plt.subplots(rowNum, colNum, squeeze=False,
-            subplot_kw=subplot_kw, num=fig.number)
+                                  subplot_kw=subplot_kw, num=fig.number)
 
     # configure defaults for appearance of row and col labels
-    row_labels_kwargs.setdefault('horizontalalignment','right')
-    row_labels_kwargs.setdefault('verticalalignment','center')
+    row_labels_kwargs.setdefault('horizontalalignment', 'right')
+    row_labels_kwargs.setdefault('verticalalignment', 'center')
     row_labels_kwargs.setdefault('size', 'x-large')
 
-    col_labels_kwargs.setdefault('horizontalalignment','center')
-    col_labels_kwargs.setdefault('verticalalignment','top')
+    col_labels_kwargs.setdefault('horizontalalignment', 'center')
+    col_labels_kwargs.setdefault('verticalalignment', 'top')
     col_labels_kwargs.setdefault('size', 'x-large')
 
     # Translate using figure coordinates
@@ -174,44 +177,47 @@ def create_grid_layout(rowNum=8, colNum=12, row_labels=None, col_labels=None,
     offset_col_labels = transforms.ScaledTranslation(0, col_label_translation, fig.dpi_scale_trans)
 
     for (row, col), ax in numpy.ndenumerate(ax_subplots):
-            plt.sca(ax) # Sets the current axis for all plotting operations
+        plt.sca(ax)  # Sets the current axis for all plotting operations
 
-            if row_labels is not None and col == 0:
-                plt.text(0, 0.5, '{0}'.format(row_labels[row]), transform=(ax.transAxes + offset_row_labels),  **row_labels_kwargs)
-                #plt.text(0 + row_label_translation, 0.5, '{0}'.format(row_labels[row]), transform=(ax.transAxes), **row_labels_kwargs)
+        if row_labels is not None and col == 0:
+            plt.text(0, 0.5, '{0}'.format(row_labels[row]),
+                     transform=(ax.transAxes + offset_row_labels), **row_labels_kwargs)
+            # plt.text(0 + row_label_translation, 0.5, '{0}'.format(row_labels[row]), transform=(ax.transAxes), **row_labels_kwargs)
 
-            if col_labels is not None and row == (rowNum-1):
-                plt.text(0.5, 0, '{0}'.format(col_labels[col]), transform=(ax.transAxes + offset_col_labels), **col_labels_kwargs)
-                #plt.text(0.5, 0+ col_label_translation, '{0}'.format(col_labels[col]), transform=(ax.transAxes), **col_labels_kwargs)
+        if col_labels is not None and row == (rowNum - 1):
+            plt.text(0.5, 0, '{0}'.format(col_labels[col]),
+                     transform=(ax.transAxes + offset_col_labels), **col_labels_kwargs)
+            # plt.text(0.5, 0+ col_label_translation, '{0}'.format(col_labels[col]), transform=(ax.transAxes), **col_labels_kwargs)
 
-            if row == 0 and col == colNum - 1:
-                visible = [False, False]
+        if row == 0 and col == colNum - 1:
+            visible = [False, False]
 
-                if xlabel:
-                    ax.xaxis.tick_top()
-                    ax.xaxis.set_label_position('top')
-                    ax.set_xlabel(xlabel, fontsize='large', labelpad=5)
-                    visible[0] = True
+            if xlabel:
+                ax.xaxis.tick_top()
+                ax.xaxis.set_label_position('top')
+                ax.set_xlabel(xlabel, fontsize='large', labelpad=5)
+                visible[0] = True
 
-                if ylabel:
-                    ax.yaxis.tick_right()
-                    ax.yaxis.set_label_position('right')
-                    ax.set_ylabel(ylabel, fontsize='large', labelpad=5)
-                    visible[1] = True
+            if ylabel:
+                ax.yaxis.tick_right()
+                ax.yaxis.set_label_position('right')
+                ax.set_ylabel(ylabel, fontsize='large', labelpad=5)
+                visible[1] = True
 
-                set_tick_lines_visibility(ax, visible)
-                set_tick_labels_visibility(ax, visible)
-            else:
-                if hide_tick_lines:
-                    set_tick_lines_visibility(ax, False)
-                if hide_tick_labels:
-                    set_tick_labels_visibility(ax, False)
+            set_tick_lines_visibility(ax, visible)
+            set_tick_labels_visibility(ax, visible)
+        else:
+            if hide_tick_lines:
+                set_tick_lines_visibility(ax, False)
+            if hide_tick_labels:
+                set_tick_labels_visibility(ax, False)
 
-            if plotFuncList is not None:
-                for plot_function in plotFuncList:
-                    plot_function(row, col)
+        if plotFuncList is not None:
+            for plot_function in plotFuncList:
+                plot_function(row, col)
 
-    plt.sca(ax_main) # Make sure this is right before the return statement. It is here to comply with a user's expectation to calls that make reference to gca().
+    plt.sca(
+        ax_main)  # Make sure this is right before the return statement. It is here to comply with a user's expectation to calls that make reference to gca().
 
     return (ax_main, ax_subplots)
 
@@ -244,7 +250,8 @@ def autoscale_subplots(subplots=None, axis='both'):
     if subplots is None:
         subplots = plt.gcf().axes
 
-    data_limits = [(ax.xaxis.get_data_interval(), ax.yaxis.get_data_interval()) for loc, ax in numpy.ndenumerate(subplots)] # TODO: Make a proper iterator
+    data_limits = [(ax.xaxis.get_data_interval(), ax.yaxis.get_data_interval()) for loc, ax in
+                   numpy.ndenumerate(subplots)]  # TODO: Make a proper iterator
     xlims, ylims = zip(*data_limits)
 
     xmins_list, xmaxs_list = zip(*xlims)
@@ -261,6 +268,7 @@ def autoscale_subplots(subplots=None, axis='both'):
             ax.set_xlim((xmin, xmax))
         if axis in ('y', 'both', 'xy', 'yx'):
             ax.set_ylim((ymin, ymax))
+
 
 def scale_subplots(subplots=None, xlim='auto', ylim='auto'):
     """
@@ -293,19 +301,20 @@ def scale_subplots(subplots=None, xlim='auto', ylim='auto'):
         if 'y' not in auto_axis:
             ax.set_ylim(ylim)
 
+
 @doc_replacer
 def plot_ndpanel(panel, func=None,
-                   xlim='auto', ylim='auto',
-                   row_labels='auto', col_labels='auto',
-                   row_name='auto', col_name='auto',
-                   pass_slicing_meta_to_func=False,
-                   subplot_xlabel=None, subplot_ylabel=None,
-                   row_name_pad=40.0, col_name_pad=40.0,
-                   hspace=0, wspace=0,
-                   hide_tick_labels=True, hide_tick_lines=False,
-                   legend=None, legend_title=None,
-                   grid_kwargs={},
-                   **kwargs):
+                 xlim='auto', ylim='auto',
+                 row_labels='auto', col_labels='auto',
+                 row_name='auto', col_name='auto',
+                 pass_slicing_meta_to_func=False,
+                 subplot_xlabel=None, subplot_ylabel=None,
+                 row_name_pad=40.0, col_name_pad=40.0,
+                 hspace=0, wspace=0,
+                 hide_tick_labels=True, hide_tick_lines=False,
+                 legend=None, legend_title=None,
+                 grid_kwargs={},
+                 **kwargs):
     """
     Use to visualize mutli-dimensional data stored in N-dimensional pandas panels.
 
@@ -357,14 +366,9 @@ def plot_ndpanel(panel, func=None,
         func(data, ax)
 
     """
-    #TODO: allow for different function inputs
-    #    -> func(time_series) -> only this is implemented
-    #    func(time_series, row, col)
-    #    func(time_series, row, col, panel)
-
     auto_col_name, auto_col_labels, auto_row_name, auto_row_labels = extract_annotation(panel)
     shape = panel.values.shape
-    rowNum, colNum = shape[-2], shape[-1] # Last two are used for setting up the size
+    rowNum, colNum = shape[-2], shape[-1]  # Last two are used for setting up the size
     ndim = len(shape)
 
     if ndim < 2 or ndim > 5:
@@ -376,7 +380,7 @@ def plot_ndpanel(panel, func=None,
         col_labels = auto_col_labels
 
     # Figure out xlimits and y limits
-    axis = '' # used below to autoscale subplots
+    axis = ''  # used below to autoscale subplots
 
     if xlim == 'auto':
         xlim = None
@@ -386,13 +390,15 @@ def plot_ndpanel(panel, func=None,
         axis += 'y'
 
     ax_main, ax_subplots = create_grid_layout(rowNum=rowNum, colNum=colNum,
-                    row_labels=row_labels, col_labels=col_labels,
-                    xlabel=subplot_xlabel, ylabel=subplot_ylabel,
-                    hide_tick_labels=hide_tick_labels, hide_tick_lines=hide_tick_lines,
-                    xlim=xlim, ylim=ylim, hspace=hspace, wspace=wspace, **grid_kwargs)
+                                              row_labels=row_labels, col_labels=col_labels,
+                                              xlabel=subplot_xlabel, ylabel=subplot_ylabel,
+                                              hide_tick_labels=hide_tick_labels,
+                                              hide_tick_lines=hide_tick_lines,
+                                              xlim=xlim, ylim=ylim, hspace=hspace, wspace=wspace,
+                                              **grid_kwargs)
 
     nrange = arange(ndim)
-    nrange = list(nrange[(nrange - 2) % ndim]) # Moves the last two dimensions to the first two
+    nrange = list(nrange[(nrange - 2) % ndim])  # Moves the last two dimensions to the first two
 
     if not isinstance(panel, pandas.DataFrame):
         panel = panel.transpose(*nrange)
@@ -416,12 +422,12 @@ def plot_ndpanel(panel, func=None,
     if legend is not None:
         items, labels = ax_subplots[legend].get_legend_handles_labels()
 
-        #lines = ax_subplots[legend].lines
-        #l = pl.legend(lines , map(lambda x : x.get_label(), lines),
+        # lines = ax_subplots[legend].lines
+        # l = pl.legend(lines , map(lambda x : x.get_label(), lines),
         l = pl.legend(items, labels,
-               bbox_to_anchor=(0.9, 0.5), bbox_transform=pl.gcf().transFigure,
-               loc='center left',
-               numpoints=1, frameon=False)
+                      bbox_to_anchor=(0.9, 0.5), bbox_transform=pl.gcf().transFigure,
+                      loc='center left',
+                      numpoints=1, frameon=False)
         if legend_title is not None:
             l.set_title(legend_title)
 
@@ -443,25 +449,21 @@ def plot_ndpanel(panel, func=None,
         xticks = numpy.array(pl.xticks()[0], dtype=object)
         xticks[1::2] = ''
         ax_label.set_xticklabels(xticks, rotation=90, size='small')
-        #xlim = ax_label.get_xlim()
-        #pl.xticks([xlim[0], xlim[1]], rotation=90)
 
     if subplot_ylabel:
         yticks = numpy.array(pl.yticks()[0], dtype=object)
         yticks[1::2] = ''
         ax_label.set_yticklabels(yticks, rotation=0, size='small')
-        #ylim = ax_label.get_ylim()
-        #pl.yticks([ylim[0], ylim[1]], rotation=0)
 
     pl.sca(ax_main)
 
     return ax_main, ax_subplots
 
 
-def plot_ndpanel_1d(data, plot_func=None, ylabel=None, axes_num=0, ax_list=None, autoscale_axis='both',
-               title='full', legend_subplot=0, legend_title=None, **kwargs):
-    """
-    Cycles through a requested dimension of an ndpanel and plots the result.
+def plot_ndpanel_1d(data, plot_func=None, ylabel=None, axes_num=0, ax_list=None,
+                    autoscale_axis='both',
+                    title='full', legend_subplot=0, legend_title=None, **kwargs):
+    """Cycle through a requested dimension of an ndpanel and plots the result.
 
     Parameters
     ------------
@@ -484,7 +486,7 @@ def plot_ndpanel_1d(data, plot_func=None, ylabel=None, axes_num=0, ax_list=None,
     axes_name = data.axes[axes_num].name
 
     if ax_list is None:
-        ax_list = [plt.subplot(num_dim, 1, i+1) for i in range(num_dim)]
+        ax_list = [plt.subplot(num_dim, 1, i + 1) for i in range(num_dim)]
 
     def default_func(data, i, value, ax, **kwargs):
         kwargs.setdefault('legend', False)
@@ -514,8 +516,9 @@ def plot_ndpanel_1d(data, plot_func=None, ylabel=None, axes_num=0, ax_list=None,
     if legend_subplot is not None:
         ax = ax_list[i]
         leg_stuff = ax.get_legend_handles_labels()
-        pl.legend(*leg_stuff, loc='center left', bbox_to_anchor=(0.9, 0.5), bbox_transform=pl.gcf().transFigure,
-               title=legend_title)
+        pl.legend(*leg_stuff, loc='center left', bbox_to_anchor=(0.9, 0.5),
+                  bbox_transform=pl.gcf().transFigure,
+                  title=legend_title)
 
 
 ###################
@@ -523,19 +526,19 @@ def plot_ndpanel_1d(data, plot_func=None, ylabel=None, axes_num=0, ax_list=None,
 ###################
 
 def plot_heat_map(z, include_values=False,
-                    cmap=matplotlib.cm.Reds,
-                    ax=None,
-                    xlabel='auto', ylabel='auto',
-                    xtick_labels='auto', ytick_labels='auto',
-                    xtick_locs=None, ytick_locs=None,
-                    xtick_kwargs={}, ytick_kwargs={},
-                    clabel_pos='top',
-                    transpose_y=False, convert_to_log_scale=False,
-                    show_colorbar=False, colorbar_dict={},
-                    values_format='{:.2}', values_font_size='small',
-                    values_color=None, values_text_kw={},
-                    bad_color=None,
-                    **kwargs):
+                  cmap=matplotlib.cm.Reds,
+                  ax=None,
+                  xlabel='auto', ylabel='auto',
+                  xtick_labels='auto', ytick_labels='auto',
+                  xtick_locs=None, ytick_locs=None,
+                  xtick_kwargs={}, ytick_kwargs={},
+                  clabel_pos='top',
+                  transpose_y=False, convert_to_log_scale=False,
+                  show_colorbar=False, colorbar_dict={},
+                  values_format='{:.2}', values_font_size='small',
+                  values_color=None, values_text_kw={},
+                  bad_color=None,
+                  **kwargs):
     """
     Plots a heat map of z.
 
@@ -605,14 +608,6 @@ def plot_heat_map(z, include_values=False,
     if isinstance(cmap, str):
         cmap = getattr(cm, cmap)
 
-    #if bad_color is not None:
-        #cmap = copy.deepcopy(cmap)
-        #cmap.set_bad(bad_color)
-
-    #kwargs.setdefault('norm', matplotlib.colors.LogNorm())
-    #ax = plt.gca().imshow(values, interpolation='none', **kwargs)
-    #ax = plt.gca().pcolor(values, **kwargs)
-
     old_ax = plt.gca()
 
     if ax is not None:
@@ -633,7 +628,7 @@ def plot_heat_map(z, include_values=False,
         colorbar_dict.setdefault('pad', 0.05)
         cax = divider.append_axes("right", **colorbar_dict)
         cb = plt.colorbar(output, cax=cax)
-        plt.sca(ax) # Switch back to original axes
+        plt.sca(ax)  # Switch back to original axes
 
     #######
     # Annotate the heat amp
@@ -664,6 +659,7 @@ def plot_heat_map(z, include_values=False,
             if x < 0.8 and x >= 0.5:
                 x = 0.8
             return cmap(1.0 - x)
+
         values_text_kw['fontsize'] = values_font_size
         values_text_kw['color'] = values_color
         plot_table(values, text_format=values_format, cmap=text_cmap, **values_text_kw)
@@ -730,14 +726,16 @@ def plot_table(matrix, text_format='{:.2f}', cmap=None, **kwargs):
     else:
         use_cmap = False
 
-    for (row,col), w in numpy.ndenumerate(matrix):
+    for (row, col), w in numpy.ndenumerate(matrix):
         x = xtick_grid[row, col]
         y = ytick_grid[row, col]
 
         if use_cmap:
             kwargs['color'] = cmap(norm(w))
 
-        plt.text(x, y, text_format.format(w), horizontalalignment='center', verticalalignment='center', transform=plt.gca().transData, **kwargs)
+        plt.text(x, y, text_format.format(w), horizontalalignment='center',
+                 verticalalignment='center', transform=plt.gca().transData, **kwargs)
+
 
 ################################
 #### PLOTTING VECTOR FIELDS ####
@@ -745,7 +743,8 @@ def plot_table(matrix, text_format='{:.2f}', cmap=None, **kwargs):
 
 from matplotlib.patches import ConnectionPatch
 
-def plot_arrow_path(x_coordinates, y_coordinates, arrowstyle="fancy",  **kwargs):
+
+def plot_arrow_path(x_coordinates, y_coordinates, arrowstyle="fancy", **kwargs):
     """
     Draws a path of arrows following the path of the coordinates.
 
@@ -783,12 +782,14 @@ def plot_arrow_path(x_coordinates, y_coordinates, arrowstyle="fancy",  **kwargs)
 
     patch_list = []
 
-    for index in range(len(position_list)-1):
-        con = ConnectionPatch(xyA=position_list[index], xyB=position_list[index+1], coordsA="data", coordsB="data",
+    for index in range(len(position_list) - 1):
+        con = ConnectionPatch(xyA=position_list[index], xyB=position_list[index + 1],
+                              coordsA="data", coordsB="data",
                               axesA=ax, axesB=ax, arrowstyle=arrowstyle, **kwargs)
         patch_list.append(con)
         ax.add_artist(con)
     return patch_list
+
 
 ###############################
 ## BEAUTIFICATION OF PLOTS ####
@@ -796,17 +797,19 @@ def plot_arrow_path(x_coordinates, y_coordinates, arrowstyle="fancy",  **kwargs)
 
 # -- Defaults --- #
 
-def set_pretty_defaults(linewidth=6, marker='o', markersize=25, xlabelsize=14, ylabelsize=14, fontsize=16):
+def set_pretty_defaults(linewidth=6, marker='o', markersize=25, xlabelsize=14, ylabelsize=14,
+                        fontsize=16):
     """ Sets plotting defaults for matplotlib library """
     plt.rcParams['xtick.labelsize'] = 16.0
     plt.rcParams['ytick.labelsize'] = 16.0
     plt.rcParams['axes.labelsize'] = 16.0
     plt.rcParams.update({'font.size': fontsize})
-    #plt.rc('lines', linewidth=2, marker='o', markersize=15)
-    #plt.rc('mathtext', default='regular')
-    #plt.rc('text', usetex=True)
-    #subplots_adjust(top=top, wspace= wspace, hspace = hspace ,  left=left, right = right, bottom=bottom)
-    #rc('lines', linewidth= linewidth, marker= marker, markersize= markersize)
+    # plt.rc('lines', linewidth=2, marker='o', markersize=15)
+    # plt.rc('mathtext', default='regular')
+    # plt.rc('text', usetex=True)
+    # subplots_adjust(top=top, wspace= wspace, hspace = hspace ,  left=left, right = right, bottom=bottom)
+    # rc('lines', linewidth= linewidth, marker= marker, markersize= markersize)
+
 
 # -- Legends --- #
 
@@ -819,11 +822,13 @@ def move_legend_outside(legend, ax=None, scalewidth=0.8):
     ax.set_position([box.x0, box.y0, box.width * scalewidth, box.height])
     legend.set_bbox_to_anchor((1, 0.5))
 
+
 def adjust_legend_fonts(legend, titlesize=20, textsize=20):
     """ Allows to adjust the size of fonts used in the legend. """
-    ltext  = legendReference.get_texts()  # all the text.Text instance in the legend
+    ltext = legendReference.get_texts()  # all the text.Text instance in the legend
     legendReference.get_title().set_size(titlesize)
-    plt.setp(ltext, fontsize=textsize)    # the legend text fontsize
+    plt.setp(ltext, fontsize=textsize)  # the legend text fontsize
+
 
 # -- Other --- #
 def array2colors(x, cmap=cm.jet, **kwargs):
@@ -840,7 +845,7 @@ def array2colors(x, cmap=cm.jet, **kwargs):
     from matplotlib.colors import rgb2hex
     ## get the colormap
     if type(cmap) is str:
-        if cmap not in cm.datad: raise ValueError('Unkown colormap %s' %cmap)
+        if cmap not in cm.datad: raise ValueError('Unkown colormap %s' % cmap)
         cmap = cm.get_cmap(cmap)
 
     x = np.asarray(x)
@@ -848,7 +853,7 @@ def array2colors(x, cmap=cm.jet, **kwargs):
     if isstr:
         temp = np.copy(x)
         x_set = set(x)
-        temp_d = dict((val,i) for i,val in enumerate(x_set))
+        temp_d = dict((val, i) for i, val in enumerate(x_set))
         x = [temp_d[id] for id in temp]
     ## get the color limits
     vmin = kwargs.get('vmin', np.min(x))
@@ -859,8 +864,9 @@ def array2colors(x, cmap=cm.jet, **kwargs):
     ## get the colors
     colors = t.to_rgba(x)
     if hex:
-       colors = [rgb2hex(c) for c in colors]
+        colors = [rgb2hex(c) for c in colors]
     return colors
+
 
 def label_subplot(subplot_number, size=30, xloc=-0.17, yloc=1.15, transform='axes', **args):
     """ Labels the plot with the correct subplot number at the specified position and specified font size.
@@ -871,14 +877,15 @@ def label_subplot(subplot_number, size=30, xloc=-0.17, yloc=1.15, transform='axe
         If using figure:
             #xloc=-0.17, yloc=1.15
     """
-    label = string.ascii_uppercase[subplot_number]
+    label = docstring.ascii_uppercase[subplot_number]
 
     if transform == 'axes':
-        transform=plt.gca().transAxes
+        transform = plt.gca().transAxes
     else:
-        transform=plt.gcf().transFigure
+        transform = plt.gcf().transFigure
 
-    plt.text(xloc,yloc, label, size=size, horizontalalignment='center',  verticalalignment = 'center', transform = transform, weight='bold', **args)
+    plt.text(xloc, yloc, label, size=size, horizontalalignment='center', verticalalignment='center',
+             transform=transform, weight='bold', **args)
 
 
 #############
@@ -889,7 +896,8 @@ def increase_linewidth_for_matrix_printing():
     """ Increases the linewidth allowed for printing numpy matrices. """
     numpy.set_printoptions(linewidth=200, precision=4)
 
-def savefig(figname, output_dir = './Figures/', tictoc=False, formats=['.jpg'], **kwargs):
+
+def savefig(figname, output_dir='./Figures/', tictoc=False, formats=['.jpg'], **kwargs):
     """
     A wrapper around matplotlibs savefig function.
     Automatically places figures in the output_dir path.
@@ -904,9 +912,11 @@ def savefig(figname, output_dir = './Figures/', tictoc=False, formats=['.jpg'], 
     for thisFormat in formats:
         plt.gcf().savefig(os.path.join(output_dir, cleanName) + thisFormat, **kwargs)
 
+
 def set_pretty_terminal_output():
     """ Need to retire this function (just change the name) """
     increase_linewidth_for_matrix_printing()
+
 
 ##############################
 #### FITTINGS AND PLOTTING ###
@@ -923,18 +933,20 @@ def fit_and_plot(xdata, ydata, xfit, xy=None):
     """
     xdata, ydata = removeNaNs(xdata, ydata)
     coefs = numpy.polyfit(xdata, ydata, 1)
-    yfit  = numpy.polyval(coefs, xfit)
+    yfit = numpy.polyval(coefs, xfit)
     print('Fit coefficients: ', coefs)
 
     # Plot Fit
     plt.plot(xfit, yfit, '--r', linewidth=2)
 
     if xy is not None:
-        x,y = xy
+        x, y = xy
     else:
         x = 0.05
         y = 0.90
-    plt.text(x, y, 'y = m x + b\n(m,b) = (%.2f, %0.2f)' % (coefs[0], coefs[1]), transform=plt.gca().transAxes)
+    plt.text(x, y, 'y = m x + b\n(m,b) = (%.2f, %0.2f)' % (coefs[0], coefs[1]),
+             transform=plt.gca().transAxes)
+
 
 def plot_histogram(data, **kwargs):
     """
@@ -946,11 +958,14 @@ def plot_histogram(data, **kwargs):
     dataClean = data[~nanIndexes].flatten()
 
     n, bins, patches = plt.hist(dataClean, **kwargs)
-    d_mean = numpy.mean(dataClean) # calculate mean
-    d_std  = numpy.std(dataClean)  # calculate standard deviation
-    plt.text(0.5, 0.95, r'$\mu=$' + '{0:0.2f}'.format(d_mean) +r', $\sigma=$' +'{0:0.2f}'.format(d_std), transform=plt.gca().transAxes,
-                    verticalalignment='top', horizontalalignment='center')
+    d_mean = numpy.mean(dataClean)  # calculate mean
+    d_std = numpy.std(dataClean)  # calculate standard deviation
+    plt.text(0.5, 0.95,
+             r'$\mu=$' + '{0:0.2f}'.format(d_mean) + r', $\sigma=$' + '{0:0.2f}'.format(d_std),
+             transform=plt.gca().transAxes,
+             verticalalignment='top', horizontalalignment='center')
     return d_mean, d_std
+
 
 #############################
 #### INTERNAL FUNCTIONS #####
@@ -967,6 +982,7 @@ def set_tick_lines_visibility(ax, visible=True):
             else:
                 thisItem.set_visible(visible)
 
+
 def set_tick_labels_visibility(ax, visible=True):
     """
     Sets the visibility of the tick labels of the requested axis.
@@ -978,9 +994,11 @@ def set_tick_labels_visibility(ax, visible=True):
             else:
                 thisItem.set_visible(visible)
 
+
 def hide_axes(axes, hide=True):
     set_tick_lines_visibility(axes, not hide)
     set_tick_labels_visibility(axes, not hide)
+
 
 def extract_annotation(data):
     """ Extracts names and values of rows and columns.
@@ -1023,56 +1041,6 @@ def extract_annotation(data):
 def get_slice(panel, row, col):
     ndim = len(panel.shape)
     nrange = arange(ndim)
-    nrange = list(nrange[(nrange - 2) % ndim]) # Moves the last two dimensions to the first two
+    nrange = list(nrange[(nrange - 2) % ndim])  # Moves the last two dimensions to the first two
     data_slice = panel.transpose(*nrange).iloc[row].iloc[col]
     return data_slice
-
-if __name__ == '__main__':
-    print(plot_ndpanel.__doc__)
-    example = None
-    example = 'Example 2'
-    if example == 'Example 1':
-        # Example using arrow path
-        a = numpy.random.random((1,10)).flatten()
-        b = numpy.random.random((1,10)).flatten()
-
-        plot_arrow_path(a,b, fc=['r', 'b', 'm'][0], ec='gray', alpha=0.5)
-        plt.show()
-    elif example == 'Example 2':
-        handles = create_grid_layout(2, 3, wspace=0.3, hspace=0.1,
-                row_labels=['1', '2', '3', '4', '5'], col_labels = ['1', '2', '3', '4', '4'],
-                hide_tick_lines=False,
-                xlim=(-500, 500), ylim=(-500, 500))
-
-        for loc, ax in numpy.ndenumerate(handles[1]):
-            a = numpy.random.random((1,10)).flatten() * 100
-            b = numpy.random.random((1,10)).flatten() * 100
-            if loc != (0, 0):
-                ax.plot(a, b)
-        #plt.autoscale(True, '', True)
-        #autoscale_subplots(handles[1], 'both')
-        plt.show()
-    elif example == 'Example 3':
-        a = numpy.random.random((10,10))
-        b = numpy.random.random((10,10))
-
-        ax_main = plt.subplot(1, 1 , 1)
-
-        ax = plt.subplot(2, 2, 1)
-        p = plot_heat_map(a)
-
-        ax = plt.subplot(2, 2, 2)
-        p = plot_heat_map(b)
-
-        plt.colorbar(p, ax=ax, filled=True)
-        plt.show()
-
-    #plot_arrow_path(a, b)
-    #plt.plot(a, b, 'o-')
-    #plt.ylim(
-    ##a[0][0] = 0.00046
-    #print(a)
-    #b = plot_heat_map(a, interpolation='none', includeValues=True, xlabel='Ampicillin', ylabel='Day', ytick_labels=['03', 'B', 'C'], xtick_labels=numpy.linspace(0, 3, 10))
-    ##c = plotTable(a)
-    ##plotTable(a)
-    #plt.show()

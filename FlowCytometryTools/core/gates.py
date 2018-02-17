@@ -12,12 +12,12 @@ Gates:
     QuadGate
     PolyGate
 """
-from FlowCytometryTools.lib.util import to_list
-from matplotlib.path import Path
 import numpy
 import pylab as pl
+from matplotlib.path import Path
 
 from FlowCytometryTools.core.common_doc import doc_replacer
+from FlowCytometryTools.utility_lib.util import to_list
 
 doc_replacer.update(_gate_pars_name="""\
 name : str

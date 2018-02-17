@@ -2,12 +2,13 @@
 """
 Modules contains graphing routines common for flow cytometry files.
 """
-from FlowCytometryTools.lib.util import to_list
-import numpy
-import pylab as pl
-import matplotlib
-from FlowCytometryTools.core.common_doc import doc_replacer
 import warnings
+
+import matplotlib
+import pylab as pl
+
+from FlowCytometryTools.core.common_doc import doc_replacer
+from FlowCytometryTools.utility_lib.util import to_list
 
 
 @doc_replacer
@@ -49,9 +50,9 @@ def plotFCM(data, channel_names, kind='histogram', ax=None,
             if (len(x) == 1) and isinstance(kwargs['bins'], int):
                 # Only needed for hist (not hist2d) due to hist function doing
                 # excessive input checking
-                warnings.warn("One of the data sets only has a single event. " \
-                              "This event won't be plotted unless the bin locations" \
-                              " are explicitely provided to the plotting function. ")
+                warnings.warn("One of the data sets only has a single event. " 
+                              "This event won't be plotted unless the bin locations" 
+                              " are explicitly provided to the plotting function. ")
                 return None
             plot_output = ax.hist(x, **kwargs)
         else:
