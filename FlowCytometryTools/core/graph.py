@@ -80,6 +80,8 @@ def plotFCM(data, channel_names, kind='histogram', ax=None,
                 pl.colorbar(mappable, ax=ax)
         else:
             raise ValueError("Not a valid plot type. Must be 'scatter', 'histogram'")
+    else:
+        raise ValueError('Received an unexpected number of channels: "{}"'.format(channel_names))
 
     pl.grid(grid)
 

@@ -17,28 +17,7 @@ from FlowCytometryTools.core.bases import (Measurement, MeasurementCollection, O
 from FlowCytometryTools.core.common_doc import doc_replacer
 from FlowCytometryTools.core.transforms import Transformation
 from FlowCytometryTools.utility_lib.graph import plot_ndpanel
-
-
-def to_iter(obj):
-    '''
-    Convert an object to a list if it is not already an iterable.
-    Nones are returned unaltered.
-    '''
-    if hasattr(obj, '__iter__'):
-        return obj
-    elif obj is None:
-        return obj
-    else:
-        return [obj]
-
-
-def to_list(obj):
-    """ This is a quick fix to make sure indexing of DataFrames
-    takes place with lists instead of tuples. """
-    obj = to_iter(obj)
-    if isinstance(obj, tuple):
-        obj = list(obj)
-    return obj
+from FlowCytometryTools.utility_lib.util import to_list
 
 
 class FCMeasurement(Measurement):
