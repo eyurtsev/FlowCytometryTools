@@ -25,22 +25,16 @@ THE SOFTWARE.
 
 from __future__ import print_function
 
-import os
-import re
-import time
-
 import matplotlib
 import matplotlib.cm as cm
 import matplotlib.pyplot as plt
 import numpy
-import numpy as np
 import pandas
 import pylab as pl
 from matplotlib import transforms
-from numpy import arange, linspace
+from numpy import arange
 
 from FlowCytometryTools.utility_lib import docstring
-from FlowCytometryTools.utility_lib import util
 
 ###############################
 #### PLOTTING TO SUBPLOTS #####
@@ -141,8 +135,8 @@ def create_grid_layout(rowNum=8, colNum=12, row_labels=None, col_labels=None,
     ax_main.patch.set_alpha(0)
     # ax_main.axison = False # If true, xlabel and ylabel do not work
 
-    set_tick_lines_visibility(ax_main, False)
-    set_tick_labels_visibility(ax_main, False)
+    _set_tick_lines_visibility(ax_main, False)
+    _set_tick_labels_visibility(ax_main, False)
 
     # Configure subplot appearance
     subplot_kw.update(xlim=xlim, ylim=ylim, xscale=xscale,
@@ -204,20 +198,21 @@ def create_grid_layout(rowNum=8, colNum=12, row_labels=None, col_labels=None,
                 ax.set_ylabel(ylabel, fontsize='large', labelpad=5)
                 visible[1] = True
 
-            set_tick_lines_visibility(ax, visible)
-            set_tick_labels_visibility(ax, visible)
+            _set_tick_lines_visibility(ax, visible)
+            _set_tick_labels_visibility(ax, visible)
         else:
             if hide_tick_lines:
-                set_tick_lines_visibility(ax, False)
+                _set_tick_lines_visibility(ax, False)
             if hide_tick_labels:
-                set_tick_labels_visibility(ax, False)
+                _set_tick_labels_visibility(ax, False)
 
         if plotFuncList is not None:
             for plot_function in plotFuncList:
                 plot_function(row, col)
 
-    plt.sca(
-        ax_main)  # Make sure this is right before the return statement. It is here to comply with a user's expectation to calls that make reference to gca().
+    # Make sure this is right before the return statement.
+    # It is here to comply with a user's expectation to calls that make reference to gca().
+    plt.sca(ax_main)
 
     return (ax_main, ax_subplots)
 
@@ -319,7 +314,8 @@ def plot_ndpanel(panel, func=None,
     Use to visualize mutli-dimensional data stored in N-dimensional pandas panels.
 
     Given an nd-panel of shape (.., .., .., rows, cols), the function creates a 2d grid of subplot
-    of shape (rows, cols). subplot i, j calls func parameter with an (n-2) nd panel that corresponds to (..., .., .., i, j).
+    of shape (rows, cols). subplot i, j calls func parameter with an (n-2) nd panel
+    that corresponds to (..., .., .., i, j).
 
     Parameters
     ---------------
@@ -339,7 +335,8 @@ def plot_ndpanel(panel, func=None,
         kwargs to be passed to the create_grid_layout method. See its documentation for further details.
     legend : None, tuple
         If provided as tuple, must be a 2-d tuple corresponding to a subplot position.
-        If legend=(2, 4), then the legend will drawn using the labels of the lines provided in subplot in 2nd row and 4th column.
+        If legend=(2, 4), then the legend will drawn using the labels of the lines provided
+        in subplot in 2nd row and 4th column.
         A better name could be subplot_source_for_legend?
     legend_title : str, None
         If provided, used as title for the legend.
@@ -458,67 +455,6 @@ def plot_ndpanel(panel, func=None,
     pl.sca(ax_main)
 
     return ax_main, ax_subplots
-
-
-def plot_ndpanel_1d(data, plot_func=None, ylabel=None, axes_num=0, ax_list=None,
-                    autoscale_axis='both',
-                    title='full', legend_subplot=0, legend_title=None, **kwargs):
-    """Cycle through a requested dimension of an ndpanel and plots the result.
-
-    Parameters
-    ------------
-    data : DataFrame | Panel | Panel4D | PanelND
-    plot_func : callable | None
-        The following information is passed to the plotting function:  (data.iloc[index], index, value, ax, **kwargs)
-    ylabel : str
-    axes_num : int | (implement str)
-    ax_list : list of ax | None
-        list of axes
-    title : 'full' | 'value' | None
-
-    Example
-    ----------
-    ax_list = subplots(2, 5, figsize=(14, 14))[1].flatten()
-    subplots_adjust(wspace=0.4, hspace=0.4)
-    plot_ndpanel_1d(data, ylabel='OD (600 nm)', title='value', ax_list=ax_list, legend_title='legend title')
-    """
-    num_dim = len(data.axes[axes_num])
-    axes_name = data.axes[axes_num].name
-
-    if ax_list is None:
-        ax_list = [plt.subplot(num_dim, 1, i + 1) for i in range(num_dim)]
-
-    def default_func(data, i, value, ax, **kwargs):
-        kwargs.setdefault('legend', False)
-        kwargs.setdefault('cmap', cm.coolwarm)
-        cmap = kwargs.pop('cmap')
-        color_set = cmap(linspace(0, 1, len(data.axes[1])))
-        data.plot(ax=ax, color=color_set, **kwargs)
-
-    if plot_func is None:
-        plot_func = default_func
-
-    for i, v in enumerate(data.axes[axes_num]):
-        ax = ax_list[i]
-        plot_func(data.iloc[i], i, v, ax, **kwargs)
-
-        if title == 'full':
-            title_str = '{} : {}'.format(axes_name, v)
-        elif title == 'value':
-            title_str = '{}'.format(v)
-        if title is not None:
-            ax.set_title(title_str)
-
-        if ylabel is not None:
-            ax.set_ylabel(ylabel)
-    autoscale_subplots(ax_list, autoscale_axis)
-
-    if legend_subplot is not None:
-        ax = ax_list[i]
-        leg_stuff = ax.get_legend_handles_labels()
-        pl.legend(*leg_stuff, loc='center left', bbox_to_anchor=(0.9, 0.5),
-                  bbox_transform=pl.gcf().transFigure,
-                  title=legend_title)
 
 
 ###################
@@ -662,7 +598,7 @@ def plot_heat_map(z, include_values=False,
 
         values_text_kw['fontsize'] = values_font_size
         values_text_kw['color'] = values_color
-        plot_table(values, text_format=values_format, cmap=text_cmap, **values_text_kw)
+        _plot_table(values, text_format=values_format, cmap=text_cmap, **values_text_kw)
 
     # Changes the default position for the xlabel to the 'top'
     xaxis = ax.xaxis
@@ -683,7 +619,7 @@ def plot_heat_map(z, include_values=False,
     return output
 
 
-def plot_table(matrix, text_format='{:.2f}', cmap=None, **kwargs):
+def _plot_table(matrix, text_format='{:.2f}', cmap=None, **kwargs):
     """
     Plots a numpy matrix as a table. Uses the current axis bounding box to decide on limits.
     text_format specifies the formatting to apply to the values.
@@ -736,245 +672,8 @@ def plot_table(matrix, text_format='{:.2f}', cmap=None, **kwargs):
         plt.text(x, y, text_format.format(w), horizontalalignment='center',
                  verticalalignment='center', transform=plt.gca().transData, **kwargs)
 
-
-################################
-#### PLOTTING VECTOR FIELDS ####
-################################
-
-from matplotlib.patches import ConnectionPatch
-
-
-def plot_arrow_path(x_coordinates, y_coordinates, arrowstyle="fancy", **kwargs):
-    """
-    Draws a path of arrows following the path of the coordinates.
-
-    Note: This is just a wrapper around matplotlib's ConnectionPath, which at the moment does not add much functionality.
-
-    Parameters
-    ------------------
-    x_coordinates : ndarray or list
-        X coordinates
-    y_coordinates : ndarray or list
-        Y coordinates
-    arrowstyle : str
-        'fancy', '->', look up other ones on matplotlib's page.
-    kwargs : keyword arguments passed to ConnectionPath
-
-    Returns
-    ---------------
-
-    list
-        arrow patches added
-
-    Example
-    ---------------
-
-    x = [1, 2, 5, 1]
-    y = [0, 3, 1, 2]
-
-    graph.plot_arrow_path(x, y, arrowstyle='fancy', color=color, alpha=0.5, shrinkA=2, shrinkB=4);
-
-    xlim(0, 5) # it's necessary to set limits, not autorelimiting after using this function!
-    ylim(0, 5)
-    """
-    position_list = zip(x_coordinates, y_coordinates)
-    ax = kwargs.pop('ax', pl.gca())
-
-    patch_list = []
-
-    for index in range(len(position_list) - 1):
-        con = ConnectionPatch(xyA=position_list[index], xyB=position_list[index + 1],
-                              coordsA="data", coordsB="data",
-                              axesA=ax, axesB=ax, arrowstyle=arrowstyle, **kwargs)
-        patch_list.append(con)
-        ax.add_artist(con)
-    return patch_list
-
-
-###############################
-## BEAUTIFICATION OF PLOTS ####
-###############################
-
-# -- Defaults --- #
-
-def set_pretty_defaults(linewidth=6, marker='o', markersize=25, xlabelsize=14, ylabelsize=14,
-                        fontsize=16):
-    """ Sets plotting defaults for matplotlib library """
-    plt.rcParams['xtick.labelsize'] = 16.0
-    plt.rcParams['ytick.labelsize'] = 16.0
-    plt.rcParams['axes.labelsize'] = 16.0
-    plt.rcParams.update({'font.size': fontsize})
-    # plt.rc('lines', linewidth=2, marker='o', markersize=15)
-    # plt.rc('mathtext', default='regular')
-    # plt.rc('text', usetex=True)
-    # subplots_adjust(top=top, wspace= wspace, hspace = hspace ,  left=left, right = right, bottom=bottom)
-    # rc('lines', linewidth= linewidth, marker= marker, markersize= markersize)
-
-
-# -- Legends --- #
-
-def move_legend_outside(legend, ax=None, scalewidth=0.8):
-    """ Moves the current legend outside of the figure """
-    if not ax:
-        ax = plt.gca()
-
-    box = ax.get_position()
-    ax.set_position([box.x0, box.y0, box.width * scalewidth, box.height])
-    legend.set_bbox_to_anchor((1, 0.5))
-
-
-def adjust_legend_fonts(legend, titlesize=20, textsize=20):
-    """ Allows to adjust the size of fonts used in the legend. """
-    ltext = legendReference.get_texts()  # all the text.Text instance in the legend
-    legendReference.get_title().set_size(titlesize)
-    plt.setp(ltext, fontsize=textsize)  # the legend text fontsize
-
-
-# -- Other --- #
-def array2colors(x, cmap=cm.jet, **kwargs):
-    '''
-    Return rgba colors corresponding to values of x from desired colormap.
-    Inputs:
-        x         = 1D iterable of strs/floats/ints to be mapped to colors.
-        cmap      = either color map instance or name of colormap as string.
-        vmin/vmax = (optional) float/int min/max values for the mapping.
-                    If not provided, set to the min/max of x.
-    Outputs:
-        colors = array of rgba color values. each row corresponds to a value in x.
-    '''
-    from matplotlib.colors import rgb2hex
-    ## get the colormap
-    if type(cmap) is str:
-        if cmap not in cm.datad: raise ValueError('Unkown colormap %s' % cmap)
-        cmap = cm.get_cmap(cmap)
-
-    x = np.asarray(x)
-    isstr = np.issubdtype(x.dtype, str)
-    if isstr:
-        temp = np.copy(x)
-        x_set = set(x)
-        temp_d = dict((val, i) for i, val in enumerate(x_set))
-        x = [temp_d[id] for id in temp]
-    ## get the color limits
-    vmin = kwargs.get('vmin', np.min(x))
-    vmax = kwargs.get('vmax', np.max(x))
-    ## set the mapping object
-    t = cm.ScalarMappable(cmap=cmap)
-    t.set_clim(vmin, vmax)
-    ## get the colors
-    colors = t.to_rgba(x)
-    if hex:
-        colors = [rgb2hex(c) for c in colors]
-    return colors
-
-
-def label_subplot(subplot_number, size=30, xloc=-0.17, yloc=1.15, transform='axes', **args):
-    """ Labels the plot with the correct subplot number at the specified position and specified font size.
-        (The idea is to get something that will place the labels consistently and in a "good" location.)
-        Good numbers
-        If using axes:
-            xloc=-0.17, yloc=1.15
-        If using figure:
-            #xloc=-0.17, yloc=1.15
-    """
-    label = docstring.ascii_uppercase[subplot_number]
-
-    if transform == 'axes':
-        transform = plt.gca().transAxes
-    else:
-        transform = plt.gcf().transFigure
-
-    plt.text(xloc, yloc, label, size=size, horizontalalignment='center', verticalalignment='center',
-             transform=transform, weight='bold', **args)
-
-
-#############
-#### MISC ###
-#############
-
-def increase_linewidth_for_matrix_printing():
-    """ Increases the linewidth allowed for printing numpy matrices. """
-    numpy.set_printoptions(linewidth=200, precision=4)
-
-
-def savefig(figname, output_dir='./Figures/', tictoc=False, formats=['.jpg'], **kwargs):
-    """
-    A wrapper around matplotlibs savefig function.
-    Automatically places figures in the output_dir path.
-    Saves the current figure several different formats.
-    """
-    util.ensure_directory(output_dir)
-    if tictoc:
-        figname = figname + '_%0.2f' % time.time()
-
-    cleanName = re.sub('[^a-zA-Z0-9_-]', '', figname)
-
-    for thisFormat in formats:
-        plt.gcf().savefig(os.path.join(output_dir, cleanName) + thisFormat, **kwargs)
-
-
-def set_pretty_terminal_output():
-    """ Need to retire this function (just change the name) """
-    increase_linewidth_for_matrix_printing()
-
-
-##############################
-#### FITTINGS AND PLOTTING ###
-##############################
-
-def fit_and_plot(xdata, ydata, xfit, xy=None):
-    """
-    The goal of this function is to accept data, and instructions for a simple fit, and plot
-    both the data and the results.
-
-    This function needs more work to be useful.
-
-    TODO: Make into polynomial rather than just linear.
-    """
-    xdata, ydata = removeNaNs(xdata, ydata)
-    coefs = numpy.polyfit(xdata, ydata, 1)
-    yfit = numpy.polyval(coefs, xfit)
-    print('Fit coefficients: ', coefs)
-
-    # Plot Fit
-    plt.plot(xfit, yfit, '--r', linewidth=2)
-
-    if xy is not None:
-        x, y = xy
-    else:
-        x = 0.05
-        y = 0.90
-    plt.text(x, y, 'y = m x + b\n(m,b) = (%.2f, %0.2f)' % (coefs[0], coefs[1]),
-             transform=plt.gca().transAxes)
-
-
-def plot_histogram(data, **kwargs):
-    """
-    Plots a histogram.
-    Filters out nan data.
-    Plots the mean and standard deviation.
-    """
-    nanIndexes = numpy.isnan(data)
-    dataClean = data[~nanIndexes].flatten()
-
-    n, bins, patches = plt.hist(dataClean, **kwargs)
-    d_mean = numpy.mean(dataClean)  # calculate mean
-    d_std = numpy.std(dataClean)  # calculate standard deviation
-    plt.text(0.5, 0.95,
-             r'$\mu=$' + '{0:0.2f}'.format(d_mean) + r', $\sigma=$' + '{0:0.2f}'.format(d_std),
-             transform=plt.gca().transAxes,
-             verticalalignment='top', horizontalalignment='center')
-    return d_mean, d_std
-
-
-#############################
-#### INTERNAL FUNCTIONS #####
-#############################
-
-def set_tick_lines_visibility(ax, visible=True):
-    """
-    Sets the visibility of the tick lines of the requested axis.
-    """
+def _set_tick_lines_visibility(ax, visible=True):
+    """Set the visibility of the tick lines of the requested axis."""
     for i, thisAxis in enumerate((ax.get_xaxis(), ax.get_yaxis())):
         for thisItem in thisAxis.get_ticklines():
             if isinstance(visible, list):
@@ -983,10 +682,8 @@ def set_tick_lines_visibility(ax, visible=True):
                 thisItem.set_visible(visible)
 
 
-def set_tick_labels_visibility(ax, visible=True):
-    """
-    Sets the visibility of the tick labels of the requested axis.
-    """
+def _set_tick_labels_visibility(ax, visible=True):
+    """Set the visibility of the tick labels of the requested axis."""
     for i, thisAxis in enumerate((ax.get_xaxis(), ax.get_yaxis())):
         for thisItem in thisAxis.get_ticklabels():
             if isinstance(visible, list):
@@ -995,21 +692,14 @@ def set_tick_labels_visibility(ax, visible=True):
                 thisItem.set_visible(visible)
 
 
-def hide_axes(axes, hide=True):
-    set_tick_lines_visibility(axes, not hide)
-    set_tick_labels_visibility(axes, not hide)
-
-
 def extract_annotation(data):
-    """ Extracts names and values of rows and columns.
+    """Extract names and values of rows and columns.
 
-    Parameter
-    ------------
-    data : DataFrame | Panel
+    Parameter:
+        data : DataFrame | Panel
 
-    Returns
-    -----------
-    col_name, col_values, row_name, row_values
+    Returns:
+        col_name, col_values, row_name, row_values
     """
     xlabel = None
     xvalues = None
@@ -1032,15 +722,3 @@ def extract_annotation(data):
         if hasattr(data.index, 'name'):
             ylabel = data.index.name
     return xlabel, xvalues, ylabel, yvalues
-
-
-################################
-### TEMPORARY TEST FUNCITONS ###
-################################
-
-def get_slice(panel, row, col):
-    ndim = len(panel.shape)
-    nrange = arange(ndim)
-    nrange = list(nrange[(nrange - 2) % ndim])  # Moves the last two dimensions to the first two
-    data_slice = panel.transpose(*nrange).iloc[row].iloc[col]
-    return data_slice
