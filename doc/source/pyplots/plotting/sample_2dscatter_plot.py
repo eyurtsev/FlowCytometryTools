@@ -1,6 +1,9 @@
-from FlowCytometryTools import FCMeasurement, ThresholdGate
-import os, FlowCytometryTools
+import os
+
 from pylab import *
+
+import FlowCytometryTools
+from FlowCytometryTools import FCMeasurement
 
 # Locate sample data included with this package
 datadir = os.path.join(FlowCytometryTools.__path__[0], 'tests', 'data', 'Plate01')

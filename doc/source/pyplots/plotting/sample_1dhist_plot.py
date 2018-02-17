@@ -1,5 +1,7 @@
-from FlowCytometryTools import FCMeasurement, ThresholdGate
-import os, FlowCytometryTools
+import os
+
+import FlowCytometryTools
+from FlowCytometryTools import FCMeasurement
 from pylab import *
 
 # Locate sample data included with this package

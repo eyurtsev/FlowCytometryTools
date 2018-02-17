@@ -1,8 +1,10 @@
-from FlowCytometryTools import FCPlate
-from GoreUtilities import plot_heat_map
-import os, FlowCytometryTools
+import os
+
 from pylab import *
-import matplotlib.pyplot as plt
+
+import FlowCytometryTools
+from FlowCytometryTools import FCPlate
+from FlowCytometryTools.core.graph import plot_heat_map
 
 # Locate sample data included with this package
 datadir = os.path.join(FlowCytometryTools.__path__[0], 'tests', 'data', 'Plate01')
@@ -20,12 +22,13 @@ plate = plate.dropna()
 
 # Create a threshold gates
 from FlowCytometryTools import ThresholdGate
+
 y2_gate = ThresholdGate(1000.0, 'Y2-A', region='above')
 
 # Plot
 plate = plate.gate(y2_gate)
 plot_heat_map(plate.counts(), include_values=True, show_colorbar=True,
-        cmap=cm.Oranges)
+              cmap=cm.Oranges)
 title('Heat map of fluorescent counts on plate')
 
-#show() # <-- Uncomment when running as a script.
+# show() # <-- Uncomment when running as a script.

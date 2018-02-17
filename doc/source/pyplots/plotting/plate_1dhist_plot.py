@@ -1,7 +1,9 @@
-from FlowCytometryTools import FCPlate
-import os, FlowCytometryTools
+import os
+
 from pylab import *
-import matplotlib.pyplot as plt
+
+import FlowCytometryTools
+from FlowCytometryTools import FCPlate
 
 # Locate sample data included with this package
 datadir = os.path.join(FlowCytometryTools.__path__[0], 'tests', 'data', 'Plate01')

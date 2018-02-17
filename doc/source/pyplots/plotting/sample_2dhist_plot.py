@@ -1,6 +1,9 @@
-from FlowCytometryTools import FCMeasurement, ThresholdGate
-import os, FlowCytometryTools
+import os
+
 from pylab import *
+
+import FlowCytometryTools
+from FlowCytometryTools import FCMeasurement
 
 # Locate sample data included with this package
 datadir = os.path.join(FlowCytometryTools.__path__[0], 'tests', 'data', 'Plate01')
@@ -16,4 +19,4 @@ tsample = tsample.transform('hlog', channels=['Y2-A', 'B1-A', 'V2-A'], b=500.0)
 tsample.plot(['Y2-A', 'B1-A'], bins=100, alpha=0.9, cmap=cm.hot);
 grid(True)
 
-#show() # <-- Uncomment when running as a script.
+# show() # <-- Uncomment when running as a script.
