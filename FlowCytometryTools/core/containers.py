@@ -92,8 +92,7 @@ class FCMeasurement(Measurement):
     @doc_replacer
     def plot(self, channel_names, kind='histogram',
              gates=None, gate_colors=None, gate_lw=1, **kwargs):
-        """
-        Plots the flow cytometry data associated with the sample on the current axis.
+        """Plot the flow cytometry data associated with the sample on the current axis.
 
         To produce the plot, follow up with a call to matplotlib's show() function.
 
