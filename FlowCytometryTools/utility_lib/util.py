@@ -4,13 +4,11 @@ except ImportError:
     import pickle
 
 import collections
-
 import fnmatch
 import glob
 import os
 import re
 
-import numpy
 import six
 
 
@@ -132,32 +130,6 @@ def get_files(dirname=None, pattern='*.*', recursive=True):
     return matches
 
 
-def get_dirname_path_map(path):
-    """
-    Descends recursively from the specified starting path, and creating a dictionary where
-    the keys are the directory names and the values are the full directory paths.
-
-    Parameters
-    ----------
-    path : str
-        starting path
-
-    Returns
-    -----------
-
-    Dictionary
-
-    keys - directory names
-    values - full paths to directories
-    """
-    name_path_map = {}
-    for root, dirnames, _ in os.walk(path):
-        if len(dirnames) > 0:
-            for directory in dirnames:
-                name_path_map[directory] = os.path.join(root, directory)
-    return name_path_map
-
-
 def get_tag_value(string, pre, post, tagtype=float, greedy=True):
     """
     Extracts the value of a tag from a string.
@@ -208,59 +180,6 @@ def get_tag_value(string, pre, post, tagtype=float, greedy=True):
         return None
     else:
         return tagtype(tag_list[0])
-
-
-def get_tag_file_map(glob_path, pre, post, tagtype=str, greedy=True):
-    """
-    Extracts requested tag from all file that match the pattern and constructs a dictionary
-    between the tags and the file paths.
-
-    Parameters
-    -----------------
-    data_path : string
-        A path to use for glob. Supports simple regular expressions.
-
-    pre : str
-        regular expression to match before the the tag value
-
-    post : str | list | tuple
-        regular expression to match after the the tag value
-
-        if list than the regular expressions will be combined into the regular expression (?=post[0]|post[1]|..)
-
-    tagtype : str | float | int
-        the type to which the tag value should be converted to
-    """
-    files = glob.glob(glob_path)
-    tag_file_map = {get_tag_value(filepath, pre, post, tagtype=tagtype, greedy=greedy): filepath for
-                    filepath in files}
-    return tag_file_map
-
-
-##############################
-## Numpy related functions
-##############################
-def remove_nans(*data_list):
-    """
-    Removes corresponding entries when any of the entries is a nan from a list of nd arrays.
-
-    Parameters
-    ------------
-    data_list = an array of nd arrays
-
-    Returns
-    --------
-    flattened lists of the nd arrays with all nan elements removed.
-
-    Examples
-    --------
-    remove_nans([nan, 3, 4, 0], [1, 5, nan, 1]) -> [3, 0], [5, 1]
-    """
-    data_list = [numpy.array(data) for data in data_list]
-    indexes = ~numpy.isnan(data_list[0])
-    for data in data_list:
-        indexes = numpy.logical_and(indexes, ~numpy.isnan(data))
-    return [data[indexes] for data in data_list]
 
 
 #####################
