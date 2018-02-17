@@ -13,7 +13,7 @@
 
     <!-- JQuery -->
     <!-- <script src="//code.jquery.com/jquery-2.1.3.min.js"></script> -->
-    <script src="//code.jquery.com/jquery-2.1.3.min.js"> </script>
+    <script src="//code.jquery.com/jquery-2.1.3.min.js"></script>
 
     <!-- JQuery UI -->
 
@@ -23,12 +23,14 @@
 
     <!-- BOOT STRAP -->
     <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js"></script>
-    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootswatch/3.3.2/spacelab/bootstrap.min.css">
+    <link rel="stylesheet"
+          href="//maxcdn.bootstrapcdn.com/bootswatch/3.3.2/spacelab/bootstrap.min.css">
 
-    <script src="//cdnjs.cloudflare.com/ajax/libs/bootbox.js/4.3.0/bootbox.min.js"> </script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/bootbox.js/4.3.0/bootbox.min.js"></script>
 
     <!-- font awesome -->
-    <link  rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css">
+    <link rel="stylesheet"
+          href="//maxcdn.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css">
 
     <style>
         #toolbar {
@@ -46,6 +48,7 @@
 
         #figure {
             display:inline-block;
+            margin: 0px auto 10px auto;
             border:2px solid black;
         }
 
@@ -67,13 +70,12 @@
 
     </style>
 
-    <script>
+    <script type="text/javascript">
+        function ondownload(figure, format) {
+            window.open('download.' + format, '_blank');
+        };
 
-      function ondownload(figure, format) {
-        window.open('download.' + format, '_blank');
-      };
-
-      $(document).ready(
+        $(document).ready(
         function() {
           var websocket_type = mpl.get_websocket_type();
           var websocket = new websocket_type("%(ws_uri)sws");
@@ -104,8 +106,7 @@
             });
 
         }
-      );
-
+        );
 
 
     var initialize_ui = function(fig, send_message) {
@@ -144,26 +145,8 @@
             });
         }
 
-        $("#figure").draggable({containment: "#workspace"});
+        <!--$("#figure").draggable({containment: "#workspace"});-->
         $("#figure").position({of: $(window)});
-
-        // Add buttons to figure
-        /*
-        var button = $('<button/>');
-
-        button.addClass('ui-button ui-widget ui-state-default ui-corner-all ' +
-                        'ui-button-icon-only');
-        button.click(function () {alert('hello');});
-
-        var icon_img = $('<span/>');
-        icon_img.addClass('ui-button-icon-primary ui-icon');
-        icon_img.addClass('ui-icon ui-icon-home');
-        icon_img.addClass('ui-corner-all');
-        button.append(icon_img);
-        var nav_element = $('#figure').children('div').last().children('div').last();
-        nav_element.append(button);
-        */
-
     }
 
     var initialize_toolbar = function(send_message) {
@@ -209,18 +192,24 @@
     }
 
     </script>
+
+
     <title>Flow Cytometry Tools</title>
+
 </head>
 
 <body>
 
-<nav class="navbar navbar-default navbar-fixed-top" role="navigtaion">
+<nav class="navbar navbar-default navbar-fixed-top" role="navigation">
     <div class="nav navbar-header">
         <div class="btn-group btn-group-lg">
             <!--<button id="open_file" title="Load an FCS file"><span class="glyphicon glyphicon-cloud-upload"></span>-->
-            <a class="btn btn-default" id="app_draw_poly_gate"><i class="fa fa-pencil fa-fw"></i></a>
-            <a class="btn btn-default" id="app_draw_vertical_gate"><i class="fa fa-ellipsis-v fa-fw"></i></a>
-            <a class="btn btn-default" id="app_draw_horizontal_gate"><i class="fa fa-ellipsis-h fa-fw"></i></a>
+            <a class="btn btn-default" id="app_draw_poly_gate"><i
+                    class="fa fa-pencil fa-fw"></i></a>
+            <a class="btn btn-default" id="app_draw_vertical_gate"><i
+                    class="fa fa-ellipsis-v fa-fw"></i></a>
+            <a class="btn btn-default" id="app_draw_horizontal_gate"><i
+                    class="fa fa-ellipsis-h fa-fw"></i></a>
             <a class="btn btn-default" id="app_delete_gate"><i class="fa fa-trash-o fa-fw"></i></a>
             <a class="btn btn-default" id="app_generate_code"><i class="fa fa-cogs fa-fw"></i></a>
         </div>
@@ -228,12 +217,9 @@
 </nav>
 
 <div id="workspace">
-    <div id="figure">
-    </div>
-
+    <div id="figure"></div>
     <div>
-        <ul id="channel-selection-menu">
-        </ul>
+        <ul id="channel-selection-menu"></ul>
     </div>
 </div>
 
