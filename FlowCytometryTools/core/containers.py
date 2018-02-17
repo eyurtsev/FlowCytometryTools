@@ -2,23 +2,21 @@ from __future__ import absolute_import
 
 import collections
 import inspect
+import warnings
 from itertools import cycle
 from random import sample
-import warnings
 
+import matplotlib
+import numpy as np
 from fcsparser import parse as parse_fcs
 from pandas import DataFrame
-import numpy as np
-import matplotlib
 
-from FlowCytometryTools.lib.graph import plot_ndpanel
-
-from FlowCytometryTools.core.transforms import Transformation
-from FlowCytometryTools.core.bases import Measurement, MeasurementCollection, OrderedCollection, queueable
 import FlowCytometryTools.core.graph as graph
+from FlowCytometryTools.core.bases import (Measurement, MeasurementCollection, OrderedCollection,
+                                           queueable)
 from FlowCytometryTools.core.common_doc import doc_replacer
-
-
+from FlowCytometryTools.core.transforms import Transformation
+from FlowCytometryTools.utility_lib.graph import plot_ndpanel
 
 
 def to_iter(obj):

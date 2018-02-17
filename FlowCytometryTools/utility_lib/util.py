@@ -1,35 +1,15 @@
-#!/usr/bin/env python
-"""
-The MIT License (MIT)
-
-Copyright (c) 2013 Eugene Yurtsev and Jonathan Friedman
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-THE SOFTWARE.
-"""
-
 try:
     import cPickle as pickle
 except ImportError:
     import pickle
 
-import os, glob, csv, inspect, sys, re, fnmatch
+import fnmatch
+import glob
+import os
+import re
+
 import numpy
+
 
 def save(obj, path):
     """
@@ -47,6 +27,7 @@ def save(obj, path):
         except Exception as e:
             print('Pickling failed for object {0}, path {1}'.format(obj, path))
             print('Error message: {0}'.format(e))
+
 
 def load(path):
     """
@@ -67,6 +48,7 @@ def load(path):
     finally:
         f.close()
 
+
 def to_iter(obj):
     '''
     Convert an object to a list if it is not already an iterable.
@@ -78,6 +60,7 @@ def to_iter(obj):
         return obj
     else:
         return [obj]
+
 
 def to_list(obj):
     """
@@ -91,44 +74,6 @@ def to_list(obj):
     else:
         return obj
 
-#############################
-# Working with dictionaries #
-#############################
-
-def print_dictionary_as_tree(dictionary, indent=0,
-                use_title_style=False, skip_types=False):
-    """
-    Outputs a pretty tree of a dictionary with its keys.
-
-    Parameters
-    -------------
-    dictionary : dict
-    indent : int
-        Number of indentations for each level of nesting
-    use_title_style : applies title style formatting for keys
-    skip_types : anything
-        Describes which types to skip. Note this is a bit confusing now...
-        For example, you can set it to numpy.ndarray, then it won't print out any arrays.
-
-    Returns
-    --------
-    string with formatted output
-    """
-    out = ''
-    for key, value in dictionary.items():
-        if use_title_style:
-            out += '\t' * indent + str(key).title()
-        else:
-            out += '\t' * indent + str(key)
-
-        if isinstance(value, dict):
-            out += '\n'
-            out += print_dictionary_as_tree(value, indent+1)
-        elif skip_types is not False and isinstance(value, skip_types):
-            out += '\t' * (indent+1) + '!\n'
-        else:
-            out += '\t' * (indent+1) + str(value) + '\n'
-    return out
 
 #############################
 # Working With Files
@@ -138,6 +83,7 @@ def ensure_directory(directory):
     """ Makes a directory if it does not exist already. """
     if not os.path.exists(directory):
         os.makedirs(directory)
+
 
 def get_files(dirname=None, pattern='*.*', recursive=True):
     '''
@@ -166,7 +112,7 @@ def get_files(dirname=None, pattern='*.*', recursive=True):
         dirname = dialogs.select_directory_dialog('Select a directory')
 
     # find all files in dirname that match pattern
-    if recursive: # search subdirs
+    if recursive:  # search subdirs
         matches = []
         for root, dirnames, filenames in os.walk(dirname):
             for filename in fnmatch.filter(filenames, pattern):
@@ -174,6 +120,7 @@ def get_files(dirname=None, pattern='*.*', recursive=True):
     else:
         matches = glob.glob(os.path.join(dirname, pattern))
     return matches
+
 
 def get_dirname_path_map(path):
     """
@@ -200,12 +147,6 @@ def get_dirname_path_map(path):
                 name_path_map[directory] = os.path.join(root, directory)
     return name_path_map
 
-#def get_tag_folder_map(path, tag, delimiter='_', tag_type=str, recursive=True):
-#    """
-#    Extracts requested tag from all file that match the pattern and constructs a dictionary
-#    between the tags and the file paths.
-#    """
-#    pass
 
 def get_tag_value(string, pre, post, tagtype=float, greedy=True):
     """
@@ -243,12 +184,13 @@ def get_tag_value(string, pre, post, tagtype=float, greedy=True):
 
     TODO Make list/tuple input for pre
     """
-    greedy = '?' if greedy else '' # For greedy search
+    greedy = '?' if greedy else ''  # For greedy search
 
     if isinstance(post, (list, tuple)):
         post = '(?=' + '|'.join(post) + ')'
 
-    tag_list = re.findall(r'{pre}(.+{greedy}){post}'.format(pre=pre, post=post, greedy=greedy), string)
+    tag_list = re.findall(r'{pre}(.+{greedy}){post}'.format(pre=pre, post=post, greedy=greedy),
+                          string)
 
     if len(tag_list) > 1:
         raise ValueError('More than one matching pattern found... check filename')
@@ -256,6 +198,7 @@ def get_tag_value(string, pre, post, tagtype=float, greedy=True):
         return None
     else:
         return tagtype(tag_list[0])
+
 
 def get_tag_file_map(glob_path, pre, post, tagtype=str, greedy=True):
     """
@@ -279,8 +222,10 @@ def get_tag_file_map(glob_path, pre, post, tagtype=str, greedy=True):
         the type to which the tag value should be converted to
     """
     files = glob.glob(glob_path)
-    tag_file_map = {get_tag_value(filepath, pre, post, tagtype=tagtype, greedy=greedy) : filepath for filepath in files}
+    tag_file_map = {get_tag_value(filepath, pre, post, tagtype=tagtype, greedy=greedy): filepath for
+                    filepath in files}
     return tag_file_map
+
 
 ##############################
 ## Numpy related functions
@@ -304,92 +249,9 @@ def remove_nans(*data_list):
     data_list = [numpy.array(data) for data in data_list]
     indexes = ~numpy.isnan(data_list[0])
     for data in data_list:
-       indexes = numpy.logical_and(indexes, ~numpy.isnan(data))
+        indexes = numpy.logical_and(indexes, ~numpy.isnan(data))
     return [data[indexes] for data in data_list]
 
-##############################
-## Pandas related functions
-##############################
-
-def rotate_ndpanel_dimensions(panel, num_rotations, direction='right'):
-    """
-    Rotates the dimensions of an ndpanel.
-    panel : ndpanel
-    num_rotations : int
-    direction : 'left' | 'right'
-
-    Returns
-    ---------
-
-    new nd panel with dimensions rotated
-    """
-    ndim = len(panel.values.shape)
-    nrange = numpy.arange(ndim)
-
-    if direction == 'right' :
-        num_rotations = -num_rotations
-
-    nrange = list(nrange[(nrange + num_rotations) % ndim]) # Moves the last two dimensions to the first two
-    return panel.transpose(*nrange)
-
-
-###################################
-## Working with git
-###################################
-
-def get_git_repository_info(output_format='ipython-html'):
-    """
-    Produces table summary with information about git repositories associated with loaded python modules.
-    (Only for python modules under git control).
-
-    Parameters
-    ----------
-
-    output_format : 'DataFrame' | 'ipython-html'
-
-    Returns
-    ----------
-
-    a summary table in the specified output_format
-    """
-    from pandas import DataFrame
-    import git
-
-    def get_loaded_git_info():
-        """
-        For all loaded modules: If the module is under git source control,
-        the git working path is recorded together with the git commit, and whether the repository is dirty.
-
-        Returns
-        ---------
-        Dictionary : keys are git repository paths, values contain all the information
-        """
-        git_map = {}
-
-        for k, v in sys.modules.items():
-            if hasattr(v, '__path__'):
-                try:
-                    if len(v.__path__) > 0:
-                        path = v.__path__[0]
-                        repo = git.Repo(path)
-                        assert repo.bare == False
-                        git_map[repo.working_dir] = (repo.working_dir, os.path.split(repo.working_dir)[1],
-                                    str(repo.active_branch), str(repo.commit()), repo.is_dirty())
-                except git.InvalidGitRepositoryError:
-                    pass
-        return git_map
-
-    git_map = get_loaded_git_info()
-    data = git_map.values()
-    d = DataFrame(numpy.array(data), columns=['Repository Path', 'Folder Name', 'Branch', 'Commit #', 'Dirty?'])
-
-    if output_format == 'DataFrame':
-        return d
-    elif output_format == 'ipython-html':
-        from IPython.display import HTML
-        return HTML(d.to_html(index=False))
-    else:
-        raise ValueError('unrecognized output_format was provided')
 
 #####################
 ### Base objects ####
@@ -401,7 +263,8 @@ class BaseObject(object):
     Used for inheritance.
     '''
 
-    def __repr__(self): return repr(self.ID)
+    def __repr__(self):
+        return repr(self.ID)
 
     def save(self, path):
         save(self, path)
