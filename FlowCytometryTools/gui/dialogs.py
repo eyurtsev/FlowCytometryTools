@@ -1,7 +1,5 @@
 from __future__ import print_function
 
-import fnmatch
-import glob
 import os
 
 try:

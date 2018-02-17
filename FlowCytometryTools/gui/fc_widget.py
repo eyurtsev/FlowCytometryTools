@@ -705,15 +705,13 @@ class FCGateManager(EventGenerator):
             parent = self.fig.canvas
 
         if filepath is None:
-            from GoreUtilities import dialogs
-
+            from FlowCytometryTools.gui import dialogs
             filepath = dialogs.open_file_dialog('Select an FCS file to load',
                                                 'FCS files (*.fcs)|*.fcs', parent=parent)
 
         if filepath is not None:
             self.sample = FCMeasurement('temp', datafile=filepath)
-            print
-            'WARNING: Data is raw (not transformation).'
+            print('WARNING: Data is raw (not transformation).')
             self._sample_loaded_event()
 
     def load_measurement(self, measurement):
