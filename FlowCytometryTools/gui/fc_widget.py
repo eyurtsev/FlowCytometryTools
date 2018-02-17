@@ -8,7 +8,7 @@ import pylab as pl
 from matplotlib.widgets import Cursor, AxesWidget
 
 from FlowCytometryTools import FCMeasurement
-from FlowCytometryTools.GUI import dialogs
+from FlowCytometryTools.gui import dialogs
 from FlowCytometryTools.utility_lib.util import to_list
 
 
@@ -37,7 +37,7 @@ class MOUSE:
 
 
 class Event(object):
-    """An event class for passing messages between different GUI."""
+    """An event class for passing messages between different gui."""
     CHANGE = 1
     VERTEX_REMOVED = 2
     BASE_GATE_CHANGED = 3

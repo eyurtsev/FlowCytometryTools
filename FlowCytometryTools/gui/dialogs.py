@@ -1,3 +1,4 @@
+from __future__ import print_function
 import os
 
 try:
@@ -84,7 +85,7 @@ def save_file_dialog(wildcard):
                            wildcard=wildcard, style=wx.SAVE)
     if dialog.ShowModal() == wx.ID_OK:
         path = dialog.GetPath()
-        print "You chose the following filename: %s" % path
+        print("You chose the following filename: %s" % path)
     else:
         path = None
     dialog.Destroy()

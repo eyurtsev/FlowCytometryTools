@@ -3,7 +3,7 @@
 import wx
 import matplotlib
 from wireframe import GeneratedWireframe
-from FlowCytometryTools.GUI import fc_widget
+from FlowCytometryTools.gui import fc_widget
 
 
 class GUIEmbedded(GeneratedWireframe):

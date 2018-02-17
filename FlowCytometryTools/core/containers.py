@@ -212,13 +212,13 @@ class FCMeasurement(Measurement):
                 backend = 'wx'
 
         if backend == 'wx':
-            from FlowCytometryTools.GUI.wx_backend import gui
+            from FlowCytometryTools.gui.wx_backend import gui
         elif backend == 'webagg':
-            from FlowCytometryTools.GUI.webagg_backend import gui
+            from FlowCytometryTools.gui.webagg_backend import gui
         else:
             raise ValueError('No support for backend {}'.format(backend))
 
-        # Launch GUI
+        # Launch gui
         output = gui.GUILauncher(measurement=self)
 
         # Switch back to inline mode if started in inline

@@ -15,7 +15,7 @@ import json
 
 import tkFileDialog
 
-from FlowCytometryTools.GUI import fc_widget
+from FlowCytometryTools.gui import fc_widget
 
 
 class MyApplication(tornado.web.Application):
