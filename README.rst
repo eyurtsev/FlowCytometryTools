@@ -57,10 +57,9 @@ you run into issues, please update the dependencies.
 
 **Required Dependencies**
 
-#. `python <http://www.python.org/getit/>`_ 2.7 (note that python 3.0 or higher are not yet supported!)
-#. `decorator <https://pypi.python.org/pypi/decorator>`_
-#. `pandas <http://pandas.sourceforge.net/index.html>`__ (Recommended version: 0.12.0 or higher).
-#. `matplotlib <http://matplotlib.org/>`__ (Recommended version: 1.13.1 or higher).
+#. `python <http://www.python.org/getit/>`_ python 2.7 or python 3
+#. `pandas <http://pandas.sourceforge.net/index.html>`__ (Recommended version: 0.19.0 or higher).
+#. `matplotlib <http://matplotlib.org/>`__ (Recommended version: 1.5.3 or higher).
 #. `scipy <http://www.scipy.org/>`__ 
 
 **Optional Dependencies**
