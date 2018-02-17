@@ -185,16 +185,16 @@ For more information see :meth:`FCMeasurement.plot`.
 
 .. ipython:: python
 
-    figure()
-	@savefig 1d_plot.png width=4.5in
-    tsample.plot(['Y2-A'], bins=100)
+    figure();
+  @savefig 1d_plot.png width=4.5in
+    tsample.plot(['Y2-A'], bins=100);
 
 .. ipython:: python
 
-    figure()
-    grid(True)
+    figure();
+    grid(True);
 	@savefig 1d_plot_prettier.png width=4.5in
-    tsample.plot(['Y2-A'], color='green', alpha=0.7, bins=100)
+    tsample.plot(['Y2-A'], color='green', alpha=0.7, bins=100);
 
 2d histograms
 ++++++++++++++++++++++++++
@@ -203,17 +203,17 @@ If you provide the plot function with the names of two channels, you'll get a 2d
 
 .. ipython:: python
 
-    figure()
+    figure();
 	@savefig 2d_plot_A.png width=4.5in
-    tsample.plot(['B1-A', 'Y2-A'])
+    tsample.plot(['B1-A', 'Y2-A']);
 
 As with 1d histograms, the plot function accepts all the same arguments as does the matplotlib histogram function.
 
 .. ipython:: python
 
-    figure()
+    figure();
 	@savefig 2d_plot_B.png width=4.5in
-    tsample.plot(['B1-A', 'Y2-A'], cmap=cm.Oranges, colorbar=False)
+    tsample.plot(['B1-A', 'Y2-A'], cmap=cm.Oranges, colorbar=False);
 
 2d scatter plots
 ++++++++++++++++++++++
@@ -224,9 +224,9 @@ This makes the plot function behave like the matplotlib scatter function (and ac
 
 .. ipython:: python
 
-    figure()
+    figure();
 	@savefig 2d_scatter_plot_A.png width=4.5in
-    tsample.plot(['B1-A', 'Y2-A'], kind='scatter', color='red', s=1, alpha=0.3)
+    tsample.plot(['B1-A', 'Y2-A'], kind='scatter', color='red', s=1, alpha=0.3);
 
 
 Gating
@@ -285,10 +285,10 @@ Plotting Gates
 
 .. ipython:: python
 
-    figure()
-    tsample.plot(['Y2-A'], gates=[y2_gate], bins=100)
+    figure();
+    tsample.plot(['Y2-A'], gates=[y2_gate], bins=100);
 	@savefig gate_A_plot.png width=4.5in
-    title('Gate Plotted')
+    title('Gate Plotted');
 
 Applying Gates
 +++++++++++++++++
@@ -303,25 +303,25 @@ same routines as does the ungated sample. For example, we can plot it:
 
 .. ipython:: python
 
-    figure()
-    gated_sample.plot(['Y2-A'], color='y', bins=100)
+    figure();
+    gated_sample.plot(['Y2-A'], color='y', bins=100);
 	@savefig gated_sample_only_plot.png width=4.5in
-    title('Gated Sample')
+    title('Gated Sample');
 
 Let's compare the gated and ungated side by side.
 
 .. ipython:: python
 
-    figure()
+    figure();
     subplots_adjust(hspace=0.4)
     ax1 = subplot(211)
-    tsample.plot(['Y2-A'], color='gray', bins=100, gates=[y2_gate])
-    title('Original Sample')
+    tsample.plot(['Y2-A'], color='gray', bins=100, gates=[y2_gate]);
+    title('Original Sample');
 
     ax2 = subplot(212, sharey=ax1, sharex=ax1)
-    gated_sample.plot(['Y2-A'], color='y', bins=100, gates=[y2_gate])
+    gated_sample.plot(['Y2-A'], color='y', bins=100, gates=[y2_gate]);
 	@savefig gate_D_plot.png width=4.5in
-    title('Gated Sample')
+    title('Gated Sample');
 
 Combining gates
 +++++++++++++++++
@@ -454,18 +454,18 @@ For more information see :meth:`FCPlate.plot`.
 
 .. ipython:: python
 
-    figure()
+    figure();
 	@savefig plate_plot_A.png width=4.5in
-    plate.plot(['Y2-A'], bins=100)
+    plate.plot(['Y2-A'], bins=100);
 
 2d histograms
 =================
 
 .. ipython:: python
 
-    figure()
+    figure();
 	@savefig plate_plot_B.png width=4.5in
-    plate.plot(['B1-A', 'Y2-A'], bins=100, wspace=0.2, hspace=0.2)
+    plate.plot(['B1-A', 'Y2-A'], bins=100, wspace=0.2, hspace=0.2);
 
 Accessing Single Wells
 ++++++++++++++++++++++++
@@ -474,10 +474,10 @@ FCPlate supports indexing to make it easier to work with single wells.
 
 .. ipython:: python
 
-    figure()
     print(plate['A3'])
+    figure();
 	@savefig plate_indexing_A.png width=4.5in
-    plate['A3'].plot(['Y2-A'], bins=100)
+    plate['A3'].plot(['Y2-A'], bins=100);
 
 
 Examples
