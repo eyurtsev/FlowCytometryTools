@@ -270,7 +270,11 @@ Using the GUI
 
 You can launch the GUI for creating the gates, by calling the view_interactively() method of an ``FCMeasurement`` instance.
 
->>> tsample.view_interactively()
+There are two backends enabled for the GUI. Both are buggy, but can help to get the job done.
+
+Use the wx backend this way:
+
+>>> tsample.view_interactively(backend='wx')
 
 .. warning::
 
@@ -279,6 +283,14 @@ You can launch the GUI for creating the gates, by calling the view_interactively
     Please note that there's no way to apply transformations through the GUI, so
     view samples through the view_interactively method. (Don't load new FCS files directly from the GUI,
     if you need those files transformed.)
+
+Use the webagg backend this way:
+
+>>> tsample.view_interactively(backend='webagg')
+
+.. image:: _static/webagg_demo.gif
+  :target: _static/webagg_demo.gif
+
 
 Plotting Gates
 +++++++++++++++++

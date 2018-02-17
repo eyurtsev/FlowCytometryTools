@@ -29,6 +29,13 @@ You can find a few example scripts that load and plot flow cytometry data in the
 If you like what you see, then proceed to the `installation <https://eyurtsev.github.io/FlowCytometryTools/install.html>`_ page and then
 to the `tutorial <https://eyurtsev.github.io/FlowCytometryTools/tutorial.html>`_.
 
+
+And yes, there's a UI to draw basic gates. It's super basic, but it gets the job done.
+
+.. image:: _static/webagg_demo.gif
+  :target: _static/webagg_demo.gif
+
+
 Features
 ===================
 
@@ -36,7 +43,7 @@ Features
 - **Plotting**: 1D, 2D histograms for both single samples and collections (e.g., 96-well plates).
 - **Gating**: threshold, interval, quad, polygon gates
 - **Subsampling**: easy to subsample to examine only part of a measurement and randomize event order
-- **GUI**: simple graphical user interface to draw gates
+- **GUI**: simple graphical user interface to draw gates (`wx` or `webagg`)
 - **FCS Formats**: Supports FCS 2.0, 3.0, and 3.1
 
 Resources
