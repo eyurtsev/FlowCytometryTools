@@ -737,15 +737,17 @@ class FCGateManager(EventGenerator):
         channel_name: str
            new channel to plot on that axis
         """
-        new_channels = list(self.current_channels)
-        if len(new_channels) == 1:
+        current_channels = list(self.current_channels)
+        if len(current_channels) == 1:
             if axis_num == 0:
                 new_channels = channel_name,
             else:
-                new_channels = new_channels[0], channel_name
+                new_channels = current_channels[0], channel_name
         else:
+            new_channels = list(current_channels)
             new_channels[axis_num] = channel_name
-        self.set_axes(new_channels, None)
+
+        self.set_axes(new_channels, self.ax)
 
     def set_axes(self, channels, ax):
         """
@@ -753,9 +755,6 @@ class FCGateManager(EventGenerator):
             each value corresponds to a channel names
             names must be unique
         """
-        if ax is None:
-            ax = self.ax
-
         # To make sure displayed as hist
         if len(set(channels)) == 1:
             channels = channels[0],
@@ -785,8 +784,6 @@ class FCGateManager(EventGenerator):
     def plot_data(self):
         """Plots the loaded data"""
         # Clear the plot before plotting onto it
-        xaxis = self.ax.get_yaxis()
-        yaxis = self.ax.get_xaxis()
         self.ax.cla()
 
         if self.sample is None:
@@ -799,6 +796,8 @@ class FCGateManager(EventGenerator):
         channels_to_plot = channels[0] if len(channels) == 1 else channels
         self.sample.plot(channels_to_plot, ax=self.ax)
 
+        xaxis = self.ax.get_xaxis()
+        yaxis = self.ax.get_yaxis()
         self.xlabel_artist = xaxis.get_label()
         self.ylabel_artist = yaxis.get_label()
         self.xlabel_artist.set_picker(5)
