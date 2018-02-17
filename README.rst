@@ -6,8 +6,8 @@ FlowCytometryTools
 .. image:: https://travis-ci.org/eyurtsev/FlowCytometryTools.svg?branch=master
     :target: https://travis-ci.org/eyurtsev/FlowCytometryTools
 .. image:: https://zenodo.org/badge/doi/10.5281/zenodo.32991.svg
-   :target: https://zenodo.org/record/32991   
-|
+    :target: https://zenodo.org/record/32991   
+
 
 FlowCytometryTools is a python package for visualization and analysis of high-throughput flow cytometry data.
 
@@ -85,8 +85,7 @@ Changes
 
 v0.4.6, 2017-03-26
 
-+ FIX: edge case for inferring x-range for spline interpolation when doing
-log transforms and with data the contains values in the interval. 
++ FIX: edge case for inferring x-range for spline interpolation when doing log transforms and with data the contains values in the interval. 
 + FIX: fix linear transform (kwargs weren't being passed correctly).
 + FIX: interval gate was raising exceptions for certain numpy versions (fix by alonyan)
 
