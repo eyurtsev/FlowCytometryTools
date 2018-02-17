@@ -38,12 +38,8 @@ install:
   - pip wheel -r requirements.test.txt
 
   - pip install numpy
-  - if [[ $MATPLOTLIB == 'master' ]]; then pip install git+https://github.com/matplotlib/matplotlib.git; else pip wheel matplotlib==$MATPLOTLIB; pip install matplotlib==$MATPLOTLIB; fi
-
   - pip install -r requirements.txt
   - pip install -r requirements.test.txt
-
-  - if [[ $PANDAS == 'master' ]]; then pip install git+https://github.com/pydata/pandas.git; else pip wheel pandas==$PANDAS; pip install pandas==$PANDAS; fi
 
 script:
   - py.test FlowCytometryTools/ --cov FlowCytometryTools -v --cov-report term-missing
