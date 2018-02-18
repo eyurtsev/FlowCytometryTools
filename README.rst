@@ -36,7 +36,7 @@ And yes, there's a UI to draw basic gates. It's super basic, but it gets the job
   :target: https://github.com/eyurtsev/FlowCytometryTools/blob/master/doc/source/_static/webagg_demo.gif 
 
 .. image:: _static/webagg_demo.gif
-  :target:: _static/webagg_demo.gif
+  :target: _static/webagg_demo.gif
 
 
 Features
