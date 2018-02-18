@@ -1,0 +1,6 @@
+FlowCytometryTools.FCPlate.transform
+====================================
+
+.. currentmodule:: FlowCytometryTools
+
+.. automethod:: FCPlate.transform

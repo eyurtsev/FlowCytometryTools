@@ -1,0 +1,6 @@
+FlowCytometryTools.FCPlate.gate
+===============================
+
+.. currentmodule:: FlowCytometryTools
+
+.. automethod:: FCPlate.gate

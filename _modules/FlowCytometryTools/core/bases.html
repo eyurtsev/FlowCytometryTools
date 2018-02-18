@@ -1,0 +1,1267 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+        <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>FlowCytometryTools.core.bases &#8212; FlowCytometryTools 0.5.0 documentation</title>
+    <link rel="stylesheet" href="../../../_static/bootstrap-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" src="../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../../../_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="../../../_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="../../../_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../../../_static/bootstrap-sphinx.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head><body>
+  
+  <a href="https://github.com/eyurtsev/flowcytometrytools"
+     class="visible-desktop hidden-xs"><img
+    id="gh-banner"
+    style="position: absolute; top: 50px; right: 0; border: 0;"
+    src="https://s3.amazonaws.com/github/ribbons/forkme_right_white_ffffff.png"
+    alt="Fork me on GitHub"></a>
+  <script>
+    // Adjust banner height.
+    $(function () {
+      var navHeight = $(".navbar .container").css("height");
+      $("#gh-banner").css("top", navHeight);
+    });
+  </script>
+
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="../../../index.html">
+          FlowCytometryTools</a>
+        <span class="navbar-text navbar-version pull-left"><b>0.5.0</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+                <li><a href="../../../gallery.html">Gallery</a></li>
+                <li><a href="../../../install.html">Install</a></li>
+                <li><a href="../../../tutorial.html">Tutorial</a></li>
+                <li><a href="../../../api.html">API</a></li>
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="../../../index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"></ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"></ul>
+</li>
+              
+            
+            
+            
+            
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="../../../search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+      <div class="col-md-3">
+        <div id="sidebar" class="bs-sidenav" role="complementary">
+<form action="../../../search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+        </div>
+      </div>
+    <div class="col-md-9 content">
+      
+  <h1>Source code for FlowCytometryTools.core.bases</h1><div class="highlight"><pre>
+<span></span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">Created on Jun 18, 2013</span>
+
+<span class="sd">@author: jonathanfriedman</span>
+
+<span class="sd">Base objects for measurement and plate objects.</span>
+
+<span class="sd">TODO:</span>
+<span class="sd">- make plate a subclass of collection</span>
+<span class="sd">- consider converting init methods to accepting data, and adding</span>
+<span class="sd">factory methods for construction from files.</span>
+<span class="sd">- consider always reading in data in measurements, perhaps storing on disk</span>
+<span class="sd">using shelve|PyTables|pandas HDFStore</span>
+<span class="sd">&#39;&#39;&#39;</span>
+<span class="kn">import</span> <span class="nn">inspect</span>
+<span class="kn">import</span> <span class="nn">os</span>
+
+<span class="kn">import</span> <span class="nn">decorator</span>
+<span class="kn">import</span> <span class="nn">pylab</span> <span class="k">as</span> <span class="nn">pl</span>
+<span class="kn">import</span> <span class="nn">six</span>
+<span class="kn">from</span> <span class="nn">numpy</span> <span class="k">import</span> <span class="n">nan</span><span class="p">,</span> <span class="n">unravel_index</span>
+<span class="kn">from</span> <span class="nn">pandas</span> <span class="k">import</span> <span class="n">DataFrame</span> <span class="k">as</span> <span class="n">DF</span>
+
+<span class="kn">from</span> <span class="nn">FlowCytometryTools.core</span> <span class="k">import</span> <span class="n">graph</span>
+<span class="kn">from</span> <span class="nn">FlowCytometryTools.core.common_doc</span> <span class="k">import</span> <span class="n">doc_replacer</span>
+<span class="kn">from</span> <span class="nn">FlowCytometryTools.core.utils</span> <span class="k">import</span> <span class="n">get_tag_value</span><span class="p">,</span> <span class="n">get_files</span><span class="p">,</span> <span class="n">save</span><span class="p">,</span> <span class="n">load</span><span class="p">,</span> <span class="n">to_list</span>
+
+
+<span class="nd">@doc_replacer</span>
+<span class="k">def</span> <span class="nf">_assign_IDS_to_datafiles</span><span class="p">(</span><span class="n">datafiles</span><span class="p">,</span> <span class="n">parser</span><span class="p">,</span> <span class="n">measurement_class</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Assign measurement IDS to datafiles using specified parser.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    datafiles : iterable of str</span>
+<span class="sd">        Path to datafiles. An ID will be assigned to each.</span>
+<span class="sd">        Note that this function does not check for uniqueness of IDs!</span>
+<span class="sd">    {_bases_filename_parser}</span>
+<span class="sd">    measurement_class: object</span>
+<span class="sd">        Used to create a temporary object when reading the ID from the datafile.</span>
+<span class="sd">        The measurement class needs to have an `ID_from_data` method.</span>
+<span class="sd">        Only used when parser=&#39;read&#39;.</span>
+<span class="sd">    kwargs: dict</span>
+<span class="sd">        Additional parameters to be passed to parser is it is a callable, or &#39;read&#39;.</span>
+<span class="sd">        If parser is &#39;read&#39;, kwargs are passed to the measurement class&#39;s `ID_from_data` method.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    Dict of ID:datafile</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">parser</span><span class="p">,</span> <span class="n">collections</span><span class="o">.</span><span class="n">Mapping</span><span class="p">):</span>
+        <span class="n">fparse</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">parser</span><span class="p">[</span><span class="n">x</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">parser</span><span class="p">,</span> <span class="s1">&#39;__call__&#39;</span><span class="p">):</span>
+        <span class="n">fparse</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">parser</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">parser</span> <span class="o">==</span> <span class="s1">&#39;name&#39;</span><span class="p">:</span>
+        <span class="n">kwargs</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;pre&#39;</span><span class="p">,</span> <span class="s1">&#39;Well_&#39;</span><span class="p">)</span>
+        <span class="n">kwargs</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;post&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;_&#39;</span><span class="p">,</span> <span class="s1">&#39;\.&#39;</span><span class="p">,</span> <span class="s1">&#39;$&#39;</span><span class="p">])</span>
+        <span class="n">kwargs</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;tagtype&#39;</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span>
+        <span class="n">fparse</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">get_tag_value</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">parser</span> <span class="o">==</span> <span class="s1">&#39;number&#39;</span><span class="p">:</span>
+        <span class="n">fparse</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">2</span><span class="p">])</span>
+    <span class="k">elif</span> <span class="n">parser</span> <span class="o">==</span> <span class="s1">&#39;read&#39;</span><span class="p">:</span>
+        <span class="n">fparse</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">measurement_class</span><span class="p">(</span><span class="n">ID</span><span class="o">=</span><span class="s1">&#39;temporary&#39;</span><span class="p">,</span> <span class="n">datafile</span><span class="o">=</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">ID_from_data</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Encountered unsupported value &quot;</span><span class="si">%s</span><span class="s1">&quot; for parser parameter.&#39;</span> <span class="o">%</span> <span class="n">parser</span><span class="p">)</span>
+    <span class="n">d</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">((</span><span class="n">fparse</span><span class="p">(</span><span class="n">dfile</span><span class="p">),</span> <span class="n">dfile</span><span class="p">)</span> <span class="k">for</span> <span class="n">dfile</span> <span class="ow">in</span> <span class="n">datafiles</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">d</span>
+
+
+<span class="k">def</span> <span class="nf">int2letters</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">alphabet</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return the alphabet representation of a non-negative integer x.</span>
+<span class="sd">    For example, with alphabet=[&#39;a&#39;,&#39;b&#39;]</span>
+<span class="sd">    0 -&gt; &#39;a&#39;</span>
+<span class="sd">    1 -&gt; &#39;b&#39;</span>
+<span class="sd">    2 -&gt; &#39;aa&#39;</span>
+<span class="sd">    3 -&gt; &#39;ab&#39;</span>
+<span class="sd">    4 -&gt; &#39;ba&#39;</span>
+
+<span class="sd">    Modified from:</span>
+<span class="sd">    http://stackoverflow.com/questions/2267362/convert-integer-to-a-string-in-a-given-numeric-base-in-python</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">base</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">alphabet</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">x</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Only non-negative numbers are supported. Encounterd </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">x</span><span class="p">)</span>
+    <span class="n">letters</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">quotient</span> <span class="o">=</span> <span class="n">x</span>
+    <span class="k">while</span> <span class="n">quotient</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">quotient</span><span class="p">,</span> <span class="n">remainder</span> <span class="o">=</span> <span class="nb">divmod</span><span class="p">(</span><span class="n">quotient</span><span class="p">,</span> <span class="n">base</span><span class="p">)</span>
+        <span class="n">quotient</span> <span class="o">-=</span> <span class="mi">1</span>
+        <span class="n">letters</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">alphabet</span><span class="p">[</span><span class="n">remainder</span><span class="p">])</span>
+    <span class="n">letters</span><span class="o">.</span><span class="n">reverse</span><span class="p">()</span>
+    <span class="k">return</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">letters</span><span class="p">)</span>
+
+
+<span class="n">_now</span> <span class="o">=</span> <span class="s1">&#39;apply_now&#39;</span>
+
+
+<span class="nd">@decorator</span><span class="o">.</span><span class="n">decorator</span>
+<span class="k">def</span> <span class="nf">queueable</span><span class="p">(</span><span class="n">fun</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="n">params</span> <span class="o">=</span> <span class="n">inspect</span><span class="o">.</span><span class="n">getcallargs</span><span class="p">(</span><span class="n">fun</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">_now</span> <span class="ow">in</span> <span class="n">params</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;&quot;</span><span class="si">%s</span><span class="s1">&quot; must be a parameter of queued function &quot;</span><span class="si">%s</span><span class="s1">&quot;&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">_now</span><span class="p">,</span> <span class="n">fun</span><span class="o">.</span><span class="vm">__name__</span><span class="p">))</span>
+    <span class="n">f_name</span> <span class="o">=</span> <span class="n">fun</span><span class="o">.</span><span class="vm">__name__</span>
+    <span class="n">kw_name</span> <span class="o">=</span> <span class="n">inspect</span><span class="o">.</span><span class="n">getargspec</span><span class="p">(</span><span class="n">fun</span><span class="p">)</span><span class="o">.</span><span class="n">keywords</span>
+    <span class="n">kws</span> <span class="o">=</span> <span class="n">params</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">kw_name</span><span class="p">,</span> <span class="p">{})</span>
+    <span class="n">params</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">kws</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="n">_now</span><span class="p">]:</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">fun</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">out</span><span class="o">.</span><span class="n">queue</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">out</span><span class="o">.</span><span class="n">history</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">f_name</span><span class="p">,</span> <span class="n">params</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">out</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">new</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;self&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="k">del</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;self&#39;</span><span class="p">]</span>
+        <span class="n">params</span><span class="p">[</span><span class="n">_now</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="n">new</span><span class="o">.</span><span class="n">queue</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">f_name</span><span class="p">,</span> <span class="n">params</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">new</span>
+
+
+<span class="k">class</span> <span class="nc">BaseObject</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Object providing common utility methods.</span>
+<span class="sd">    Used for inheritance.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;&lt;</span><span class="si">{0}</span><span class="s1"> </span><span class="si">{1}</span><span class="s1">&gt;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ID</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Saves object to a pickled file. &quot;&quot;&quot;</span>
+        <span class="n">save</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">load</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Loads object from a pickled file. &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">load</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_constructor</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span>
+
+    <span class="k">def</span> <span class="nf">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">deep</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Make a copy of this object</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        deep : boolean, default True</span>
+<span class="sd">            Make a deep copy, i.e. also copy data</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        copy : type of caller</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">copy</span> <span class="k">import</span> <span class="n">copy</span><span class="p">,</span> <span class="n">deepcopy</span>
+        <span class="k">if</span> <span class="n">deep</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">Measurement</span><span class="p">(</span><span class="n">BaseObject</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    A class for holding data from a single measurement, i.e.</span>
+<span class="sd">    a single well or a single tube.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ID</span><span class="p">,</span>
+                 <span class="n">datafile</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">readdata</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">readdata_kwargs</span><span class="o">=</span><span class="p">{},</span>
+                 <span class="n">metafile</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">readmeta</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">readmeta_kwargs</span><span class="o">=</span><span class="p">{}):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ID</span> <span class="o">=</span> <span class="n">ID</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">datafile</span> <span class="o">=</span> <span class="n">datafile</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">metafile</span> <span class="o">=</span> <span class="n">metafile</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_data</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_meta</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">readdata_kwargs</span> <span class="o">=</span> <span class="n">readdata_kwargs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">readmeta_kwargs</span> <span class="o">=</span> <span class="n">readmeta_kwargs</span>
+        <span class="k">if</span> <span class="n">readdata</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">set_data</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">readmeta</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">set_meta</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">position</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">history</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">queue</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">def</span> <span class="nf">_set_position</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">orderedcollection_id</span><span class="p">,</span> <span class="n">pos</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">position</span><span class="p">[</span><span class="n">orderedcollection_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">pos</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">shape</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span>
+
+    <span class="k">def</span> <span class="nf">apply_queued</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">new</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">new</span><span class="o">.</span><span class="n">queue</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">queue</span><span class="p">:</span>
+            <span class="n">name</span><span class="p">,</span> <span class="n">params</span> <span class="o">=</span> <span class="n">a</span>
+            <span class="n">new</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">new</span><span class="p">,</span> <span class="n">name</span><span class="p">)(</span><span class="o">**</span><span class="n">params</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">new</span>
+
+    <span class="c1">#     # An example for how to write a queueable function</span>
+    <span class="c1">#     @queueable</span>
+    <span class="c1">#     def fake_action(self, a, b=&#39;!&#39;, apply_now=False, **kws):</span>
+    <span class="c1">#         &#39;&#39;&#39;</span>
+    <span class="c1">#         Detailed doc.</span>
+    <span class="c1">#         &#39;&#39;&#39;</span>
+    <span class="c1">#         new = self.copy()</span>
+    <span class="c1">#         data = self.get_data()</span>
+    <span class="c1">#         if data is None: data = &#39;&#39;</span>
+    <span class="c1">#         c = kws.get(&#39;c&#39;,&#39; &#39;)</span>
+    <span class="c1">#         new_data = data + (a + b +&#39; (%s). &#39;%c)</span>
+    <span class="c1">#         new.set_data(data=new_data)</span>
+    <span class="c1">#         new.data = new_data</span>
+    <span class="c1">#         return new</span>
+
+    <span class="c1"># ----------------------</span>
+    <span class="c1"># Methods of exposing underlying data</span>
+    <span class="c1"># ----------------------</span>
+    <span class="k">def</span> <span class="nf">__contains__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="fm">__contains__</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="fm">__getitem__</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+
+    <span class="c1"># ----------------------</span>
+    <span class="c1"># Methods getting/setting data</span>
+    <span class="c1"># ----------------------</span>
+    <span class="k">def</span> <span class="nf">read_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        This function should be overwritten for each</span>
+<span class="sd">        specific data type.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">pass</span>
+
+    <span class="k">def</span> <span class="nf">read_meta</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        This function should be overwritten for each</span>
+<span class="sd">        specific data type.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">pass</span>
+
+    <span class="k">def</span> <span class="nf">set_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Read data into memory, applying all actions in queue.</span>
+<span class="sd">        Additionally, update queue and history.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">if</span> <span class="n">data</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;_data&#39;</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">history</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">queue</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">queue</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">def</span> <span class="nf">set_meta</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">meta</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Assign values to self.meta.</span>
+<span class="sd">        Meta is not returned</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">if</span> <span class="n">meta</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">meta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_meta</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;_meta&#39;</span><span class="p">,</span> <span class="n">meta</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_get_attr_from_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        return values of attribute of self.</span>
+<span class="sd">        Attribute values can the ones assigned already, or the read for</span>
+<span class="sd">        the corresponding file.</span>
+<span class="sd">        If read from file:</span>
+<span class="sd">            i) the method used to read the file is &#39;self.read_[attr name]&#39;</span>
+<span class="sd">            (e.g. for an attribute named &#39;meta&#39; &#39;self.read_meta&#39;</span>
+<span class="sd">            will be used).</span>
+<span class="sd">            ii) the file path will be the one specified in an attribute</span>
+<span class="sd">            named: &#39;[attr name]file&#39;. (e.g. for an attribute named</span>
+<span class="sd">            &#39;meta&#39; a &#39;metafile&#39; attribute will be created).</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">current_value</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;_&#39;</span> <span class="o">+</span> <span class="n">name</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">current_value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="n">current_value</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">parser_kwargs</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;read</span><span class="si">%s</span><span class="s1">_kwargs&#39;</span> <span class="o">%</span> <span class="n">name</span><span class="p">,</span> <span class="p">{})</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;read_</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">name</span><span class="p">)(</span><span class="o">**</span><span class="n">parser_kwargs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">value</span>
+
+    <span class="k">def</span> <span class="nf">get_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Get the measurement data.</span>
+<span class="sd">        If data is not set, read from &#39;self.datafile&#39; using &#39;self.read_data&#39;.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">queue</span><span class="p">:</span>
+            <span class="n">new</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">apply_queued</span><span class="p">()</span>
+            <span class="k">return</span> <span class="n">new</span><span class="o">.</span><span class="n">get_data</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_attr_from_file</span><span class="p">(</span><span class="s1">&#39;data&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_meta</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Get the measurement metadata.</span>
+<span class="sd">        If not metadata is not set, read from &#39;self.metafile&#39; using &#39;self.read_meta&#39;.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_attr_from_file</span><span class="p">(</span><span class="s1">&#39;meta&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="n">data</span> <span class="o">=</span> <span class="nb">property</span><span class="p">(</span><span class="n">get_data</span><span class="p">,</span> <span class="n">set_data</span><span class="p">,</span> <span class="n">doc</span><span class="o">=</span><span class="s1">&#39;Data may be stored in memory or on disk&#39;</span><span class="p">)</span>
+    <span class="n">meta</span> <span class="o">=</span> <span class="nb">property</span><span class="p">(</span><span class="n">get_meta</span><span class="p">,</span> <span class="n">set_meta</span><span class="p">,</span> <span class="n">doc</span><span class="o">=</span><span class="s1">&#39;Metadata associated with measurement.&#39;</span><span class="p">)</span>
+
+    <span class="c1"># ----------------------</span>
+    <span class="k">def</span> <span class="nf">get_meta_fields</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fields</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Get specific fields of associated metadata.</span>
+
+<span class="sd">        This function should be overwritten for each</span>
+<span class="sd">        specific data type.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">pass</span>
+
+    <span class="k">def</span> <span class="nf">ID_from_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Get measurement ID from loaded data.</span>
+
+<span class="sd">        This function should be overwritten for each</span>
+<span class="sd">        specific data type.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">pass</span>
+
+    <span class="k">def</span> <span class="nf">apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">func</span><span class="p">,</span> <span class="n">applyto</span><span class="o">=</span><span class="s1">&#39;measurement&#39;</span><span class="p">,</span> <span class="n">noneval</span><span class="o">=</span><span class="n">nan</span><span class="p">,</span> <span class="n">setdata</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Apply func either to self or to associated data.</span>
+<span class="sd">        If data is not already parsed, try and read it.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        func : callable</span>
+<span class="sd">            The function either accepts a measurement object or an FCS object.</span>
+<span class="sd">            Does some calculation and returns the result.</span>
+<span class="sd">        applyto : [&#39;data&#39; | &#39;measurement&#39;]</span>
+<span class="sd">            * &#39;data&#39; : apply to associated data</span>
+<span class="sd">            * &#39;measurement&#39; : apply to measurement object itself.</span>
+<span class="sd">        noneval : obj</span>
+<span class="sd">            Value to return if `applyto` is &#39;data&#39;, but no data is available.</span>
+<span class="sd">        setdata : bool</span>
+<span class="sd">            Used only if data is not already set.</span>
+<span class="sd">            If true parsed data will be assigned to self.data</span>
+<span class="sd">            Otherwise data will be discarded at end of apply.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">applyto</span> <span class="o">=</span> <span class="n">applyto</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">applyto</span> <span class="o">==</span> <span class="s1">&#39;data&#39;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">datafile</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">noneval</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">read_data</span><span class="p">()</span>
+                <span class="k">if</span> <span class="n">setdata</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">data</span>
+            <span class="k">return</span> <span class="n">func</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">applyto</span> <span class="o">==</span> <span class="s1">&#39;measurement&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">func</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Encountered unsupported value &quot;</span><span class="si">%s</span><span class="s1">&quot; for applyto parameter.&#39;</span> <span class="o">%</span> <span class="n">applyto</span><span class="p">)</span>
+
+
+<span class="n">Well</span> <span class="o">=</span> <span class="n">Measurement</span>
+
+<span class="kn">import</span> <span class="nn">collections</span>
+
+
+<span class="k">class</span> <span class="nc">MeasurementCollection</span><span class="p">(</span><span class="n">collections</span><span class="o">.</span><span class="n">MutableMapping</span><span class="p">,</span> <span class="n">BaseObject</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    A collection of measurements</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">_measurement_class</span> <span class="o">=</span> <span class="n">Measurement</span>  <span class="c1"># to be replaced when inheriting</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ID</span><span class="p">,</span> <span class="n">measurements</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        A dictionary-like container for holding multiple Measurements.</span>
+
+<span class="sd">        Note that the collection keys are not necessarily identical to the Measurements IDs.</span>
+<span class="sd">        Additionally, like a dict, measurement keys must be unique.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        ID : hashable</span>
+<span class="sd">            Collection ID</span>
+<span class="sd">        measurements : mappable | iterable</span>
+<span class="sd">            values are measurements of appropriate type (type is explicitly check for).</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ID</span> <span class="o">=</span> <span class="n">ID</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">measurements</span><span class="p">,</span> <span class="n">collections</span><span class="o">.</span><span class="n">Mapping</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">measurements</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">measurements</span><span class="p">:</span>
+                <span class="bp">self</span><span class="p">[</span><span class="n">m</span><span class="o">.</span><span class="n">ID</span><span class="p">]</span> <span class="o">=</span> <span class="n">m</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="nd">@doc_replacer</span>
+    <span class="k">def</span> <span class="nf">from_files</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">ID</span><span class="p">,</span> <span class="n">datafiles</span><span class="p">,</span> <span class="n">parser</span><span class="p">,</span> <span class="n">readdata_kwargs</span><span class="o">=</span><span class="p">{},</span> <span class="n">readmeta_kwargs</span><span class="o">=</span><span class="p">{},</span> <span class="o">**</span><span class="n">ID_kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create a Collection of measurements from a set of data files.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        {_bases_ID}</span>
+<span class="sd">        {_bases_data_files}</span>
+<span class="sd">        {_bases_filename_parser}</span>
+<span class="sd">        {_bases_ID_kwargs}</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">d</span> <span class="o">=</span> <span class="n">_assign_IDS_to_datafiles</span><span class="p">(</span><span class="n">datafiles</span><span class="p">,</span> <span class="n">parser</span><span class="p">,</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_measurement_class</span><span class="p">,</span> <span class="o">**</span><span class="n">ID_kwargs</span><span class="p">)</span>
+        <span class="n">measurements</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">sID</span><span class="p">,</span> <span class="n">dfile</span> <span class="ow">in</span> <span class="n">d</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">measurements</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">_measurement_class</span><span class="p">(</span><span class="n">sID</span><span class="p">,</span> <span class="n">datafile</span><span class="o">=</span><span class="n">dfile</span><span class="p">,</span>
+                                                           <span class="n">readdata_kwargs</span><span class="o">=</span><span class="n">readdata_kwargs</span><span class="p">,</span>
+                                                           <span class="n">readmeta_kwargs</span><span class="o">=</span><span class="n">readmeta_kwargs</span><span class="p">))</span>
+            <span class="k">except</span><span class="p">:</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;Error occurred while trying to parse file: </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">dfile</span>
+                <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">ID</span><span class="p">,</span> <span class="n">measurements</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="nd">@doc_replacer</span>
+    <span class="k">def</span> <span class="nf">from_dir</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">ID</span><span class="p">,</span> <span class="n">datadir</span><span class="p">,</span> <span class="n">parser</span><span class="p">,</span> <span class="n">pattern</span><span class="o">=</span><span class="s1">&#39;*.fcs&#39;</span><span class="p">,</span> <span class="n">recursive</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                 <span class="n">readdata_kwargs</span><span class="o">=</span><span class="p">{},</span> <span class="n">readmeta_kwargs</span><span class="o">=</span><span class="p">{},</span> <span class="o">**</span><span class="n">ID_kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create a Collection of measurements from data files contained in a directory.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        ID : hashable</span>
+<span class="sd">            Collection ID</span>
+<span class="sd">        datadir : str</span>
+<span class="sd">            Path of directory containing the data files.</span>
+<span class="sd">        pattern : str</span>
+<span class="sd">            Only files matching the pattern will be used to create measurements.</span>
+<span class="sd">        recursive : bool</span>
+<span class="sd">            Recursively look for files matching pattern in subdirectories.</span>
+<span class="sd">        {_bases_filename_parser}</span>
+<span class="sd">        {_bases_ID_kwargs}</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">datafiles</span> <span class="o">=</span> <span class="n">get_files</span><span class="p">(</span><span class="n">datadir</span><span class="p">,</span> <span class="n">pattern</span><span class="p">,</span> <span class="n">recursive</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">from_files</span><span class="p">(</span><span class="n">ID</span><span class="p">,</span> <span class="n">datafiles</span><span class="p">,</span> <span class="n">parser</span><span class="p">,</span>
+                              <span class="n">readdata_kwargs</span><span class="o">=</span><span class="n">readdata_kwargs</span><span class="p">,</span> <span class="n">readmeta_kwargs</span><span class="o">=</span><span class="n">readmeta_kwargs</span><span class="p">,</span>
+                              <span class="o">**</span><span class="n">ID_kwargs</span><span class="p">)</span>
+
+    <span class="c1"># ----------------------</span>
+    <span class="c1"># MutableMapping methods</span>
+    <span class="c1"># ----------------------</span>
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;ID:</span><span class="se">\n</span><span class="si">%s</span><span class="se">\n\n</span><span class="s1">Data:</span><span class="se">\n</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ID</span><span class="p">,</span> <span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">__setitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_measurement_class</span><span class="p">):</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;Collection of type </span><span class="si">%s</span><span class="s1"> can only contain object of type </span><span class="si">%s</span><span class="s1">.</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span>
+                <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">),</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_measurement_class</span><span class="p">))</span> <span class="o">+</span>
+                   <span class="s1">&#39;Encountered type </span><span class="si">%s</span><span class="s1">.&#39;</span> <span class="o">%</span> <span class="nb">type</span><span class="p">(</span><span class="n">value</span><span class="p">))</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+
+    <span class="k">def</span> <span class="nf">__delitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+        <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">iter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+
+    <span class="c1"># ----------------------</span>
+    <span class="c1"># User methods</span>
+    <span class="c1"># ----------------------</span>
+    <span class="k">def</span> <span class="nf">apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">func</span><span class="p">,</span> <span class="n">ids</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">applyto</span><span class="o">=</span><span class="s1">&#39;measurement&#39;</span><span class="p">,</span> <span class="n">noneval</span><span class="o">=</span><span class="n">nan</span><span class="p">,</span>
+              <span class="n">setdata</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">output_format</span><span class="o">=</span><span class="s1">&#39;dict&#39;</span><span class="p">,</span> <span class="n">ID</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+              <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Apply func to each of the specified measurements.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        func : callable</span>
+<span class="sd">            Accepts a Measurement object or a DataFrame.</span>
+<span class="sd">        ids : hashable| iterable of hashables | None</span>
+<span class="sd">            Keys of measurements to which func will be applied.</span>
+<span class="sd">            If None is given apply to all measurements.</span>
+<span class="sd">        applyto :  &#39;measurement&#39; | &#39;data&#39;</span>
+<span class="sd">            * &#39;measurement&#39; : apply to measurements objects themselves.</span>
+<span class="sd">            * &#39;data&#39;        : apply to measurement associated data</span>
+<span class="sd">        noneval : obj</span>
+<span class="sd">            Value returned if applyto is &#39;data&#39; but no data is available.</span>
+<span class="sd">        setdata : bool</span>
+<span class="sd">            Whether to set the data in the Measurement object.</span>
+<span class="sd">            Used only if data is not already set.</span>
+<span class="sd">        output_format : [&#39;dict&#39; | &#39;collection&#39;]</span>
+<span class="sd">            * collection : keeps result as collection</span>
+<span class="sd">            WARNING: For collection, func should return a copy of the measurement instance rather</span>
+<span class="sd">            than the original measurement instance.</span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Dictionary keyed by measurement keys containing the corresponding output of func</span>
+<span class="sd">        or returns a collection (if output_format=&#39;collection&#39;).</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">if</span> <span class="n">ids</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">ids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">ids</span> <span class="o">=</span> <span class="n">to_list</span><span class="p">(</span><span class="n">ids</span><span class="p">)</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">((</span><span class="n">i</span><span class="p">,</span> <span class="bp">self</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="n">applyto</span><span class="p">,</span> <span class="n">noneval</span><span class="p">,</span> <span class="n">setdata</span><span class="p">))</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">ids</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">output_format</span> <span class="o">==</span> <span class="s1">&#39;collection&#39;</span><span class="p">:</span>
+            <span class="n">can_keep_as_collection</span> <span class="o">=</span> <span class="nb">all</span><span class="p">(</span>
+                <span class="p">[</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_measurement_class</span><span class="p">)</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">result</span><span class="o">.</span><span class="n">values</span><span class="p">()])</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">can_keep_as_collection</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                    <span class="s1">&#39;Cannot turn output into a collection. The provided func must return results of type </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_measurement_class</span><span class="p">))</span>
+
+            <span class="n">new_collection</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+            <span class="c1"># Locate IDs to remove</span>
+            <span class="n">ids_to_remove</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="k">if</span> <span class="n">x</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">ids</span><span class="p">]</span>
+            <span class="c1"># Remove data for these IDs</span>
+            <span class="k">for</span> <span class="n">ids</span> <span class="ow">in</span> <span class="n">ids_to_remove</span><span class="p">:</span>
+                <span class="n">new_collection</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">ids</span><span class="p">)</span>
+            <span class="c1"># Update keys with new values</span>
+            <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">new_collection</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">new_collection</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">result</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">ID</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">new_collection</span><span class="o">.</span><span class="n">ID</span> <span class="o">=</span> <span class="n">ID</span>
+            <span class="k">return</span> <span class="n">new_collection</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Return a dictionary</span>
+            <span class="k">return</span> <span class="n">result</span>
+
+    <span class="k">def</span> <span class="nf">set_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ids</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set the data for all specified measurements (all if None given).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">fun</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">set_data</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">fun</span><span class="p">,</span> <span class="n">ids</span><span class="o">=</span><span class="n">ids</span><span class="p">,</span> <span class="n">applyto</span><span class="o">=</span><span class="s1">&#39;measurement&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_clear_measurement_attr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attr</span><span class="p">,</span> <span class="n">ids</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="n">fun</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="nb">setattr</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">attr</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">fun</span><span class="p">,</span> <span class="n">ids</span><span class="o">=</span><span class="n">ids</span><span class="p">,</span> <span class="n">applyto</span><span class="o">=</span><span class="s1">&#39;measurement&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">clear_measurement_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ids</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Clear the data in all specified measurements (all if None given).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_clear_measurement_attr</span><span class="p">(</span><span class="s1">&#39;data&#39;</span><span class="p">,</span> <span class="n">ids</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">clear_measurement_meta</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ids</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Clear the metadata in all specified measurements (all if None given).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_clear_measurement_attr</span><span class="p">(</span><span class="s1">&#39;meta&#39;</span><span class="p">,</span> <span class="n">ids</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_measurement_metadata</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fields</span><span class="p">,</span> <span class="n">ids</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">noneval</span><span class="o">=</span><span class="n">nan</span><span class="p">,</span>
+                                 <span class="n">output_format</span><span class="o">=</span><span class="s1">&#39;DataFrame&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the metadata fields of specified measurements (all if None given).</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        fields : str | iterable of str</span>
+<span class="sd">            Names of metadata fields to be returned.</span>
+<span class="sd">        ids : hashable| iterable of hashables | None</span>
+<span class="sd">            Keys of measurements for which metadata will be returned.</span>
+<span class="sd">            If None is given return metadata of all measurements.</span>
+<span class="sd">        noneval : obj</span>
+<span class="sd">            Value returned if applyto is &#39;data&#39; but no data is available.</span>
+<span class="sd">        output_format :  &#39;DataFrame&#39; | &#39;dict&#39;</span>
+<span class="sd">            &#39;DataFrame&#39; : return DataFrame,</span>
+<span class="sd">            &#39;dict&#39;      : return dictionary.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Measurement metadata in specified output_format.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">fields</span> <span class="o">=</span> <span class="n">to_list</span><span class="p">(</span><span class="n">fields</span><span class="p">)</span>
+        <span class="n">func</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">get_meta_fields</span><span class="p">(</span><span class="n">fields</span><span class="p">)</span>
+        <span class="n">meta_d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="n">ids</span><span class="o">=</span><span class="n">ids</span><span class="p">,</span> <span class="n">applyto</span><span class="o">=</span><span class="s1">&#39;measurement&#39;</span><span class="p">,</span>
+                            <span class="n">noneval</span><span class="o">=</span><span class="n">noneval</span><span class="p">,</span> <span class="n">output_format</span><span class="o">=</span><span class="s1">&#39;dict&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">output_format</span> <span class="ow">is</span> <span class="s1">&#39;dict&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">meta_d</span>
+        <span class="k">elif</span> <span class="n">output_format</span> <span class="ow">is</span> <span class="s1">&#39;DataFrame&#39;</span><span class="p">:</span>
+            <span class="kn">from</span> <span class="nn">pandas</span> <span class="k">import</span> <span class="n">DataFrame</span> <span class="k">as</span> <span class="n">DF</span>
+            <span class="n">meta_df</span> <span class="o">=</span> <span class="n">DF</span><span class="p">(</span><span class="n">meta_d</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">fields</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">meta_df</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;The output_format must be either &#39;dict&#39; or &#39;DataFrame&#39;. &quot;</span> <span class="o">+</span>
+                   <span class="s2">&quot;Encountered unsupported value </span><span class="si">%s</span><span class="s2">.&quot;</span> <span class="o">%</span> <span class="nb">repr</span><span class="p">(</span><span class="n">output_format</span><span class="p">))</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+    <span class="c1"># ----------------------</span>
+    <span class="c1"># Filtering methods</span>
+    <span class="c1"># ----------------------</span>
+    <span class="k">def</span> <span class="nf">filter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">criteria</span><span class="p">,</span> <span class="n">applyto</span><span class="o">=</span><span class="s1">&#39;measurement&#39;</span><span class="p">,</span> <span class="n">ID</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Filter measurements according to given criteria.</span>
+<span class="sd">        Retain only Measurements for which criteria returns True.</span>
+
+<span class="sd">        TODO: add support for multiple criteria</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        criteria : callable</span>
+<span class="sd">            Returns bool.</span>
+<span class="sd">        applyto : &#39;measurement&#39; | &#39;keys&#39; | &#39;data&#39; | mapping</span>
+<span class="sd">             &#39;measurement&#39; : criteria is applied to Measurement objects</span>
+<span class="sd">             &#39;keys&#39;         : criteria is applied to the keys.</span>
+<span class="sd">             &#39;data&#39;         : criteria is applied to the Measurement objects&#39; data.</span>
+<span class="sd">             mapping        : for each key criteria is applied to mapping value with same key.</span>
+<span class="sd">        ID : str</span>
+<span class="sd">            ID of the filtered collection.</span>
+<span class="sd">            If None is given, append &#39;.filterd&#39; to the current sample ID.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Filtered Collection.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">fil</span> <span class="o">=</span> <span class="n">criteria</span>
+        <span class="n">new</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">applyto</span><span class="p">,</span> <span class="n">collections</span><span class="o">.</span><span class="n">Mapping</span><span class="p">):</span>
+            <span class="n">remove</span> <span class="o">=</span> <span class="p">(</span><span class="n">k</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">fil</span><span class="p">(</span><span class="n">applyto</span><span class="p">[</span><span class="n">k</span><span class="p">]))</span>
+        <span class="k">elif</span> <span class="n">applyto</span> <span class="o">==</span> <span class="s1">&#39;measurement&#39;</span><span class="p">:</span>
+            <span class="n">remove</span> <span class="o">=</span> <span class="p">(</span><span class="n">k</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">fil</span><span class="p">(</span><span class="n">v</span><span class="p">))</span>
+        <span class="k">elif</span> <span class="n">applyto</span> <span class="o">==</span> <span class="s1">&#39;keys&#39;</span><span class="p">:</span>
+            <span class="n">remove</span> <span class="o">=</span> <span class="p">(</span><span class="n">k</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">fil</span><span class="p">(</span><span class="n">k</span><span class="p">))</span>
+        <span class="k">elif</span> <span class="n">applyto</span> <span class="o">==</span> <span class="s1">&#39;data&#39;</span><span class="p">:</span>
+            <span class="n">remove</span> <span class="o">=</span> <span class="p">(</span><span class="n">k</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">fil</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">get_data</span><span class="p">()))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Unsupported value &quot;</span><span class="si">%s</span><span class="s1">&quot; for applyto parameter.&#39;</span> <span class="o">%</span> <span class="n">applyto</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">remove</span><span class="p">:</span>
+            <span class="k">del</span> <span class="n">new</span><span class="p">[</span><span class="n">r</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">ID</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">ID</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ID</span>
+        <span class="n">new</span><span class="o">.</span><span class="n">ID</span> <span class="o">=</span> <span class="n">ID</span>
+        <span class="k">return</span> <span class="n">new</span>
+
+    <span class="k">def</span> <span class="nf">filter_by_key</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">keys</span><span class="p">,</span> <span class="n">ID</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Keep only Measurements with given keys.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">keys</span> <span class="o">=</span> <span class="n">to_list</span><span class="p">(</span><span class="n">keys</span><span class="p">)</span>
+        <span class="n">fil</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">keys</span>
+        <span class="k">if</span> <span class="n">ID</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">ID</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ID</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">fil</span><span class="p">,</span> <span class="n">applyto</span><span class="o">=</span><span class="s1">&#39;keys&#39;</span><span class="p">,</span> <span class="n">ID</span><span class="o">=</span><span class="n">ID</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">filter_by_attr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attr</span><span class="p">,</span> <span class="n">criteria</span><span class="p">,</span> <span class="n">ID</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="n">applyto</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">attr</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+        <span class="k">if</span> <span class="n">ID</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">ID</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ID</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">criteria</span><span class="p">,</span> <span class="n">applyto</span><span class="o">=</span><span class="n">applyto</span><span class="p">,</span> <span class="n">ID</span><span class="o">=</span><span class="n">ID</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">filter_by_IDs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ids</span><span class="p">,</span> <span class="n">ID</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Keep only Measurements with given IDs.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">fil</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">ids</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">filter_by_attr</span><span class="p">(</span><span class="s1">&#39;ID&#39;</span><span class="p">,</span> <span class="n">fil</span><span class="p">,</span> <span class="n">ID</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">filter_by_meta</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">criteria</span><span class="p">,</span> <span class="n">ID</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+
+    <span class="k">def</span> <span class="nf">filter_by_rows</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rows</span><span class="p">,</span> <span class="n">ID</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Keep only Measurements in corresponding rows.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">rows</span> <span class="o">=</span> <span class="n">to_list</span><span class="p">(</span><span class="n">rows</span><span class="p">)</span>
+        <span class="n">fil</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">rows</span>
+        <span class="n">applyto</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_positions</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="p">()}</span>
+        <span class="k">if</span> <span class="n">ID</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">ID</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ID</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">fil</span><span class="p">,</span> <span class="n">applyto</span><span class="o">=</span><span class="n">applyto</span><span class="p">,</span> <span class="n">ID</span><span class="o">=</span><span class="n">ID</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">filter_by_cols</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cols</span><span class="p">,</span> <span class="n">ID</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Keep only Measurements in corresponding columns.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">rows</span> <span class="o">=</span> <span class="n">to_list</span><span class="p">(</span><span class="n">cols</span><span class="p">)</span>
+        <span class="n">fil</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">rows</span>
+        <span class="n">applyto</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_positions</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="p">()}</span>
+        <span class="k">if</span> <span class="n">ID</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">ID</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ID</span> <span class="o">+</span> <span class="s1">&#39;.filtered_by_cols&#39;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">fil</span><span class="p">,</span> <span class="n">applyto</span><span class="o">=</span><span class="n">applyto</span><span class="p">,</span> <span class="n">ID</span><span class="o">=</span><span class="n">ID</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">OrderedCollection</span><span class="p">(</span><span class="n">MeasurementCollection</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Collection of Measurements that have an order, e.g. a 96-well Plate.</span>
+
+<span class="sd">    TODO:</span>
+<span class="sd">        - add reshape?</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="nd">@doc_replacer</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ID</span><span class="p">,</span> <span class="n">measurements</span><span class="p">,</span> <span class="n">position_mapper</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">12</span><span class="p">),</span>
+                 <span class="n">positions</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">row_labels</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">col_labels</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A dictionary-like container for holding multiple Measurements in a 2D array.</span>
+
+<span class="sd">        Note that the collection keys are not necessarily identical to the Measurements IDs.</span>
+<span class="sd">        Additionally, like a dict, measurement keys must be unique.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        ID : hashable</span>
+<span class="sd">            Collection ID</span>
+<span class="sd">        measurements : mappable | iterable</span>
+<span class="sd">            values are measurements of appropriate type (type is explicitly checked for).</span>
+<span class="sd">        {_bases_position_mapper}</span>
+<span class="sd">        shape : 2-tuple</span>
+<span class="sd">            Shape of the 2D array of measurements (rows, cols).</span>
+<span class="sd">        positions : dict | None</span>
+<span class="sd">            Mapping of measurement_key:(row,col)</span>
+<span class="sd">            If None is given set positions as specified by the position_mapper arg.</span>
+<span class="sd">        row_labels : iterable of str</span>
+<span class="sd">            If None is given, rows will be labeled &#39;A&#39;,&#39;B&#39;,&#39;C&#39;, ...</span>
+<span class="sd">        col_labels : iterable of str</span>
+<span class="sd">            If None is given, columns will be labeled 1,2,3, ...</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1">## init the collection</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">OrderedCollection</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">ID</span><span class="p">,</span> <span class="n">measurements</span><span class="p">)</span>
+        <span class="c1">## set shape-related attributes</span>
+        <span class="k">if</span> <span class="n">row_labels</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">row_labels</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_default_labels</span><span class="p">(</span><span class="s1">&#39;rows&#39;</span><span class="p">,</span> <span class="n">shape</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">col_labels</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">col_labels</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_default_labels</span><span class="p">(</span><span class="s1">&#39;cols&#39;</span><span class="p">,</span> <span class="n">shape</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">row_labels</span> <span class="o">=</span> <span class="n">row_labels</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">col_labels</span> <span class="o">=</span> <span class="n">col_labels</span>
+        <span class="c1">##set positions</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_positions</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_positions</span><span class="p">(</span><span class="n">positions</span><span class="p">,</span> <span class="n">position_mapper</span><span class="o">=</span><span class="n">position_mapper</span><span class="p">)</span>
+        <span class="c1">## check that all positions have been set</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_positions</span><span class="p">:</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;All measurement position must be set,&#39;</span> <span class="o">+</span>
+                       <span class="s1">&#39; but no position was set for measurement </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">k</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">layout</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">layout</span>
+        <span class="n">print_layout</span> <span class="o">=</span> <span class="n">layout</span><span class="o">.</span><span class="n">applymap</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">ID</span> <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="s1">&#39;ID&#39;</span><span class="p">)</span> <span class="k">else</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s1">&#39;ID:</span><span class="se">\n</span><span class="si">%s</span><span class="se">\n\n</span><span class="s1">Data:</span><span class="se">\n</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ID</span><span class="p">,</span> <span class="n">print_layout</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="nd">@doc_replacer</span>
+    <span class="k">def</span> <span class="nf">from_files</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">ID</span><span class="p">,</span> <span class="n">datafiles</span><span class="p">,</span> <span class="n">parser</span><span class="o">=</span><span class="s1">&#39;name&#39;</span><span class="p">,</span>
+                   <span class="n">position_mapper</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                   <span class="n">readdata_kwargs</span><span class="o">=</span><span class="p">{},</span> <span class="n">readmeta_kwargs</span><span class="o">=</span><span class="p">{},</span> <span class="n">ID_kwargs</span><span class="o">=</span><span class="p">{},</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create an OrderedCollection of measurements from a set of data files.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        {_bases_ID}</span>
+<span class="sd">        {_bases_data_files}</span>
+<span class="sd">        {_bases_filename_parser}</span>
+<span class="sd">        {_bases_position_mapper}</span>
+<span class="sd">        {_bases_ID_kwargs}</span>
+<span class="sd">        kwargs : dict</span>
+<span class="sd">            Additional key word arguments to be passed to constructor.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">position_mapper</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">parser</span><span class="p">,</span> <span class="n">six</span><span class="o">.</span><span class="n">string_types</span><span class="p">):</span>
+                <span class="n">position_mapper</span> <span class="o">=</span> <span class="n">parser</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;When using a custom parser, you must specify the position_mapper keyword.&quot;</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="n">d</span> <span class="o">=</span> <span class="n">_assign_IDS_to_datafiles</span><span class="p">(</span><span class="n">datafiles</span><span class="p">,</span> <span class="n">parser</span><span class="p">,</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_measurement_class</span><span class="p">,</span> <span class="o">**</span><span class="n">ID_kwargs</span><span class="p">)</span>
+        <span class="n">measurements</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">sID</span><span class="p">,</span> <span class="n">dfile</span> <span class="ow">in</span> <span class="n">d</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">measurements</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">_measurement_class</span><span class="p">(</span><span class="n">sID</span><span class="p">,</span> <span class="n">datafile</span><span class="o">=</span><span class="n">dfile</span><span class="p">,</span>
+                                                           <span class="n">readdata_kwargs</span><span class="o">=</span><span class="n">readdata_kwargs</span><span class="p">,</span>
+                                                           <span class="n">readmeta_kwargs</span><span class="o">=</span><span class="n">readmeta_kwargs</span><span class="p">))</span>
+            <span class="k">except</span><span class="p">:</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;Error occured while trying to parse file: </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">dfile</span>
+                <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">ID</span><span class="p">,</span> <span class="n">measurements</span><span class="p">,</span> <span class="n">position_mapper</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="nd">@doc_replacer</span>
+    <span class="k">def</span> <span class="nf">from_dir</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">ID</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span>
+                 <span class="n">parser</span><span class="o">=</span><span class="s1">&#39;name&#39;</span><span class="p">,</span>
+                 <span class="n">position_mapper</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">pattern</span><span class="o">=</span><span class="s1">&#39;*.fcs&#39;</span><span class="p">,</span> <span class="n">recursive</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                 <span class="n">readdata_kwargs</span><span class="o">=</span><span class="p">{},</span> <span class="n">readmeta_kwargs</span><span class="o">=</span><span class="p">{},</span> <span class="n">ID_kwargs</span><span class="o">=</span><span class="p">{},</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create a Collection of measurements from data files contained in a directory.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        {_bases_ID}</span>
+<span class="sd">        datadir : str</span>
+<span class="sd">            Path of directory containing the data files.</span>
+<span class="sd">        pattern : str</span>
+<span class="sd">            Only files matching the pattern will be used to create measurements.</span>
+<span class="sd">        recursive : bool</span>
+<span class="sd">            Recursively look for files matching pattern in subdirectories.</span>
+<span class="sd">        {_bases_filename_parser}</span>
+<span class="sd">        {_bases_position_mapper}</span>
+<span class="sd">        {_bases_ID_kwargs}</span>
+<span class="sd">        kwargs : dict</span>
+<span class="sd">            Additional key word arguments to be passed to constructor.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">datafiles</span> <span class="o">=</span> <span class="n">get_files</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">pattern</span><span class="p">,</span> <span class="n">recursive</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">from_files</span><span class="p">(</span><span class="n">ID</span><span class="p">,</span> <span class="n">datafiles</span><span class="p">,</span> <span class="n">parser</span><span class="o">=</span><span class="n">parser</span><span class="p">,</span> <span class="n">position_mapper</span><span class="o">=</span><span class="n">position_mapper</span><span class="p">,</span>
+                              <span class="n">readdata_kwargs</span><span class="o">=</span><span class="n">readdata_kwargs</span><span class="p">,</span> <span class="n">readmeta_kwargs</span><span class="o">=</span><span class="n">readmeta_kwargs</span><span class="p">,</span>
+                              <span class="n">ID_kwargs</span><span class="o">=</span><span class="n">ID_kwargs</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">set_labels</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="s1">&#39;rows&#39;</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Set the row/col labels.</span>
+<span class="sd">        Note that this method doesn&#39;t check that enough labels were set for all the assigned positions.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">if</span> <span class="n">axis</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;rows&#39;</span><span class="p">,</span> <span class="s1">&#39;row&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">):</span>
+            <span class="n">assigned_pos</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_positions</span><span class="o">.</span><span class="n">itervalues</span><span class="p">())</span>
+            <span class="n">not_assigned</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">labels</span><span class="p">)</span> <span class="o">-</span> <span class="n">assigned_pos</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">not_assigned</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;New labels must contain all assigned positions&#39;</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">row_labels</span> <span class="o">=</span> <span class="n">labels</span>
+        <span class="k">elif</span> <span class="n">axis</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;cols&#39;</span><span class="p">,</span> <span class="s1">&#39;col&#39;</span><span class="p">,</span> <span class="s1">&#39;c&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">col_labels</span> <span class="o">=</span> <span class="n">labels</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;Unsupported axis value </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">axis</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_default_labels</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">axis</span><span class="p">,</span> <span class="n">shape</span><span class="p">):</span>
+        <span class="kn">import</span> <span class="nn">string</span>
+        <span class="k">if</span> <span class="n">axis</span> <span class="o">==</span> <span class="s1">&#39;rows&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[</span><span class="n">int2letters</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">string</span><span class="o">.</span><span class="n">ascii_uppercase</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span> <span class="o">+</span> <span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">_is_valid_position</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">position</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        check if given position is valid for this collection</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">row</span><span class="p">,</span> <span class="n">col</span> <span class="o">=</span> <span class="n">position</span>
+        <span class="n">valid_r</span> <span class="o">=</span> <span class="n">row</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">row_labels</span>
+        <span class="n">valid_c</span> <span class="o">=</span> <span class="n">col</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">col_labels</span>
+        <span class="k">return</span> <span class="n">valid_r</span> <span class="ow">and</span> <span class="n">valid_c</span>
+
+    <span class="nd">@doc_replacer</span>
+    <span class="k">def</span> <span class="nf">_get_ID2position_mapper</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">position_mapper</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Defines a position parser that is used</span>
+<span class="sd">        to map between sample IDs and positions.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        --------------</span>
+<span class="sd">        {_bases_position_mapper}</span>
+
+<span class="sd">        TODO: Fix the name to work with more than 26 letters</span>
+<span class="sd">        of the alphabet.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="k">def</span> <span class="nf">num_parser</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">order</span><span class="p">):</span>
+            <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="o">=</span> <span class="n">unravel_index</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="mi">1</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="n">order</span><span class="p">)</span>
+            <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">row_labels</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">col_labels</span><span class="p">[</span><span class="n">j</span><span class="p">])</span>
+
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">position_mapper</span><span class="p">,</span> <span class="s1">&#39;__call__&#39;</span><span class="p">):</span>
+            <span class="n">mapper</span> <span class="o">=</span> <span class="n">position_mapper</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">position_mapper</span><span class="p">,</span> <span class="n">collections</span><span class="o">.</span><span class="n">Mapping</span><span class="p">):</span>
+            <span class="n">mapper</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">position_mapper</span><span class="p">[</span><span class="n">x</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="n">position_mapper</span> <span class="o">==</span> <span class="s1">&#39;name&#39;</span><span class="p">:</span>
+            <span class="n">mapper</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">int</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">:]))</span>
+        <span class="k">elif</span> <span class="n">position_mapper</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;row_first_enumerator&#39;</span><span class="p">,</span> <span class="s1">&#39;number&#39;</span><span class="p">):</span>
+            <span class="n">mapper</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">num_parser</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="s1">&#39;F&#39;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">position_mapper</span> <span class="o">==</span> <span class="s1">&#39;col_first_enumerator&#39;</span><span class="p">:</span>
+            <span class="n">mapper</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">num_parser</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="s1">&#39;C&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;&quot;</span><span class="si">{}</span><span class="s1">&quot; is not a known key_to_position_parser.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">position_mapper</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">mapper</span>
+
+    <span class="k">def</span> <span class="nf">set_positions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">positions</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">position_mapper</span><span class="o">=</span><span class="s1">&#39;name&#39;</span><span class="p">,</span> <span class="n">ids</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        checks for position validity &amp; collisions,</span>
+<span class="sd">        but not that all measurements are assigned.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        -----------</span>
+<span class="sd">        positions : is dict-like of measurement_key:(row,col)</span>
+<span class="sd">        parser :</span>
+<span class="sd">            callable - gets key and returns position</span>
+<span class="sd">            mapping  - key:pos</span>
+<span class="sd">            &#39;name&#39;   - parses things like &#39;A1&#39;, &#39;G12&#39;</span>
+<span class="sd">            &#39;number&#39; - converts number to positions, going over rows first.</span>
+<span class="sd">        ids :</span>
+<span class="sd">            parser will be applied to specified ids only.</span>
+<span class="sd">            If None is given, parser will be applied to all measurements.</span>
+
+<span class="sd">        TODO: output a more informative message for position collisions</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">if</span> <span class="n">positions</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">ids</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">ids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">ids</span> <span class="o">=</span> <span class="n">to_list</span><span class="p">(</span><span class="n">ids</span><span class="p">)</span>
+            <span class="n">mapper</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_ID2position_mapper</span><span class="p">(</span><span class="n">position_mapper</span><span class="p">)</span>
+            <span class="n">positions</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">((</span><span class="n">ID</span><span class="p">,</span> <span class="n">mapper</span><span class="p">(</span><span class="n">ID</span><span class="p">))</span> <span class="k">for</span> <span class="n">ID</span> <span class="ow">in</span> <span class="n">ids</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">pass</span>
+        <span class="c1"># check that resulting assignment is unique (one measurement per position)</span>
+        <span class="n">temp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_positions</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">temp</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">positions</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">len</span><span class="p">(</span><span class="n">temp</span><span class="o">.</span><span class="n">values</span><span class="p">())</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">temp</span><span class="o">.</span><span class="n">values</span><span class="p">())):</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;A position can only be occupied by a single measurement&#39;</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">pos</span> <span class="ow">in</span> <span class="n">positions</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_valid_position</span><span class="p">(</span><span class="n">pos</span><span class="p">):</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;Position </span><span class="si">{}</span><span class="s1"> is not supported for this collection&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">pos</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_positions</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">pos</span>
+            <span class="bp">self</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">_set_position</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ID</span><span class="p">,</span> <span class="n">pos</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_positions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Get a dictionary of measurement positions.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">if</span> <span class="n">copy</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_positions</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_positions</span>
+
+    <span class="k">def</span> <span class="nf">_dict2DF</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">noneval</span><span class="p">,</span> <span class="n">dropna</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">DF</span><span class="p">(</span><span class="n">noneval</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">row_labels</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">col_labels</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">object</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">res</span> <span class="ow">in</span> <span class="n">d</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_positions</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+            <span class="n">df</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">res</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="k">pass</span>
+        <span class="k">if</span> <span class="n">dropna</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">df</span><span class="o">.</span><span class="n">dropna</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">how</span><span class="o">=</span><span class="s1">&#39;all&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">dropna</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">how</span><span class="o">=</span><span class="s1">&#39;all&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">df</span>
+
+    <span class="k">def</span> <span class="nf">dropna</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Remove rows and cols that have no assigned measurements.</span>
+<span class="sd">        Return new instance.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">new</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">tmp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dict2DF</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nan</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+        <span class="n">new</span><span class="o">.</span><span class="n">row_labels</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">tmp</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+        <span class="n">new</span><span class="o">.</span><span class="n">col_labels</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">tmp</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">new</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">layout</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dict2DF</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nan</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">shape</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">row_labels</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">col_labels</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">func</span><span class="p">,</span> <span class="n">ids</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">applyto</span><span class="o">=</span><span class="s1">&#39;measurement&#39;</span><span class="p">,</span>
+              <span class="n">output_format</span><span class="o">=</span><span class="s1">&#39;DataFrame&#39;</span><span class="p">,</span> <span class="n">noneval</span><span class="o">=</span><span class="n">nan</span><span class="p">,</span>
+              <span class="n">setdata</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">dropna</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">ID</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Apply func to each of the specified measurements.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        func : callable</span>
+<span class="sd">            Accepts a Measurement object or a DataFrame.</span>
+<span class="sd">        ids : hashable| iterable of hashables | None</span>
+<span class="sd">            Keys of measurements to which func will be applied.</span>
+<span class="sd">            If None is given apply to all measurements.</span>
+<span class="sd">        applyto :  &#39;measurement&#39; | &#39;data&#39;</span>
+<span class="sd">            &#39;measurement&#39; : apply to measurements objects themselves.</span>
+<span class="sd">            &#39;data&#39;        : apply to measurement associated data</span>
+<span class="sd">        output_format: [&#39;DataFrame&#39; | &#39;dict&#39; | &#39;collection&#39;]</span>
+<span class="sd">        noneval : obj</span>
+<span class="sd">            Value returned if applyto is &#39;data&#39; but no data is available.</span>
+<span class="sd">        setdata : bool</span>
+<span class="sd">            Whether to set the data in the Measurement object.</span>
+<span class="sd">            Used only if data is not already set.</span>
+<span class="sd">        dropna : bool</span>
+<span class="sd">            whether to remove rows/cols that contain no measurements.</span>
+<span class="sd">        ID : [None | str | numeric]</span>
+<span class="sd">            ID is used as the new ID for the collection.</span>
+<span class="sd">            If None, then the old ID is retained.</span>
+<span class="sd">            Note: Only applicable when output is a collection.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        DataFrame/Dictionary/Collection containing the output of func for each Measurement.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">_output</span> <span class="o">=</span> <span class="s1">&#39;collection&#39;</span> <span class="k">if</span> <span class="n">output_format</span> <span class="o">==</span> <span class="s1">&#39;collection&#39;</span> <span class="k">else</span> <span class="s1">&#39;dict&#39;</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">OrderedCollection</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="n">ids</span><span class="p">,</span> <span class="n">applyto</span><span class="p">,</span>
+                                                      <span class="n">noneval</span><span class="p">,</span> <span class="n">setdata</span><span class="p">,</span>
+                                                      <span class="n">output_format</span><span class="o">=</span><span class="n">_output</span><span class="p">)</span>
+
+        <span class="c1"># Note: result should be of type dict or collection for the code</span>
+        <span class="c1"># below to work</span>
+        <span class="k">if</span> <span class="n">output_format</span> <span class="ow">is</span> <span class="s1">&#39;dict&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">result</span>
+        <span class="k">elif</span> <span class="n">output_format</span> <span class="ow">is</span> <span class="s1">&#39;DataFrame&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dict2DF</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">noneval</span><span class="p">,</span> <span class="n">dropna</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">output_format</span> <span class="ow">is</span> <span class="s1">&#39;collection&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">result</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;output_format must be either &#39;dict&#39; or &#39;DataFrame&#39;. &quot;</span> <span class="o">+</span>
+                   <span class="s2">&quot;Encountered unsupported value </span><span class="si">%s</span><span class="s2">.&quot;</span> <span class="o">%</span> <span class="nb">repr</span><span class="p">(</span><span class="n">output_format</span><span class="p">))</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+    <span class="nd">@doc_replacer</span>
+    <span class="k">def</span> <span class="nf">grid_plot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">func</span><span class="p">,</span> <span class="n">applyto</span><span class="o">=</span><span class="s1">&#39;measurement&#39;</span><span class="p">,</span> <span class="n">ids</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                  <span class="n">row_labels</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">col_labels</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                  <span class="n">xlim</span><span class="o">=</span><span class="s1">&#39;auto&#39;</span><span class="p">,</span> <span class="n">ylim</span><span class="o">=</span><span class="s1">&#39;auto&#39;</span><span class="p">,</span>
+                  <span class="n">xlabel</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ylabel</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                  <span class="n">colorbar</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                  <span class="n">row_label_xoffset</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">col_label_yoffset</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                  <span class="n">hide_tick_labels</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">hide_tick_lines</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                  <span class="n">hspace</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">wspace</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                  <span class="n">row_labels_kwargs</span><span class="o">=</span><span class="p">{},</span> <span class="n">col_labels_kwargs</span><span class="o">=</span><span class="p">{}):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Creates subplots for each well in the plate. Uses func to plot on each axis.</span>
+<span class="sd">        Follow with a call to matplotlibs show() in order to see the plot.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        func : callable</span>
+<span class="sd">            func is a callable that accepts a measurement</span>
+<span class="sd">            object (with an optional axis reference) and plots on the current axis.</span>
+<span class="sd">            Return values from func are ignored.</span>
+<span class="sd">            .. note: if using applyto=&#39;measurement&#39;, the function</span>
+<span class="sd">            when querying for data should make sure that the data</span>
+<span class="sd">            actually exists</span>
+<span class="sd">        applyto : &#39;measurement&#39; | &#39;data&#39;</span>
+<span class="sd">        {_graph_grid_layout}</span>
+<span class="sd">        {bases_OrderedCollection_grid_plot_pars}</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        {_graph_grid_layout_returns}</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ---------</span>
+<span class="sd">        &gt;&gt;&gt; def y(well, ax):</span>
+<span class="sd">        &gt;&gt;&gt;     data = well.get_data()</span>
+<span class="sd">        &gt;&gt;&gt;     if data is None:</span>
+<span class="sd">        &gt;&gt;&gt;         return None</span>
+<span class="sd">        &gt;&gt;&gt;     graph.plotFCM(data, &#39;Y2-A&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; def z(data, ax):</span>
+<span class="sd">        &gt;&gt;&gt;     plot(data[0:100, 1], data[0:100, 2])</span>
+<span class="sd">        &gt;&gt;&gt; plate.plot(y, applyto=&#39;measurement&#39;);</span>
+<span class="sd">        &gt;&gt;&gt; plate.plot(z, applyto=&#39;data&#39;);</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Acquire call arguments to be passed to create plate layout</span>
+        <span class="n">callArgs</span> <span class="o">=</span> <span class="nb">locals</span><span class="p">()</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>  <span class="c1"># This statement must remain first. The copy is just defensive.</span>
+        <span class="p">[</span><span class="n">callArgs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">varname</span><span class="p">)</span> <span class="k">for</span> <span class="n">varname</span> <span class="ow">in</span>
+         <span class="p">[</span><span class="s1">&#39;self&#39;</span><span class="p">,</span> <span class="s1">&#39;func&#39;</span><span class="p">,</span> <span class="s1">&#39;applyto&#39;</span><span class="p">,</span> <span class="s1">&#39;ids&#39;</span><span class="p">,</span> <span class="s1">&#39;colorbar&#39;</span><span class="p">,</span> <span class="s1">&#39;xlim&#39;</span><span class="p">,</span> <span class="s1">&#39;ylim&#39;</span><span class="p">]]</span>  <span class="c1"># pop args</span>
+
+        <span class="n">callArgs</span><span class="p">[</span><span class="s1">&#39;rowNum&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">callArgs</span><span class="p">[</span><span class="s1">&#39;colNum&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="n">subplots_adjust_args</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">subplots_adjust_args</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;right&#39;</span><span class="p">,</span> <span class="mf">0.85</span><span class="p">)</span>
+        <span class="n">subplots_adjust_args</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;top&#39;</span><span class="p">,</span> <span class="mf">0.85</span><span class="p">)</span>
+        <span class="n">pl</span><span class="o">.</span><span class="n">subplots_adjust</span><span class="p">(</span><span class="o">**</span><span class="n">subplots_adjust_args</span><span class="p">)</span>
+
+        <span class="c1"># Uses plate default row/col labels if user does not override them by specifying row/col</span>
+        <span class="c1"># labels</span>
+        <span class="k">if</span> <span class="n">row_labels</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span> <span class="n">callArgs</span><span class="p">[</span><span class="s1">&#39;row_labels&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">row_labels</span>
+        <span class="k">if</span> <span class="n">col_labels</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span> <span class="n">callArgs</span><span class="p">[</span><span class="s1">&#39;col_labels&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">col_labels</span>
+
+        <span class="n">ax_main</span><span class="p">,</span> <span class="n">ax_subplots</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">create_grid_layout</span><span class="p">(</span><span class="o">**</span><span class="n">callArgs</span><span class="p">)</span>
+        <span class="n">subplots_ax</span> <span class="o">=</span> <span class="n">DF</span><span class="p">(</span><span class="n">ax_subplots</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">row_labels</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">col_labels</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">ids</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">ids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+        <span class="n">ids</span> <span class="o">=</span> <span class="n">to_list</span><span class="p">(</span><span class="n">ids</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">ID</span> <span class="ow">in</span> <span class="n">ids</span><span class="p">:</span>
+            <span class="n">measurement</span> <span class="o">=</span> <span class="bp">self</span><span class="p">[</span><span class="n">ID</span><span class="p">]</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">measurement</span><span class="p">,</span> <span class="s1">&#39;data&#39;</span><span class="p">):</span>
+                <span class="k">continue</span>
+
+            <span class="n">row</span><span class="p">,</span> <span class="n">col</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_positions</span><span class="p">[</span><span class="n">ID</span><span class="p">]</span>
+            <span class="n">ax</span> <span class="o">=</span> <span class="n">subplots_ax</span><span class="p">[</span><span class="n">col</span><span class="p">][</span><span class="n">row</span><span class="p">]</span>
+            <span class="n">pl</span><span class="o">.</span><span class="n">sca</span><span class="p">(</span><span class="n">ax</span><span class="p">)</span>  <span class="c1"># sets the current axis</span>
+
+            <span class="k">if</span> <span class="n">applyto</span> <span class="o">==</span> <span class="s1">&#39;measurement&#39;</span><span class="p">:</span>
+                <span class="n">func</span><span class="p">(</span><span class="n">measurement</span><span class="p">,</span> <span class="n">ax</span><span class="p">)</span>  <span class="c1"># reminder: pandas row/col order is reversed</span>
+            <span class="k">elif</span> <span class="n">applyto</span> <span class="o">==</span> <span class="s1">&#39;data&#39;</span><span class="p">:</span>
+                <span class="n">data</span> <span class="o">=</span> <span class="n">measurement</span><span class="o">.</span><span class="n">get_data</span><span class="p">()</span>
+                <span class="k">if</span> <span class="n">data</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">func</span><span class="o">.</span><span class="n">func_code</span><span class="o">.</span><span class="n">co_argcount</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                        <span class="n">func</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">func</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">ax</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Encountered unsupported value </span><span class="si">{}</span><span class="s1"> for applyto parameter.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="n">applyto</span><span class="p">))</span>
+
+        <span class="c1"># Autoscaling axes</span>
+        <span class="n">graph</span><span class="o">.</span><span class="n">scale_subplots</span><span class="p">(</span><span class="n">ax_subplots</span><span class="p">,</span> <span class="n">xlim</span><span class="o">=</span><span class="n">xlim</span><span class="p">,</span> <span class="n">ylim</span><span class="o">=</span><span class="n">ylim</span><span class="p">)</span>
+
+        <span class="c1">#####</span>
+        <span class="c1"># Placing ticks on the top left subplot</span>
+        <span class="n">ax_label</span> <span class="o">=</span> <span class="n">ax_subplots</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">pl</span><span class="o">.</span><span class="n">sca</span><span class="p">(</span><span class="n">ax_label</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">xlabel</span><span class="p">:</span>
+            <span class="n">xlim</span> <span class="o">=</span> <span class="n">ax_label</span><span class="o">.</span><span class="n">get_xlim</span><span class="p">()</span>
+            <span class="n">pl</span><span class="o">.</span><span class="n">xticks</span><span class="p">([</span><span class="n">xlim</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">xlim</span><span class="p">[</span><span class="mi">1</span><span class="p">]],</span> <span class="n">rotation</span><span class="o">=</span><span class="mi">90</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">ylabel</span><span class="p">:</span>
+            <span class="n">ylim</span> <span class="o">=</span> <span class="n">ax_label</span><span class="o">.</span><span class="n">get_ylim</span><span class="p">()</span>
+            <span class="n">pl</span><span class="o">.</span><span class="n">yticks</span><span class="p">([</span><span class="n">ylim</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">ylim</span><span class="p">[</span><span class="mi">1</span><span class="p">]],</span> <span class="n">rotation</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+        <span class="n">pl</span><span class="o">.</span><span class="n">sca</span><span class="p">(</span><span class="n">ax_main</span><span class="p">)</span>  <span class="c1"># sets to the main axis -- more intuitive</span>
+
+        <span class="k">return</span> <span class="n">ax_main</span><span class="p">,</span> <span class="n">ax_subplots</span>
+</pre></div>
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2018, Eugene Yurtsev and Jonathan Friedman.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.0.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

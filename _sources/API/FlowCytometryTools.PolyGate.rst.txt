@@ -1,0 +1,31 @@
+FlowCytometryTools.PolyGate
+===========================
+
+.. currentmodule:: FlowCytometryTools
+
+.. autoclass:: PolyGate
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~PolyGate.__init__
+      ~PolyGate.plot
+      ~PolyGate.validate_input
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~PolyGate.region
+      ~PolyGate.unnamed_gate_num
+   
+   

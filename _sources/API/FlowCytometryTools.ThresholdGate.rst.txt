@@ -1,0 +1,31 @@
+FlowCytometryTools.ThresholdGate
+================================
+
+.. currentmodule:: FlowCytometryTools
+
+.. autoclass:: ThresholdGate
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~ThresholdGate.__init__
+      ~ThresholdGate.plot
+      ~ThresholdGate.validate_input
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~ThresholdGate.region
+      ~ThresholdGate.unnamed_gate_num
+   
+   

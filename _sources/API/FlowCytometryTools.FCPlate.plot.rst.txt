@@ -1,0 +1,6 @@
+FlowCytometryTools.FCPlate.plot
+===============================
+
+.. currentmodule:: FlowCytometryTools
+
+.. automethod:: FCPlate.plot

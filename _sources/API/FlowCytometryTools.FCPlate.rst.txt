@@ -1,0 +1,65 @@
+FlowCytometryTools.FCPlate
+==========================
+
+.. currentmodule:: FlowCytometryTools
+
+.. autoclass:: FCPlate
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~FCPlate.__init__
+      ~FCPlate.apply
+      ~FCPlate.clear
+      ~FCPlate.clear_measurement_data
+      ~FCPlate.clear_measurement_meta
+      ~FCPlate.copy
+      ~FCPlate.counts
+      ~FCPlate.dropna
+      ~FCPlate.filter
+      ~FCPlate.filter_by_IDs
+      ~FCPlate.filter_by_attr
+      ~FCPlate.filter_by_cols
+      ~FCPlate.filter_by_key
+      ~FCPlate.filter_by_meta
+      ~FCPlate.filter_by_rows
+      ~FCPlate.from_dir
+      ~FCPlate.from_files
+      ~FCPlate.gate
+      ~FCPlate.get
+      ~FCPlate.get_measurement_metadata
+      ~FCPlate.get_positions
+      ~FCPlate.grid_plot
+      ~FCPlate.items
+      ~FCPlate.keys
+      ~FCPlate.load
+      ~FCPlate.plot
+      ~FCPlate.pop
+      ~FCPlate.popitem
+      ~FCPlate.save
+      ~FCPlate.set_data
+      ~FCPlate.set_labels
+      ~FCPlate.set_positions
+      ~FCPlate.setdefault
+      ~FCPlate.subsample
+      ~FCPlate.transform
+      ~FCPlate.update
+      ~FCPlate.values
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~FCPlate.layout
+      ~FCPlate.shape
+   
+   

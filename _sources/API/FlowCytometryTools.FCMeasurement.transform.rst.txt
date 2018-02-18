@@ -1,0 +1,6 @@
+FlowCytometryTools.FCMeasurement.transform
+==========================================
+
+.. currentmodule:: FlowCytometryTools
+
+.. automethod:: FCMeasurement.transform

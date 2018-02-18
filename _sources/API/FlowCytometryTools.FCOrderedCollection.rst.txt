@@ -1,0 +1,65 @@
+FlowCytometryTools.FCOrderedCollection
+======================================
+
+.. currentmodule:: FlowCytometryTools
+
+.. autoclass:: FCOrderedCollection
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~FCOrderedCollection.__init__
+      ~FCOrderedCollection.apply
+      ~FCOrderedCollection.clear
+      ~FCOrderedCollection.clear_measurement_data
+      ~FCOrderedCollection.clear_measurement_meta
+      ~FCOrderedCollection.copy
+      ~FCOrderedCollection.counts
+      ~FCOrderedCollection.dropna
+      ~FCOrderedCollection.filter
+      ~FCOrderedCollection.filter_by_IDs
+      ~FCOrderedCollection.filter_by_attr
+      ~FCOrderedCollection.filter_by_cols
+      ~FCOrderedCollection.filter_by_key
+      ~FCOrderedCollection.filter_by_meta
+      ~FCOrderedCollection.filter_by_rows
+      ~FCOrderedCollection.from_dir
+      ~FCOrderedCollection.from_files
+      ~FCOrderedCollection.gate
+      ~FCOrderedCollection.get
+      ~FCOrderedCollection.get_measurement_metadata
+      ~FCOrderedCollection.get_positions
+      ~FCOrderedCollection.grid_plot
+      ~FCOrderedCollection.items
+      ~FCOrderedCollection.keys
+      ~FCOrderedCollection.load
+      ~FCOrderedCollection.plot
+      ~FCOrderedCollection.pop
+      ~FCOrderedCollection.popitem
+      ~FCOrderedCollection.save
+      ~FCOrderedCollection.set_data
+      ~FCOrderedCollection.set_labels
+      ~FCOrderedCollection.set_positions
+      ~FCOrderedCollection.setdefault
+      ~FCOrderedCollection.subsample
+      ~FCOrderedCollection.transform
+      ~FCOrderedCollection.update
+      ~FCOrderedCollection.values
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~FCOrderedCollection.layout
+      ~FCOrderedCollection.shape
+   
+   

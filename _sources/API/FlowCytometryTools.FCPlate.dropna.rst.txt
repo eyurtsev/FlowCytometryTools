@@ -1,0 +1,6 @@
+FlowCytometryTools.FCPlate.dropna
+=================================
+
+.. currentmodule:: FlowCytometryTools
+
+.. automethod:: FCPlate.dropna

@@ -1,0 +1,6 @@
+FlowCytometryTools.FCMeasurement.gate
+=====================================
+
+.. currentmodule:: FlowCytometryTools
+
+.. automethod:: FCMeasurement.gate

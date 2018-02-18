@@ -1,0 +1,6 @@
+FlowCytometryTools.core.transforms.hlog
+=======================================
+
+.. currentmodule:: FlowCytometryTools.core.transforms
+
+.. autofunction:: hlog

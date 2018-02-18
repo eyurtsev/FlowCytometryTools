@@ -1,0 +1,6 @@
+FlowCytometryTools.FCPlate.counts
+=================================
+
+.. currentmodule:: FlowCytometryTools
+
+.. automethod:: FCPlate.counts

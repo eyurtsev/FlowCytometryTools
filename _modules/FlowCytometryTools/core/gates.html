@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+        <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>FlowCytometryTools.core.gates &#8212; FlowCytometryTools 0.5.0 documentation</title>
+    <link rel="stylesheet" href="../../../_static/bootstrap-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" src="../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../../../_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="../../../_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="../../../_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../../../_static/bootstrap-sphinx.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head><body>
+  
+  <a href="https://github.com/eyurtsev/flowcytometrytools"
+     class="visible-desktop hidden-xs"><img
+    id="gh-banner"
+    style="position: absolute; top: 50px; right: 0; border: 0;"
+    src="https://s3.amazonaws.com/github/ribbons/forkme_right_white_ffffff.png"
+    alt="Fork me on GitHub"></a>
+  <script>
+    // Adjust banner height.
+    $(function () {
+      var navHeight = $(".navbar .container").css("height");
+      $("#gh-banner").css("top", navHeight);
+    });
+  </script>
+
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="../../../index.html">
+          FlowCytometryTools</a>
+        <span class="navbar-text navbar-version pull-left"><b>0.5.0</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+                <li><a href="../../../gallery.html">Gallery</a></li>
+                <li><a href="../../../install.html">Install</a></li>
+                <li><a href="../../../tutorial.html">Tutorial</a></li>
+                <li><a href="../../../api.html">API</a></li>
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="../../../index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"></ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"></ul>
+</li>
+              
+            
+            
+            
+            
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="../../../search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+      <div class="col-md-3">
+        <div id="sidebar" class="bs-sidenav" role="complementary">
+<form action="../../../search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+        </div>
+      </div>
+    <div class="col-md-9 content">
+      
+  <h1>Source code for FlowCytometryTools.core.gates</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;&quot; @author: Eugene Yurtsev @date 2013-07-25</span>
+
+<span class="sd">Defines gates that operate on DataFrames.</span>
+
+<span class="sd">API:</span>
+<span class="sd">    DataFrame -- pandas object</span>
+<span class="sd">    gate1 -- a polygon gate.</span>
+
+<span class="sd">Gates:</span>
+<span class="sd">    ThresholdGate</span>
+<span class="sd">    IntervalGate</span>
+<span class="sd">    QuadGate</span>
+<span class="sd">    PolyGate</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">numpy</span>
+<span class="kn">import</span> <span class="nn">pylab</span> <span class="k">as</span> <span class="nn">pl</span>
+<span class="kn">from</span> <span class="nn">matplotlib.path</span> <span class="k">import</span> <span class="n">Path</span>
+
+<span class="kn">from</span> <span class="nn">FlowCytometryTools.core.common_doc</span> <span class="k">import</span> <span class="n">doc_replacer</span>
+<span class="kn">from</span> <span class="nn">FlowCytometryTools.core.utils</span> <span class="k">import</span> <span class="n">to_list</span>
+
+<span class="n">doc_replacer</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">_gate_pars_name</span><span class="o">=</span><span class="s2">&quot;&quot;&quot;</span><span class="se">\</span>
+<span class="s2">name : str</span>
+<span class="s2">    The gate&#39;s name.&quot;&quot;&quot;</span><span class="p">)</span>
+<span class="n">doc_replacer</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">_gate_pars_1_channel</span><span class="o">=</span><span class="s2">&quot;&quot;&quot;</span><span class="se">\</span>
+<span class="s2">channel : str</span>
+<span class="s2">    Defines the channel name.&quot;&quot;&quot;</span><span class="p">)</span>
+
+<span class="n">doc_replacer</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">_gate_pars_2_channels</span><span class="o">=</span>
+                    <span class="sd">&quot;&quot;&quot;channels : [&#39;channel 1 name&#39;, &#39;channel 2 name&#39;]</span>
+<span class="sd">                        Defines the names of the channels&quot;&quot;&quot;</span><span class="p">)</span>
+
+<span class="n">doc_replacer</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">_gate_plot_doc</span><span class="o">=</span>
+                    <span class="sd">&quot;&quot;&quot;Plots the gate.</span>
+
+<span class="sd">                    .. warning:</span>
+<span class="sd">                        The plot function does not check that your</span>
+<span class="sd">                        axis correspond to the correct channels.</span>
+
+<span class="sd">                    Parameters</span>
+<span class="sd">                    ----------</span>
+<span class="sd">                    ax : axes to use for plotting the gate on</span>
+<span class="sd">                    flip : boolean</span>
+<span class="sd">                        If True, draws the interval</span>
+<span class="sd">                        along the y-axis instead of along the x-axis</span>
+
+<span class="sd">                    Returns</span>
+<span class="sd">                    -------</span>
+<span class="sd">                    Reference to created artists.&quot;&quot;&quot;</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">_ComposableMixin</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; A mixin&#39; class that enables to compose gates using logic elements. &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__and__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">CompositeGate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;and&#39;</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__xor__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">CompositeGate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;xor&#39;</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__or__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">CompositeGate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;or&#39;</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__invert__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">CompositeGate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;invert&#39;</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">Gate</span><span class="p">(</span><span class="n">_ComposableMixin</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Defines common interface for specific implementations of the gate classes. &quot;&quot;&quot;</span>
+    <span class="n">unnamed_gate_num</span> <span class="o">=</span> <span class="mi">1</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vert</span><span class="p">,</span> <span class="n">channels</span><span class="p">,</span> <span class="n">region</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">vert</span> <span class="o">=</span> <span class="n">vert</span>
+        <span class="n">channels</span> <span class="o">=</span> <span class="n">to_list</span><span class="p">(</span><span class="n">channels</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">channels</span> <span class="o">=</span> <span class="n">channels</span>
+
+        <span class="k">if</span> <span class="n">name</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;Unnamed Gate </span><span class="si">{0}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">Gate</span><span class="o">.</span><span class="n">unnamed_gate_num</span><span class="p">)</span>
+            <span class="n">Gate</span><span class="o">.</span><span class="n">unnamed_gate_num</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">region</span> <span class="o">=</span> <span class="n">region</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">validate_input</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">validate_input</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Optional method to be defined by derived class</span>
+<span class="sd">        to check whether user input was valid. &quot;&quot;&quot;</span>
+        <span class="k">pass</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;&quot;&quot;Gate Type: </span><span class="si">{0}</span><span class="s2"></span>
+<span class="s2">               </span><span class="se">\t</span><span class="s2">Vertices: </span><span class="si">{1}</span><span class="s2"></span>
+<span class="s2">               </span><span class="se">\t</span><span class="s2">Channel(s): </span><span class="si">{2}</span><span class="s2"></span>
+<span class="s2">               </span><span class="se">\t</span><span class="s2">Name: </span><span class="si">{3}</span><span class="s2"></span>
+<span class="s2">                &quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">vert</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">channels</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__repr__</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataframe</span><span class="p">,</span> <span class="n">region</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Filters the dataframe, keeping only events that pass the gate.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        --------------</span>
+<span class="sd">        dataframe : DataFrame</span>
+<span class="sd">        region : None, optional</span>
+<span class="sd">            If specified, the gate region is updated to the given region.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">region</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">region</span> <span class="o">=</span> <span class="n">region</span>
+
+        <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">channels</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">c</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">dataframe</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s1">&#39;Trying to filter based on channel </span><span class="si">{channel}</span><span class="s1">, which is not present in the data.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                        <span class="n">channel</span><span class="o">=</span><span class="n">c</span><span class="p">))</span>
+
+        <span class="n">idx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_identify</span><span class="p">(</span><span class="n">dataframe</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">dataframe</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">_find_orientation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ax_channels</span><span class="p">):</span>
+        <span class="n">ax_channels</span> <span class="o">=</span> <span class="n">to_list</span><span class="p">(</span><span class="n">ax_channels</span><span class="p">)</span>
+        <span class="n">c</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">channels</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">ax_channels</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">i</span> <span class="o">=</span> <span class="n">ax_channels</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">flip</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">flip</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;Trying to plot gate that is defined on channel </span><span class="si">{0}</span><span class="s2">,</span>
+<span class="s2">                                but figure axis correspond to channels </span><span class="si">{1}</span><span class="s2">&quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">c</span><span class="p">,</span>
+                                                                                     <span class="n">ax_channels</span><span class="p">))</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">channels</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="n">c</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">channels</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">c</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">ax_channels</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;Trying to plot gate that is defined on channel </span><span class="si">{0}</span><span class="s2">,</span>
+<span class="s2">                                but figure axis correspond to channels </span><span class="si">{1}</span><span class="s2">&quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">c</span><span class="p">,</span>
+                                                                                     <span class="n">ax_channels</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">flip</span>
+
+    <span class="k">def</span> <span class="nf">plot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Plots the gate. Must be specified in derived class. &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;Plotting is not yet supported for this gate type.&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_identify</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataframe</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Returns a list of indexes corresponding to events that pass the gate. &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">region</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; The region of the gate that passes events. &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_region</span>
+
+    <span class="nd">@region</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">region</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">value</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_region_options</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_region</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;region must be one of the following: </span><span class="si">{0}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_region_options</span><span class="p">))</span>
+
+
+<div class="viewcode-block" id="ThresholdGate"><a class="viewcode-back" href="../../../API/FlowCytometryTools.ThresholdGate.html#FlowCytometryTools.ThresholdGate">[docs]</a><span class="k">class</span> <span class="nc">ThresholdGate</span><span class="p">(</span><span class="n">Gate</span><span class="p">):</span>
+<div class="viewcode-block" id="ThresholdGate.__init__"><a class="viewcode-back" href="../../../API/FlowCytometryTools.ThresholdGate.html#FlowCytometryTools.ThresholdGate.__init__">[docs]</a>    <span class="nd">@doc_replacer</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">threshold</span><span class="p">,</span> <span class="n">channel</span><span class="p">,</span> <span class="n">region</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Passes all events above or below a given threshold.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        threshold : float</span>
+<span class="sd">            Location of the gate</span>
+<span class="sd">        {_gate_pars_1_channel}</span>
+<span class="sd">        region : [&#39;above&#39;, &#39;below&#39;]</span>
+<span class="sd">            If &#39;above&#39;, the gate only passes through data that lies above the threshold.</span>
+<span class="sd">        {_gate_pars_name}</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1">#: Possible regions</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_region_options</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;above&#39;</span><span class="p">,</span> <span class="s1">&#39;below&#39;</span><span class="p">)</span>
+</div>
+        <span class="nb">super</span><span class="p">(</span><span class="n">ThresholdGate</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">threshold</span><span class="p">,</span> <span class="n">channel</span><span class="p">,</span> <span class="n">region</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_identify</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataframe</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Identifies which of the data points in the dataframe pass the gate. &quot;&quot;&quot;</span>
+        <span class="n">idx</span> <span class="o">=</span> <span class="n">dataframe</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">channels</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vert</span>  <span class="c1"># Get indexes that are above threshold</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">region</span> <span class="o">==</span> <span class="s1">&#39;below&#39;</span><span class="p">:</span>
+            <span class="n">idx</span> <span class="o">=</span> <span class="o">~</span><span class="n">idx</span>
+
+        <span class="k">return</span> <span class="n">idx</span>
+
+    <span class="nd">@doc_replacer</span>
+    <span class="k">def</span> <span class="nf">plot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">flip</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">ax_channels</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        {_gate_plot_doc}</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">ax</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">ax</span> <span class="o">=</span> <span class="n">pl</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">ax_channels</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">flip</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_find_orientation</span><span class="p">(</span><span class="n">ax_channels</span><span class="p">)</span>
+
+        <span class="n">plot_func</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">axes</span><span class="o">.</span><span class="n">axhline</span> <span class="k">if</span> <span class="n">flip</span> <span class="k">else</span> <span class="n">ax</span><span class="o">.</span><span class="n">axes</span><span class="o">.</span><span class="n">axvline</span>
+
+        <span class="n">kwargs</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;color&#39;</span><span class="p">,</span> <span class="s1">&#39;black&#39;</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">plot_func</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">vert</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="IntervalGate"><a class="viewcode-back" href="../../../API/FlowCytometryTools.IntervalGate.html#FlowCytometryTools.IntervalGate">[docs]</a><span class="k">class</span> <span class="nc">IntervalGate</span><span class="p">(</span><span class="n">Gate</span><span class="p">):</span>
+<div class="viewcode-block" id="IntervalGate.__init__"><a class="viewcode-back" href="../../../API/FlowCytometryTools.IntervalGate.html#FlowCytometryTools.IntervalGate.__init__">[docs]</a>    <span class="nd">@doc_replacer</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vert</span><span class="p">,</span> <span class="n">channel</span><span class="p">,</span> <span class="n">region</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Passes all events either inside or outside the given interval.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        vert : tuple</span>
+<span class="sd">            Tuple describes the interval (xmin, xmax)</span>
+<span class="sd">        {_gate_pars_1_channel}</span>
+<span class="sd">        region : [&#39;in&#39;, &#39;out&#39;]</span>
+<span class="sd">            If &#39;in&#39;, the gate only passes through data that lies inside the interval.</span>
+<span class="sd">        {_gate_pars_name}</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_region_options</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;in&#39;</span><span class="p">,</span> <span class="s1">&#39;out&#39;</span><span class="p">)</span></div>
+        <span class="nb">super</span><span class="p">(</span><span class="n">IntervalGate</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">vert</span><span class="p">,</span> <span class="n">channel</span><span class="p">,</span> <span class="n">region</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">validate_input</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Raise appropriate exception if gate was defined incorrectly.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">vert</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vert</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">u</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> must be larger than </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">vert</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">vert</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+
+    <span class="k">def</span> <span class="nf">_identify</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataframe</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return bool series which is True for indexes that &#39;pass&#39; the gate&quot;&quot;&quot;</span>
+        <span class="n">idx</span> <span class="o">=</span> <span class="p">((</span><span class="n">dataframe</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">channels</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vert</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">&amp;</span>
+               <span class="p">(</span><span class="n">dataframe</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">channels</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vert</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">region</span> <span class="o">==</span> <span class="s1">&#39;out&#39;</span><span class="p">:</span>
+            <span class="n">idx</span> <span class="o">=</span> <span class="o">~</span><span class="n">idx</span>
+
+        <span class="k">return</span> <span class="n">idx</span>
+
+    <span class="nd">@doc_replacer</span>
+    <span class="k">def</span> <span class="nf">plot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">flip</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">ax_channels</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        {_gate_plot_doc}</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">ax</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">ax</span> <span class="o">=</span> <span class="n">pl</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">ax_channels</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">flip</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_find_orientation</span><span class="p">(</span><span class="n">ax_channels</span><span class="p">)</span>
+
+        <span class="n">plot_func</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">axes</span><span class="o">.</span><span class="n">axhline</span> <span class="k">if</span> <span class="n">flip</span> <span class="k">else</span> <span class="n">ax</span><span class="o">.</span><span class="n">axes</span><span class="o">.</span><span class="n">axvline</span>
+
+        <span class="n">kwargs</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;color&#39;</span><span class="p">,</span> <span class="s1">&#39;black&#39;</span><span class="p">)</span>
+        <span class="n">a1</span> <span class="o">=</span> <span class="n">plot_func</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">vert</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">a2</span> <span class="o">=</span> <span class="n">plot_func</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">vert</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</div>
+        <span class="k">return</span> <span class="p">(</span><span class="n">a1</span><span class="p">,</span> <span class="n">a2</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="QuadGate"><a class="viewcode-back" href="../../../API/FlowCytometryTools.QuadGate.html#FlowCytometryTools.QuadGate">[docs]</a><span class="k">class</span> <span class="nc">QuadGate</span><span class="p">(</span><span class="n">Gate</span><span class="p">):</span>
+<div class="viewcode-block" id="QuadGate.__init__"><a class="viewcode-back" href="../../../API/FlowCytometryTools.QuadGate.html#FlowCytometryTools.QuadGate.__init__">[docs]</a>    <span class="nd">@doc_replacer</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vert</span><span class="p">,</span> <span class="n">channels</span><span class="p">,</span> <span class="n">region</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Passes events in a given quadrant of a 2d-plot.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        vert : tuple</span>
+<span class="sd">            A tuple of length 2: (x_center, y_center)</span>
+<span class="sd">            Specifies the center of the quad gate.</span>
+<span class="sd">        {_gate_pars_2_channels}</span>
+<span class="sd">        region : [&#39;top left&#39;, &#39;top right&#39;, &#39;bottom left&#39;, &#39;bottom right&#39;]</span>
+<span class="sd">            For example, if &#39;top left&#39;, the gate only passes through data that lies in the top left region.</span>
+<span class="sd">        {_gate_pars_name}</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_region_options</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;top left&#39;</span><span class="p">,</span> <span class="s1">&#39;top right&#39;</span><span class="p">,</span> <span class="s1">&#39;bottom left&#39;</span><span class="p">,</span> <span class="s1">&#39;bottom right&#39;</span><span class="p">)</span></div>
+        <span class="nb">super</span><span class="p">(</span><span class="n">QuadGate</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">vert</span><span class="p">,</span> <span class="n">channels</span><span class="p">,</span> <span class="n">region</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_identify</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataframe</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns a list of indexes containing only the points that pass the filter.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        dataframe : DataFrame</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1">##</span>
+        <span class="c1"># TODO Fix this implementation. (i.e., why not support just &#39;left&#39;)</span>
+        <span class="c1"># At the moment this implementation won&#39;t work at all.</span>
+        <span class="c1"># The logic here can be simplified.</span>
+        <span class="n">id1</span> <span class="o">=</span> <span class="n">dataframe</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">channels</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vert</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">id2</span> <span class="o">=</span> <span class="n">dataframe</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">channels</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vert</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="s1">&#39;left&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">region</span><span class="p">:</span> <span class="n">id1</span> <span class="o">=</span> <span class="o">~</span><span class="n">id1</span>
+        <span class="k">if</span> <span class="s1">&#39;bottom&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">region</span><span class="p">:</span> <span class="n">id2</span> <span class="o">=</span> <span class="o">~</span><span class="n">id2</span>
+
+        <span class="n">idx</span> <span class="o">=</span> <span class="n">id1</span> <span class="o">&amp;</span> <span class="n">id2</span>
+
+        <span class="k">if</span> <span class="s1">&#39;out&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">region</span><span class="p">:</span>
+            <span class="n">idx</span> <span class="o">=</span> <span class="o">~</span><span class="n">idx</span>
+
+        <span class="k">return</span> <span class="n">idx</span>
+
+    <span class="nd">@doc_replacer</span>
+    <span class="k">def</span> <span class="nf">plot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">flip</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">ax_channels</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        {_gate_plot_doc}</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">ax</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">ax</span> <span class="o">=</span> <span class="n">pl</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span>
+
+        <span class="n">kwargs</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;color&#39;</span><span class="p">,</span> <span class="s1">&#39;black&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">ax_channels</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">flip</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_find_orientation</span><span class="p">(</span><span class="n">ax_channels</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">flip</span><span class="p">:</span>
+            <span class="n">a1</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">axes</span><span class="o">.</span><span class="n">axvline</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">vert</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="n">a2</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">axes</span><span class="o">.</span><span class="n">axhline</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">vert</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">a1</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">axes</span><span class="o">.</span><span class="n">axvline</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">vert</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="n">a2</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">axes</span><span class="o">.</span><span class="n">axhline</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">vert</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</div>
+        <span class="k">return</span> <span class="p">(</span><span class="n">a1</span><span class="p">,</span> <span class="n">a2</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="PolyGate"><a class="viewcode-back" href="../../../API/FlowCytometryTools.PolyGate.html#FlowCytometryTools.PolyGate">[docs]</a><span class="k">class</span> <span class="nc">PolyGate</span><span class="p">(</span><span class="n">Gate</span><span class="p">):</span>
+<div class="viewcode-block" id="PolyGate.__init__"><a class="viewcode-back" href="../../../API/FlowCytometryTools.PolyGate.html#FlowCytometryTools.PolyGate.__init__">[docs]</a>    <span class="nd">@doc_replacer</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vert</span><span class="p">,</span> <span class="n">channels</span><span class="p">,</span> <span class="n">region</span><span class="o">=</span><span class="s1">&#39;in&#39;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Passes all events that are either inside or outside the polygon.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        vert : list of 2-tuples</span>
+<span class="sd">            [(x1, y1), (x2, y2), (x3, y3)]</span>
+<span class="sd">            Each 2-tuple describes the location of a vertex.</span>
+<span class="sd">        {_gate_pars_2_channels}</span>
+<span class="sd">        region : [&#39;in&#39;, &#39;out&#39;]</span>
+<span class="sd">            If &#39;in&#39;, the gate only passes through data that lies inside the interval.</span>
+<span class="sd">        {_gate_pars_name}</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_region_options</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;in&#39;</span><span class="p">,</span> <span class="s1">&#39;out&#39;</span><span class="p">)</span></div>
+        <span class="nb">super</span><span class="p">(</span><span class="n">PolyGate</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">vert</span><span class="p">,</span> <span class="n">channels</span><span class="p">,</span> <span class="n">region</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_identify</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataframe</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns a list of indexes containing only the points that pass the filter.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        dataframe : DataFrame</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">vert</span><span class="p">)</span>
+        <span class="n">idx</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">contains_points</span><span class="p">(</span><span class="n">dataframe</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">channels</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">region</span> <span class="o">==</span> <span class="s1">&#39;out&#39;</span><span class="p">:</span>
+            <span class="n">idx</span> <span class="o">=</span> <span class="o">~</span><span class="n">idx</span>
+
+        <span class="k">return</span> <span class="n">idx</span>
+
+    <span class="nd">@doc_replacer</span>
+    <span class="k">def</span> <span class="nf">plot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">flip</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">ax_channels</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        {_gate_plot_doc}</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">ax</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">ax</span> <span class="o">=</span> <span class="n">pl</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">ax_channels</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">flip</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_find_orientation</span><span class="p">(</span><span class="n">ax_channels</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">flip</span><span class="p">:</span>
+            <span class="n">vert</span> <span class="o">=</span> <span class="p">[</span><span class="n">v</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">vert</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">vert</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vert</span>
+        <span class="n">kwargs</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;fill&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="n">kwargs</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;color&#39;</span><span class="p">,</span> <span class="s1">&#39;black&#39;</span><span class="p">)</span>
+        <span class="n">poly</span> <span class="o">=</span> <span class="n">pl</span><span class="o">.</span><span class="n">Polygon</span><span class="p">(</span><span class="n">vert</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">ax</span><span class="o">.</span><span class="n">add_artist</span><span class="p">(</span><span class="n">poly</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="CompositeGate"><a class="viewcode-back" href="../../../API/FlowCytometryTools.core.gates.CompositeGate.html#FlowCytometryTools.CompositeGate">[docs]</a><span class="k">class</span> <span class="nc">CompositeGate</span><span class="p">(</span><span class="n">_ComposableMixin</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Defines a composite gate that is generated by the logical addition of one or more gates.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+
+<span class="sd">    You can create the union of two gates by combining them with how=&#39;or&#39;.</span>
+
+<span class="sd">    &gt;&gt;&gt; union_gate = CompositeGate(gate1, &#39;or&#39;, gate2)</span>
+
+<span class="sd">    However,</span>
+
+<span class="sd">    There is a shorthand to do the same operation</span>
+
+<span class="sd">    &gt;&gt;&gt; union_gate = gate1 | gate2</span>
+
+<span class="sd">    Similarly, if you wanted the intersection:</span>
+
+<span class="sd">    &gt;&gt;&gt; intersection_gate = CompositeGate(gate1, &#39;and&#39;, gate2)</span>
+
+<span class="sd">    With the shorthand</span>
+
+<span class="sd">    &gt;&gt;&gt; intersection_gate = gate1 &amp; gate2</span>
+
+<span class="sd">    As another example, let&#39;s invert a gate.</span>
+
+<span class="sd">    The longway:</span>
+
+<span class="sd">    &gt;&gt;&gt; inverted_gate = CompositeGate(gate1, &#39;invert&#39;)</span>
+
+<span class="sd">    The shortway:</span>
+
+<span class="sd">    &gt;&gt;&gt; inverted_gate = ~gate1</span>
+
+<span class="sd">    .. warning::</span>
+
+<span class="sd">        When using the shorthand notation you must use the syntax &#39;~&#39;, &#39;&amp;&#39;, &#39;|&#39;.</span>
+<span class="sd">        Do **NOT** use &#39;and&#39;, &#39;or&#39;, &#39;not&#39;.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="CompositeGate.__init__"><a class="viewcode-back" href="../../../API/FlowCytometryTools.core.gates.CompositeGate.html#FlowCytometryTools.CompositeGate.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gate1</span><span class="p">,</span> <span class="n">how</span><span class="p">,</span> <span class="n">gate2</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Instead of using this class directly to create composite gates, it is recommended</span>
+<span class="sd">        you use the shorthand syntax presented directly above.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+
+<span class="sd">        gate1 : subclass of Gate</span>
+<span class="sd">        how : [&#39;and&#39; | &#39;or&#39; | &#39;invert&#39; | &#39;xor&#39;]</span>
+<span class="sd">            Describes how to combine the gates</span>
+<span class="sd">        gate2 : subclass of Gate</span>
+<span class="sd">            Need to specify is how is anything but &#39;not&#39;.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gates</span> <span class="o">=</span> <span class="p">[</span><span class="n">gate1</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">gate2</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">gates</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">gate2</span><span class="p">)</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">how</span> <span class="o">=</span> <span class="n">how</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gates</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">gate</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gates</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">return</span> <span class="s1">&#39;~</span><span class="si">{0}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">gate</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s1">&#39;</span><span class="si">{0}</span><span class="s1"> </span><span class="si">{1}</span><span class="s1"> </span><span class="si">{2}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gates</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">how</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gates</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
+
+    <span class="k">def</span> <span class="nf">_identify</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataframe</span><span class="p">):</span>
+        <span class="n">idx</span> <span class="o">=</span> <span class="p">[</span><span class="n">gate</span><span class="o">.</span><span class="n">_identify</span><span class="p">(</span><span class="n">dataframe</span><span class="p">)</span> <span class="k">for</span> <span class="n">gate</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">gates</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">how</span> <span class="o">==</span> <span class="s1">&#39;and&#39;</span><span class="p">:</span>
+            <span class="n">function</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">logical_and</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">how</span> <span class="o">==</span> <span class="s1">&#39;or&#39;</span><span class="p">:</span>
+            <span class="n">function</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">logical_or</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">how</span> <span class="o">==</span> <span class="s1">&#39;invert&#39;</span><span class="p">:</span>
+            <span class="n">function</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">logical_not</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">how</span> <span class="o">==</span> <span class="s1">&#39;xor&#39;</span><span class="p">:</span>
+            <span class="n">function</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">logical_xor</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">supported_values</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;and&#39;</span><span class="p">,</span> <span class="s1">&#39;or&#39;</span><span class="p">,</span> <span class="s1">&#39;invert&#39;</span><span class="p">,</span> <span class="s1">&#39;xor&#39;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Unsupported value for how. how must be in (</span><span class="si">{0}</span><span class="s2">)&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">supported_values</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">function</span><span class="p">(</span><span class="o">*</span><span class="n">idx</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataframe</span><span class="p">):</span>
+        <span class="n">idx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_identify</span><span class="p">(</span><span class="n">dataframe</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">dataframe</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+
+    <span class="nd">@doc_replacer</span>
+    <span class="k">def</span> <span class="nf">plot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">flip</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">ax_channels</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        {_gate_plot_doc}</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">gate</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">gates</span><span class="p">:</span></div>
+            <span class="n">gate</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">flip</span><span class="o">=</span><span class="n">flip</span><span class="p">,</span> <span class="n">ax_channels</span><span class="o">=</span><span class="n">ax_channels</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2018, Eugene Yurtsev and Jonathan Friedman.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.0.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

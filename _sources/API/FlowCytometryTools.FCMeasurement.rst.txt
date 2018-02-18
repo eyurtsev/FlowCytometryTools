@@ -1,0 +1,52 @@
+FlowCytometryTools.FCMeasurement
+================================
+
+.. currentmodule:: FlowCytometryTools
+
+.. autoclass:: FCMeasurement
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~FCMeasurement.ID_from_data
+      ~FCMeasurement.__init__
+      ~FCMeasurement.apply
+      ~FCMeasurement.apply_queued
+      ~FCMeasurement.copy
+      ~FCMeasurement.gate
+      ~FCMeasurement.get_data
+      ~FCMeasurement.get_meta
+      ~FCMeasurement.get_meta_fields
+      ~FCMeasurement.load
+      ~FCMeasurement.plot
+      ~FCMeasurement.read_data
+      ~FCMeasurement.read_meta
+      ~FCMeasurement.save
+      ~FCMeasurement.set_data
+      ~FCMeasurement.set_meta
+      ~FCMeasurement.subsample
+      ~FCMeasurement.transform
+      ~FCMeasurement.view
+      ~FCMeasurement.view_interactively
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~FCMeasurement.channel_names
+      ~FCMeasurement.channels
+      ~FCMeasurement.counts
+      ~FCMeasurement.data
+      ~FCMeasurement.meta
+      ~FCMeasurement.shape
+   
+   

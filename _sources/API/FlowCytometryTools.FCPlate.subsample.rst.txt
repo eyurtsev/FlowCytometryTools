@@ -1,0 +1,6 @@
+FlowCytometryTools.FCPlate.subsample
+====================================
+
+.. currentmodule:: FlowCytometryTools
+
+.. automethod:: FCPlate.subsample

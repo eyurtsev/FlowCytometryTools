@@ -1,0 +1,6 @@
+FlowCytometryTools.FCPlate.from\_files
+======================================
+
+.. currentmodule:: FlowCytometryTools
+
+.. automethod:: FCPlate.from_files

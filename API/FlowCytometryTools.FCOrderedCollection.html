@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+        <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>FlowCytometryTools.FCOrderedCollection &#8212; FlowCytometryTools 0.5.0 documentation</title>
+    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head><body>
+  
+  <a href="https://github.com/eyurtsev/flowcytometrytools"
+     class="visible-desktop hidden-xs"><img
+    id="gh-banner"
+    style="position: absolute; top: 50px; right: 0; border: 0;"
+    src="https://s3.amazonaws.com/github/ribbons/forkme_right_white_ffffff.png"
+    alt="Fork me on GitHub"></a>
+  <script>
+    // Adjust banner height.
+    $(function () {
+      var navHeight = $(".navbar .container").css("height");
+      $("#gh-banner").css("top", navHeight);
+    });
+  </script>
+
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="../index.html">
+          FlowCytometryTools</a>
+        <span class="navbar-text navbar-version pull-left"><b>0.5.0</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+                <li><a href="../gallery.html">Gallery</a></li>
+                <li><a href="../install.html">Install</a></li>
+                <li><a href="../tutorial.html">Tutorial</a></li>
+                <li><a href="../api.html">API</a></li>
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="../index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"></ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">FlowCytometryTools.FCOrderedCollection</a></li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+            
+            
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="../search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+      <div class="col-md-3">
+        <div id="sidebar" class="bs-sidenav" role="complementary"><ul>
+<li><a class="reference internal" href="#">FlowCytometryTools.FCOrderedCollection</a></li>
+</ul>
+
+<div id="sourcelink">
+  <a href="../_sources/API/FlowCytometryTools.FCOrderedCollection.rst.txt"
+     rel="nofollow">Source</a>
+</div>
+<form action="../search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+        </div>
+      </div>
+    <div class="col-md-9 content">
+      
+  <div class="section" id="flowcytometrytools-fcorderedcollection">
+<h1>FlowCytometryTools.FCOrderedCollection<a class="headerlink" href="#flowcytometrytools-fcorderedcollection" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="FlowCytometryTools.FCOrderedCollection">
+<em class="property">class </em><code class="descclassname">FlowCytometryTools.</code><code class="descname">FCOrderedCollection</code><span class="sig-paren">(</span><em>ID</em>, <em>measurements</em>, <em>position_mapper</em>, <em>shape=(8</em>, <em>12)</em>, <em>positions=None</em>, <em>row_labels=None</em>, <em>col_labels=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/FlowCytometryTools/core/containers.html#FCOrderedCollection"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#FlowCytometryTools.FCOrderedCollection" title="Permalink to this definition">¶</a></dt>
+<dd><p>A dict-like class for holding flow cytometry samples that are arranged in a matrix.</p>
+<dl class="method">
+<dt id="FlowCytometryTools.FCOrderedCollection.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>ID</em>, <em>measurements</em>, <em>position_mapper</em>, <em>shape=(8</em>, <em>12)</em>, <em>positions=None</em>, <em>row_labels=None</em>, <em>col_labels=None</em><span class="sig-paren">)</span><a class="headerlink" href="#FlowCytometryTools.FCOrderedCollection.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>A dictionary-like container for holding multiple Measurements in a 2D array.</p>
+<p>Note that the collection keys are not necessarily identical to the Measurements IDs.
+Additionally, like a dict, measurement keys must be unique.</p>
+<dl class="docutils">
+<dt>ID <span class="classifier-delimiter">:</span> <span class="classifier">hashable</span></dt>
+<dd>Collection ID</dd>
+<dt>measurements <span class="classifier-delimiter">:</span> <span class="classifier">mappable | iterable</span></dt>
+<dd>values are measurements of appropriate type (type is explicitly checked for).</dd>
+</dl>
+<p>position_mapper : [None, callable, mapping, ‘name’, ‘row_first_enumerator’, ‘col_first_enumerator’]</p>
+<blockquote>
+<div><p>Returns the coordinates (row, col) which correspond to the key.
+(The key is the key extracted from the filename by the parser.)</p>
+<p>For example, the key ‘A1’ corresponds to the matrix coordinates (0, 0).</p>
+<blockquote>
+<div><ul class="simple">
+<li>None     : if None, then uses the same value as the parser</li>
+<li>callable : gets key and returns position</li>
+<li>mapping  : key:pos</li>
+<li>‘name’   : parses things like ‘A1’, ‘G12’</li>
+<li>‘row_first_enumerator’, ‘name’ : converts number to positions, going over rows first</li>
+<li>‘col_first_enumerator’ : converts number to positions, going over columns first.</li>
+</ul>
+</div></blockquote>
+</div></blockquote>
+<dl class="docutils">
+<dt>shape <span class="classifier-delimiter">:</span> <span class="classifier">2-tuple</span></dt>
+<dd>Shape of the 2D array of measurements (rows, cols).</dd>
+<dt>positions <span class="classifier-delimiter">:</span> <span class="classifier">dict | None</span></dt>
+<dd>Mapping of measurement_key:(row,col)
+If None is given set positions as specified by the position_mapper arg.</dd>
+<dt>row_labels <span class="classifier-delimiter">:</span> <span class="classifier">iterable of str</span></dt>
+<dd>If None is given, rows will be labeled ‘A’,’B’,’C’, …</dd>
+<dt>col_labels <span class="classifier-delimiter">:</span> <span class="classifier">iterable of str</span></dt>
+<dd>If None is given, columns will be labeled 1,2,3, …</dd>
+</dl>
+</dd></dl>
+
+<p class="rubric">Methods</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="#FlowCytometryTools.FCOrderedCollection.__init__" title="FlowCytometryTools.FCOrderedCollection.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(ID,&nbsp;measurements,&nbsp;position_mapper)</td>
+<td>A dictionary-like container for holding multiple Measurements in a 2D array.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">apply</span></code>(func[,&nbsp;ids,&nbsp;applyto,&nbsp;output_format,&nbsp;…])</td>
+<td>Apply func to each of the specified measurements.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">clear</span></code>()</td>
+<td></td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">clear_measurement_data</span></code>([ids])</td>
+<td>Clear the data in all specified measurements (all if None given).</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">clear_measurement_meta</span></code>([ids])</td>
+<td>Clear the metadata in all specified measurements (all if None given).</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">copy</span></code>([deep])</td>
+<td>Make a copy of this object</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">counts</span></code>([ids,&nbsp;setdata,&nbsp;output_format])</td>
+<td>Return the counts in each of the specified measurements.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">dropna</span></code>()</td>
+<td>Remove rows and cols that have no assigned measurements.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">filter</span></code>(criteria[,&nbsp;applyto,&nbsp;ID])</td>
+<td>Filter measurements according to given criteria.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">filter_by_IDs</span></code>(ids[,&nbsp;ID])</td>
+<td>Keep only Measurements with given IDs.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">filter_by_attr</span></code>(attr,&nbsp;criteria[,&nbsp;ID])</td>
+<td></td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">filter_by_cols</span></code>(cols[,&nbsp;ID])</td>
+<td>Keep only Measurements in corresponding columns.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">filter_by_key</span></code>(keys[,&nbsp;ID])</td>
+<td>Keep only Measurements with given keys.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">filter_by_meta</span></code>(criteria[,&nbsp;ID])</td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">filter_by_rows</span></code>(rows[,&nbsp;ID])</td>
+<td>Keep only Measurements in corresponding rows.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">from_dir</span></code>(ID,&nbsp;path[,&nbsp;parser,&nbsp;…])</td>
+<td>Create a Collection of measurements from data files contained in a directory.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">from_files</span></code>(ID,&nbsp;datafiles[,&nbsp;parser,&nbsp;…])</td>
+<td>Create an OrderedCollection of measurements from a set of data files.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">gate</span></code>(gate[,&nbsp;ID,&nbsp;apply_now])</td>
+<td>Applies the gate to each Measurement in the Collection, returning a new Collection with gated data.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">get</span></code>(k[,d])</td>
+<td></td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_measurement_metadata</span></code>(fields[,&nbsp;ids,&nbsp;…])</td>
+<td>Get the metadata fields of specified measurements (all if None given).</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_positions</span></code>([copy])</td>
+<td>Get a dictionary of measurement positions.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">grid_plot</span></code>(func[,&nbsp;applyto,&nbsp;ids,&nbsp;row_labels,&nbsp;…])</td>
+<td>Creates subplots for each well in the plate.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">items</span></code>()</td>
+<td></td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">keys</span></code>()</td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">load</span></code>(path)</td>
+<td>Loads object from a pickled file.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>(channel_names[,&nbsp;kind,&nbsp;gates,&nbsp;…])</td>
+<td>Produces a grid plot with each subplot corresponding to the data at the given position.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">pop</span></code>(k[,d])</td>
+<td>If key is not found, d is returned if given, otherwise KeyError is raised.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">popitem</span></code>()</td>
+<td>as a 2-tuple; but raise KeyError if D is empty.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">save</span></code>(path)</td>
+<td>Saves object to a pickled file.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_data</span></code>([ids])</td>
+<td>Set the data for all specified measurements (all if None given).</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_labels</span></code>(labels[,&nbsp;axis])</td>
+<td>Set the row/col labels.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_positions</span></code>([positions,&nbsp;position_mapper,&nbsp;ids])</td>
+<td>checks for position validity &amp; collisions,</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">setdefault</span></code>(k[,d])</td>
+<td></td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">subsample</span></code>(key[,&nbsp;order,&nbsp;auto_resize,&nbsp;ID])</td>
+<td>Allows arbitrary slicing (subsampling) of the data.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">transform</span></code>(transform[,&nbsp;direction,&nbsp;…])</td>
+<td>Apply transform to each Measurement in the Collection.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">update</span></code>([E,&nbsp;]**F)</td>
+<td>If E present and has a .keys() method, does:     for k in E: D[k] = E[k]</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">values</span></code>()</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Attributes</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">layout</span></code></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">shape</span></code></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2018, Eugene Yurtsev and Jonathan Friedman.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.0.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

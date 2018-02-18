@@ -1,0 +1,6 @@
+FlowCytometryTools.FCMeasurement.plot
+=====================================
+
+.. currentmodule:: FlowCytometryTools
+
+.. automethod:: FCMeasurement.plot

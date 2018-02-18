@@ -1,0 +1,6 @@
+FlowCytometryTools.FCMeasurement.counts
+=======================================
+
+.. currentmodule:: FlowCytometryTools
+
+.. autoattribute:: FCMeasurement.counts

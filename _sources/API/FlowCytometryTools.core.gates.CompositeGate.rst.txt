@@ -1,0 +1,29 @@
+FlowCytometryTools.core.gates.CompositeGate
+===========================================
+
+.. currentmodule:: FlowCytometryTools.core.gates
+
+.. autoclass:: CompositeGate
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~CompositeGate.__init__
+      ~CompositeGate.plot
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~CompositeGate.name
+   
+   

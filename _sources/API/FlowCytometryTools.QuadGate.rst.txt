@@ -1,0 +1,31 @@
+FlowCytometryTools.QuadGate
+===========================
+
+.. currentmodule:: FlowCytometryTools
+
+.. autoclass:: QuadGate
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~QuadGate.__init__
+      ~QuadGate.plot
+      ~QuadGate.validate_input
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~QuadGate.region
+      ~QuadGate.unnamed_gate_num
+   
+   

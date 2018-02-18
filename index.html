@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+        <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>FlowCytometryTools &#8212; FlowCytometryTools 0.5.0 documentation</title>
+    <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="_static/bootstrap-sphinx.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head><body>
+  
+  <a href="https://github.com/eyurtsev/flowcytometrytools"
+     class="visible-desktop hidden-xs"><img
+    id="gh-banner"
+    style="position: absolute; top: 50px; right: 0; border: 0;"
+    src="https://s3.amazonaws.com/github/ribbons/forkme_right_white_ffffff.png"
+    alt="Fork me on GitHub"></a>
+  <script>
+    // Adjust banner height.
+    $(function () {
+      var navHeight = $(".navbar .container").css("height");
+      $("#gh-banner").css("top", navHeight);
+    });
+  </script>
+
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="#">
+          FlowCytometryTools</a>
+        <span class="navbar-text navbar-version pull-left"><b>0.5.0</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+                <li><a href="gallery.html">Gallery</a></li>
+                <li><a href="install.html">Install</a></li>
+                <li><a href="tutorial.html">Tutorial</a></li>
+                <li><a href="api.html">API</a></li>
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"></ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">FlowCytometryTools</a><ul>
+<li><a class="reference internal" href="#who-is-this-for">Who is this for?</a></li>
+<li><a class="reference internal" href="#features">Features</a></li>
+<li><a class="reference internal" href="#resources">Resources</a></li>
+<li><a class="reference internal" href="#dependencies">Dependencies</a></li>
+<li><a class="reference internal" href="#alternatives">Alternatives</a></li>
+<li><a class="reference internal" href="#changes">Changes</a></li>
+<li><a class="reference internal" href="#license">LICENSE</a></li>
+</ul>
+</li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+            
+            
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+      <div class="col-md-3">
+        <div id="sidebar" class="bs-sidenav" role="complementary"><ul>
+<li><a class="reference internal" href="#">FlowCytometryTools</a><ul>
+<li><a class="reference internal" href="#who-is-this-for">Who is this for?</a></li>
+<li><a class="reference internal" href="#features">Features</a></li>
+<li><a class="reference internal" href="#resources">Resources</a></li>
+<li><a class="reference internal" href="#dependencies">Dependencies</a></li>
+<li><a class="reference internal" href="#alternatives">Alternatives</a></li>
+<li><a class="reference internal" href="#changes">Changes</a></li>
+<li><a class="reference internal" href="#license">LICENSE</a></li>
+</ul>
+</li>
+</ul>
+
+<div id="sourcelink">
+  <a href="_sources/index.rst.txt"
+     rel="nofollow">Source</a>
+</div>
+<form action="search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+        </div>
+      </div>
+    <div class="col-md-9 content">
+      
+  <div class="section" id="flowcytometrytools">
+<h1>FlowCytometryTools<a class="headerlink" href="#flowcytometrytools" title="Permalink to this headline">¶</a></h1>
+<p><strong>Authors</strong>: Jonathan Friedman and <a class="reference external" href="https://eyurtsev.github.io">Eugene Yurtsev</a></p>
+<a class="reference external image-reference" href="https://travis-ci.org/eyurtsev/FlowCytometryTools"><img alt="https://travis-ci.org/eyurtsev/FlowCytometryTools.svg?branch=master" src="https://travis-ci.org/eyurtsev/FlowCytometryTools.svg?branch=master" /></a>
+<a class="reference external image-reference" href="https://zenodo.org/record/32991"><img alt="https://zenodo.org/badge/doi/10.5281/zenodo.32991.svg" src="https://zenodo.org/badge/doi/10.5281/zenodo.32991.svg" /></a>
+<p>FlowCytometryTools is a python package for visualization and analysis of high-throughput flow cytometry data.</p>
+<ul class="simple">
+<li><strong>Intuitive</strong>: provides a simple programmatic interface to work with flow cytometry data</li>
+<li><strong>Flexible</strong>: can analyze either individual samples or collections of many plates</li>
+<li><strong>Scalable</strong>: simplifies analysis of high-throughput data using the power of <a class="reference external" href="https://pandas.pydata.org/">pandas</a></li>
+</ul>
+<div class="section" id="who-is-this-for">
+<h2>Who is this for?<a class="headerlink" href="#who-is-this-for" title="Permalink to this headline">¶</a></h2>
+<p>FlowCytometryTools is for researchers who want to use the python programming language to analyze flow cytometry data.</p>
+<p>The package is specifically tailored for high-throughput analysis. It provides an interface that can directly work with collections of flow cytometry measurements (e.g., 96-well plates).</p>
+<p>Basic familiarity with the python programming languages is recommended.</p>
+<p>You can find a few example scripts that load and plot flow cytometry data in the <a class="reference external" href="https://eyurtsev.github.io/FlowCytometryTools/gallery.html">gallery</a> page.</p>
+<p>If you like what you see, then proceed to the <a class="reference external" href="https://eyurtsev.github.io/FlowCytometryTools/install.html">installation</a> page and then
+to the <a class="reference external" href="https://eyurtsev.github.io/FlowCytometryTools/tutorial.html">tutorial</a>.</p>
+<p>And yes, there’s a UI to draw basic gates. It’s super basic, but it gets the job done.</p>
+<a class="reference external image-reference" href="https://github.com/eyurtsev/FlowCytometryTools/blob/master/doc/source/_static/webagg_demo.gif"><img alt="https://github.com/eyurtsev/FlowCytometryTools/blob/master/doc/source/_static/webagg_demo.gif" src="https://github.com/eyurtsev/FlowCytometryTools/blob/master/doc/source/_static/webagg_demo.gif" /></a>
+<a class="reference external image-reference" href="_static/webagg_demo.gif"><img alt="_images/webagg_demo.gif" src="_images/webagg_demo.gif" /></a>
+</div>
+<div class="section" id="features">
+<h2>Features<a class="headerlink" href="#features" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><strong>Transformations</strong>: hyperlog (hlog), truncated log (tlog), or anything you can dream of ;)</li>
+<li><strong>Plotting</strong>: 1D, 2D histograms for both single samples and collections (e.g., 96-well plates).</li>
+<li><strong>Gating</strong>: threshold, interval, quad, polygon gates</li>
+<li><strong>Subsampling</strong>: easy to subsample to examine only part of a measurement and randomize event order</li>
+<li><strong>GUI</strong>: simple graphical user interface to draw gates (<cite>wx</cite> or <cite>webagg</cite>)</li>
+<li><strong>FCS Formats</strong>: Supports FCS 2.0, 3.0, and 3.1</li>
+</ul>
+</div>
+<div class="section" id="resources">
+<h2>Resources<a class="headerlink" href="#resources" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><strong>Documentation:</strong> <a class="reference external" href="https://eyurtsev.github.io/FlowCytometryTools/">https://eyurtsev.github.io/FlowCytometryTools/</a></li>
+<li><strong>Source Repository:</strong> <a class="reference external" href="https://github.com/eyurtsev/FlowCytometryTools">https://github.com/eyurtsev/FlowCytometryTools</a></li>
+<li><strong>Comments or questions:</strong> <a class="reference external" href="https://github.com/eyurtsev/FlowCytometryTools/issues">https://github.com/eyurtsev/FlowCytometryTools/issues</a></li>
+</ul>
+</div>
+<div class="section" id="dependencies">
+<h2>Dependencies<a class="headerlink" href="#dependencies" title="Permalink to this headline">¶</a></h2>
+<p>For more information about how to obtain these, please see the <a class="reference external" href="https://eyurtsev.github.io/FlowCytometryTools/install.html">installation</a> page.</p>
+<p>FlowCytometryTools may work with older versions of some of these dependencies, but if
+you run into issues, please update the dependencies.</p>
+<p><strong>Required Dependencies</strong></p>
+<ol class="arabic simple">
+<li><a class="reference external" href="https://www.python.org/getit/">python</a> python 2.7 or python 3</li>
+<li><a class="reference external" href="https://pandas.pydata.org/">pandas</a> (Recommended version: 0.19.0 or higher).</li>
+<li><a class="reference external" href="https://matplotlib.org/">matplotlib</a> (Recommended version: 1.5.3 or higher).</li>
+<li><a class="reference external" href="https://www.scipy.org/">scipy</a></li>
+</ol>
+<p><strong>Optional Dependencies</strong></p>
+<ol class="arabic simple">
+<li><a class="reference external" href="https://wiki.wxpython.org/How%20to%20install%20wxPython">wx-python</a> : Used for the FlowCytometryTools GUI.</li>
+</ol>
+</div>
+<div class="section" id="alternatives">
+<h2>Alternatives<a class="headerlink" href="#alternatives" title="Permalink to this headline">¶</a></h2>
+<p>FlowCytometryTools is not the only open source software for performing data analysis on flow cytometry data.</p>
+<p>So if you find that FlowCytometryTools does not suit your needs, take a look at the following software:</p>
+<ul class="simple">
+<li><a class="reference external" href="https://github.com/bpteague/cytoflow">cytoflow</a>: API for python with a GUI</li>
+<li><a class="reference external" href="https://pythonhosted.org/fcm/basic.html">fcm</a> : API for python</li>
+<li><a class="reference external" href="http://master.bioconductor.org/">Bioconductor</a> : API for the R programming language</li>
+<li><a class="reference external" href="http://flowpy.wikidot.com/">FlowPy</a> : GUI</li>
+<li><a class="reference external" href="http://www.cyflogic.com/">cyflogic</a> : GUI</li>
+<li><a class="reference external" href="http://www.flowingsoftware.com/">Flowing Software</a> : GUI</li>
+</ul>
+</div>
+<div class="section" id="changes">
+<h2>Changes<a class="headerlink" href="#changes" title="Permalink to this headline">¶</a></h2>
+<p>v0.4.6, 2017-03-26</p>
+<ul class="simple">
+<li>FIX: edge case for inferring x-range for spline interpolation when doing log transforms and with data the contains values in the interval.</li>
+<li>FIX: fix linear transform (kwargs weren’t being passed correctly).</li>
+<li>FIX: interval gate was raising exceptions for certain numpy versions (fix by alonyan)</li>
+</ul>
+<p>v0.4.5, 2015-10-31</p>
+<ul class="simple">
+<li>Sample fcs files now included with installation</li>
+<li>Mostly maintenance (tests, configuration files, etc.)</li>
+</ul>
+<p>v0.4.4, 2015-09-06</p>
+<p>** Repository moved to github **</p>
+<p>Enhancements:</p>
+<ul class="simple">
+<li>added an experimental web-based backend for drawing gates. Use FCMeasurement.view_inteactively(backend=’webagg’).</li>
+<li>col first enumerator for forming an ordered fcs file collection (Yoav Ram)</li>
+</ul>
+<p>Bug fixes:</p>
+<ul class="simple">
+<li>FCPlate.from_dir ID_kwargs match against full path, not just filename (Nick Bolten)</li>
+<li>fcs parser can read larger fcs files and handles blank headers (Ben Roth)</li>
+</ul>
+<p>v0.4.3, 2014-12-05</p>
+<ul class="simple">
+<li>ENHC: Automatically determine bin location when plotting plates.</li>
+<li>Fix for Accuri V6 FCS (Ben Roth)</li>
+<li>Fix for xlim/ylim when plotting 2d histograms</li>
+</ul>
+<p>v0.4.2, 2014-10-08</p>
+<ul class="simple">
+<li>FCS parser can handle more formats</li>
+<li>Updated documentation</li>
+</ul>
+<p>v0.4.1, 2014-09-13</p>
+<ul class="simple">
+<li>Bug fixes for GUI</li>
+<li>Now works with matplotlib 1.4.0</li>
+<li>Added documentation and examples to gallery</li>
+</ul>
+<p>v0.4.0, 2014-06-05</p>
+<ul class="simple">
+<li>Updates in documentation</li>
+<li>Added experimental view() function</li>
+<li>Renamed old view() function into -&gt; view_interactively()</li>
+<li>Added queueing to help when dealing with large quantities of data.</li>
+<li>Histogram plots should work with pandas (0.14.0) &amp; matplotlib (1.3.1).</li>
+</ul>
+<p>v0.3.6, 2014-02-11</p>
+<ul class="simple">
+<li>Mostly updates in documentation</li>
+</ul>
+<p>v0.3.5, 2014-01-19</p>
+<ul class="simple">
+<li>Boost in speed for transformations on collections of measurements (like 96-well plates).</li>
+<li>Much of the documentation has been updated and improved.</li>
+<li>Improved GUI.</li>
+</ul>
+<p>v0.3.0, 2013-10-27 Initial Release</p>
+</div>
+<div class="section" id="license">
+<h2>LICENSE<a class="headerlink" href="#license" title="Permalink to this headline">¶</a></h2>
+<p>The MIT License (MIT)</p>
+<p>Copyright (c) 2013-2015 Eugene Yurtsev and Jonathan Friedman</p>
+<p>Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the “Software”), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:</p>
+<p>The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.</p>
+<p>THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.</p>
+<div class="toctree-wrapper compound">
+</div>
+</div>
+</div>
+
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2018, Eugene Yurtsev and Jonathan Friedman.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.0.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

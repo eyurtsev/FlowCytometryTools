@@ -1,0 +1,31 @@
+FlowCytometryTools.IntervalGate
+===============================
+
+.. currentmodule:: FlowCytometryTools
+
+.. autoclass:: IntervalGate
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~IntervalGate.__init__
+      ~IntervalGate.plot
+      ~IntervalGate.validate_input
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~IntervalGate.region
+      ~IntervalGate.unnamed_gate_num
+   
+   

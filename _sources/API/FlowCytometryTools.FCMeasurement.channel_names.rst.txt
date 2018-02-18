@@ -1,0 +1,6 @@
+FlowCytometryTools.FCMeasurement.channel\_names
+===============================================
+
+.. currentmodule:: FlowCytometryTools
+
+.. autoattribute:: FCMeasurement.channel_names

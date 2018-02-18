@@ -1,0 +1,6 @@
+FlowCytometryTools.core.transforms.tlog
+=======================================
+
+.. currentmodule:: FlowCytometryTools.core.transforms
+
+.. autofunction:: tlog

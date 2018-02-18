@@ -1,0 +1,6 @@
+FlowCytometryTools.FCMeasurement.subsample
+==========================================
+
+.. currentmodule:: FlowCytometryTools
+
+.. automethod:: FCMeasurement.subsample

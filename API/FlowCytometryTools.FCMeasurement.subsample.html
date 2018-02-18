@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+        <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>FlowCytometryTools.FCMeasurement.subsample &#8212; FlowCytometryTools 0.5.0 documentation</title>
+    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head><body>
+  
+  <a href="https://github.com/eyurtsev/flowcytometrytools"
+     class="visible-desktop hidden-xs"><img
+    id="gh-banner"
+    style="position: absolute; top: 50px; right: 0; border: 0;"
+    src="https://s3.amazonaws.com/github/ribbons/forkme_right_white_ffffff.png"
+    alt="Fork me on GitHub"></a>
+  <script>
+    // Adjust banner height.
+    $(function () {
+      var navHeight = $(".navbar .container").css("height");
+      $("#gh-banner").css("top", navHeight);
+    });
+  </script>
+
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="../index.html">
+          FlowCytometryTools</a>
+        <span class="navbar-text navbar-version pull-left"><b>0.5.0</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+                <li><a href="../gallery.html">Gallery</a></li>
+                <li><a href="../install.html">Install</a></li>
+                <li><a href="../tutorial.html">Tutorial</a></li>
+                <li><a href="../api.html">API</a></li>
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="../index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"></ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">FlowCytometryTools.FCMeasurement.subsample</a></li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+            
+            
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="../search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+      <div class="col-md-3">
+        <div id="sidebar" class="bs-sidenav" role="complementary"><ul>
+<li><a class="reference internal" href="#">FlowCytometryTools.FCMeasurement.subsample</a></li>
+</ul>
+
+<div id="sourcelink">
+  <a href="../_sources/API/FlowCytometryTools.FCMeasurement.subsample.rst.txt"
+     rel="nofollow">Source</a>
+</div>
+<form action="../search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+        </div>
+      </div>
+    <div class="col-md-9 content">
+      
+  <div class="section" id="flowcytometrytools-fcmeasurement-subsample">
+<h1>FlowCytometryTools.FCMeasurement.subsample<a class="headerlink" href="#flowcytometrytools-fcmeasurement-subsample" title="Permalink to this headline">¶</a></h1>
+<dl class="method">
+<dt id="FlowCytometryTools.FCMeasurement.subsample">
+<code class="descclassname">FCMeasurement.</code><code class="descname">subsample</code><span class="sig-paren">(</span><em>key</em>, <em>order='random'</em>, <em>auto_resize=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/FlowCytometryTools/core/containers.html#FCMeasurement.subsample"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#FlowCytometryTools.FCMeasurement.subsample" title="Permalink to this definition">¶</a></dt>
+<dd><p>Allows arbitrary slicing (subsampling) of the data.</p>
+<dl class="docutils">
+<dt>key <span class="classifier-delimiter">:</span> <span class="classifier">[int | float | tuple | slice]</span></dt>
+<dd><p class="first">When key is a single number, it specifies a number/fraction of events
+to use. Use the parameter ‘order’ to specify how to subsample
+the requested number/fraction of events.</p>
+<ul class="last simple">
+<li>int : specifies a number of events to use</li>
+<li>float : specifies a fraction of events to use (a number between 0 and 1)</li>
+<li>tuple : consists of two floats, each between 0 and 1. For example, key = (0.66666, 1.0) returns the last one third of events.</li>
+<li>slice : applies a slice. For example, key = slice(10, 1000, 20) returns events with indexes [10, 30, 50, …]</li>
+</ul>
+</dd>
+<dt>order <span class="classifier-delimiter">:</span> <span class="classifier">[‘random’ | ‘start’ | ‘end’]</span></dt>
+<dd><p class="first">Specifies which events to choose. This is only relevant
+when key is either an int or a float.</p>
+<ul class="last simple">
+<li>‘random’ : chooses the events randomly (without replacement)</li>
+<li>‘start’ : subsamples starting from the start</li>
+<li>‘end’ : subsamples starting from the end</li>
+</ul>
+</dd>
+<dt>auto_resize <span class="classifier-delimiter">:</span> <span class="classifier">[False | True]</span></dt>
+<dd>If True, attempts to automatically control indexing errors.
+For example, if there are only 1000 events in the fcs sample,
+but the key is set to subsample 2000 events, then an error will be raised.
+However, with auto_resize set to True, the key will be adjusted
+to 1000 events.</dd>
+</dl>
+<dl class="docutils">
+<dt>FCMeasurement</dt>
+<dd>Sample with subsampled data.</dd>
+</dl>
+</dd></dl>
+
+</div>
+
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2018, Eugene Yurtsev and Jonathan Friedman.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.0.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

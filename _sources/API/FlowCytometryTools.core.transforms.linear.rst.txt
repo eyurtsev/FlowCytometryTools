@@ -1,0 +1,6 @@
+FlowCytometryTools.core.transforms.linear
+=========================================
+
+.. currentmodule:: FlowCytometryTools.core.transforms
+
+.. autofunction:: linear

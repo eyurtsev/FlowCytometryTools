@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+        <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Specifying paths to FCS data &#8212; FlowCytometryTools 0.5.0 documentation</title>
+    <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="_static/bootstrap-sphinx.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head><body>
+  
+  <a href="https://github.com/eyurtsev/flowcytometrytools"
+     class="visible-desktop hidden-xs"><img
+    id="gh-banner"
+    style="position: absolute; top: 50px; right: 0; border: 0;"
+    src="https://s3.amazonaws.com/github/ribbons/forkme_right_white_ffffff.png"
+    alt="Fork me on GitHub"></a>
+  <script>
+    // Adjust banner height.
+    $(function () {
+      var navHeight = $(".navbar .container").css("height");
+      $("#gh-banner").css("top", navHeight);
+    });
+  </script>
+
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="index.html">
+          FlowCytometryTools</a>
+        <span class="navbar-text navbar-version pull-left"><b>0.5.0</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+                <li><a href="gallery.html">Gallery</a></li>
+                <li><a href="install.html">Install</a></li>
+                <li><a href="#">Tutorial</a></li>
+                <li><a href="api.html">API</a></li>
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"></ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">Specifying paths to FCS data</a></li>
+<li><a class="reference internal" href="#working-with-individual-fcs-files">Working with individual FCS files</a><ul>
+<li><a class="reference internal" href="#loading-the-file">Loading the file</a></li>
+<li><a class="reference internal" href="#channel-information">Channel Information</a></li>
+<li><a class="reference internal" href="#full-meta-data">Full Meta Data</a></li>
+<li><a class="reference internal" href="#accessing-raw-data">Accessing Raw Data</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#transformations">Transformations</a><ul>
+<li><a class="reference internal" href="#compensation-and-custom-transformations">Compensation and custom transformations</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#plotting">Plotting</a><ul>
+<li><a class="reference internal" href="#d-histograms">1d histograms</a></li>
+<li><a class="reference internal" href="#id1">2d histograms</a></li>
+<li><a class="reference internal" href="#d-scatter-plots">2d scatter plots</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#gating">Gating</a><ul>
+<li><a class="reference internal" href="#creating-gates">Creating Gates</a><ul>
+<li><a class="reference internal" href="#programmatically">Programmatically</a></li>
+<li><a class="reference internal" href="#using-the-gui">Using the GUI</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#plotting-gates">Plotting Gates</a></li>
+<li><a class="reference internal" href="#applying-gates">Applying Gates</a></li>
+<li><a class="reference internal" href="#combining-gates">Combining gates</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#working-with-plates">Working with plates</a><ul>
+<li><a class="reference internal" href="#loading-data">Loading Data</a></li>
+<li><a class="reference internal" href="#loading-data-better-way">Loading Data (better way)</a></li>
+<li><a class="reference internal" href="#id2">Plotting</a></li>
+<li><a class="reference internal" href="#accessing-single-wells">Accessing Single Wells</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#examples">Examples</a><ul>
+<li><a class="reference internal" href="#counting-using-the-counts-method">Counting using the counts method</a></li>
+<li><a class="reference internal" href="#counting-on-our-own">Counting on our own</a></li>
+<li><a class="reference internal" href="#calculating-median-fluorescence">Calculating median fluorescence</a></li>
+</ul>
+</li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+            
+            
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+      <div class="col-md-3">
+        <div id="sidebar" class="bs-sidenav" role="complementary"><ul>
+<li><a class="reference internal" href="#">Specifying paths to FCS data</a></li>
+<li><a class="reference internal" href="#working-with-individual-fcs-files">Working with individual FCS files</a><ul>
+<li><a class="reference internal" href="#loading-the-file">Loading the file</a></li>
+<li><a class="reference internal" href="#channel-information">Channel Information</a></li>
+<li><a class="reference internal" href="#full-meta-data">Full Meta Data</a></li>
+<li><a class="reference internal" href="#accessing-raw-data">Accessing Raw Data</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#transformations">Transformations</a><ul>
+<li><a class="reference internal" href="#compensation-and-custom-transformations">Compensation and custom transformations</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#plotting">Plotting</a><ul>
+<li><a class="reference internal" href="#d-histograms">1d histograms</a></li>
+<li><a class="reference internal" href="#id1">2d histograms</a></li>
+<li><a class="reference internal" href="#d-scatter-plots">2d scatter plots</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#gating">Gating</a><ul>
+<li><a class="reference internal" href="#creating-gates">Creating Gates</a><ul>
+<li><a class="reference internal" href="#programmatically">Programmatically</a></li>
+<li><a class="reference internal" href="#using-the-gui">Using the GUI</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#plotting-gates">Plotting Gates</a></li>
+<li><a class="reference internal" href="#applying-gates">Applying Gates</a></li>
+<li><a class="reference internal" href="#combining-gates">Combining gates</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#working-with-plates">Working with plates</a><ul>
+<li><a class="reference internal" href="#loading-data">Loading Data</a></li>
+<li><a class="reference internal" href="#loading-data-better-way">Loading Data (better way)</a></li>
+<li><a class="reference internal" href="#id2">Plotting</a></li>
+<li><a class="reference internal" href="#accessing-single-wells">Accessing Single Wells</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#examples">Examples</a><ul>
+<li><a class="reference internal" href="#counting-using-the-counts-method">Counting using the counts method</a></li>
+<li><a class="reference internal" href="#counting-on-our-own">Counting on our own</a></li>
+<li><a class="reference internal" href="#calculating-median-fluorescence">Calculating median fluorescence</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    <div class="col-md-9 content">
+      
+  <div class="section" id="specifying-paths-to-fcs-data">
+<span id="tutorial"></span><h1>Specifying paths to FCS data<a class="headerlink" href="#specifying-paths-to-fcs-data" title="Permalink to this headline">¶</a></h1>
+<p>To get cracking, we need some flow cytometry data (i.e., .fcs files). A few FCS data files have been bundled with this python package. To use these files, enter the following in your ipython terminal:</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [1]: </span><span class="kn">import</span> <span class="nn">FlowCytometryTools</span>
+
+<span class="gp">In [2]: </span><span class="kn">from</span> <span class="nn">FlowCytometryTools</span> <span class="kn">import</span> <span class="n">test_data_dir</span><span class="p">,</span> <span class="n">test_data_file</span>
+
+<span class="gp">In [3]: </span><span class="n">datadir</span> <span class="o">=</span> <span class="n">test_data_dir</span>
+
+<span class="gp">In [4]: </span><span class="n">datafile</span> <span class="o">=</span> <span class="n">test_data_file</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">datadir</span></code> will point to a directory containing flow cytometry data while <code class="docutils literal notranslate"><span class="pre">datafile</span></code> will point
+to a specific FCS file.</p>
+<p>To analyze your own data, simply set the ‘datafile’ variable to the path of your .fcs file:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">datafile</span><span class="o">=</span><span class="sa">r</span><span class="s1">&#39;C:\data\my_very_awesome_data.fcs&#39;</span>
+</pre></div>
+</div>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+<p><em>Windows Users</em> Windows uses the backslash character (‘’) for paths. However, the backslash character is a special character in python that is used for formatting strings. In order to specify paths correctly, you must precede the path with the character ‘r’.</p>
+<blockquote>
+<div><p>Good:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">datafile</span><span class="o">=</span><span class="sa">r</span><span class="s1">&#39;C:\data\my_very_awesome_data.fcs&#39;</span>
+</pre></div>
+</div>
+<p>Bad:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">datafile</span><span class="o">=</span><span class="s1">&#39;C:\data\my_very_awesome_data.fcs&#39;</span>
+</pre></div>
+</div>
+</div></blockquote>
+</div>
+<div class="section" id="working-with-individual-fcs-files">
+<h1>Working with individual FCS files<a class="headerlink" href="#working-with-individual-fcs-files" title="Permalink to this headline">¶</a></h1>
+<p>Below is a brief description, for more information see <a class="reference internal" href="API/FlowCytometryTools.FCMeasurement.html#FlowCytometryTools.FCMeasurement" title="FlowCytometryTools.FCMeasurement"><code class="xref py py-class docutils literal notranslate"><span class="pre">FCMeasurement</span></code></a>.</p>
+<div class="section" id="loading-the-file">
+<h2>Loading the file<a class="headerlink" href="#loading-the-file" title="Permalink to this headline">¶</a></h2>
+<p>Once <code class="docutils literal notranslate"><span class="pre">datadir</span></code> and <code class="docutils literal notranslate"><span class="pre">datafile</span></code> have been defined, we can proceed to load the data:</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [5]: </span><span class="kn">from</span> <span class="nn">FlowCytometryTools</span> <span class="kn">import</span> <span class="n">FCMeasurement</span>
+
+<span class="gp">In [6]: </span><span class="n">sample</span> <span class="o">=</span> <span class="n">FCMeasurement</span><span class="p">(</span><span class="n">ID</span><span class="o">=</span><span class="s1">&#39;Test Sample&#39;</span><span class="p">,</span> <span class="n">datafile</span><span class="o">=</span><span class="n">datafile</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="channel-information">
+<h2>Channel Information<a class="headerlink" href="#channel-information" title="Permalink to this headline">¶</a></h2>
+<p>Want to know which channels were measured? No problem.</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [7]: </span><span class="k">print</span><span class="p">(</span><span class="n">sample</span><span class="o">.</span><span class="n">channel_names</span><span class="p">)</span>
+<span class="go">(&#39;HDR-T&#39;, &#39;FSC-A&#39;, &#39;FSC-H&#39;, &#39;FSC-W&#39;, &#39;SSC-A&#39;, &#39;SSC-H&#39;, &#39;SSC-W&#39;, &#39;V2-A&#39;, &#39;V2-H&#39;, &#39;V2-W&#39;, &#39;Y2-A&#39;, &#39;Y2-H&#39;, &#39;Y2-W&#39;, &#39;B1-A&#39;, &#39;B1-H&#39;, &#39;B1-W&#39;)</span>
+</pre></div>
+</div>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [8]: </span><span class="k">print</span><span class="p">(</span><span class="n">sample</span><span class="o">.</span><span class="n">channels</span><span class="p">)</span>
+<span class="go">                $PnB $PnG    $PnR   $PnN                  $PnE   $PnS</span>
+<span class="go">Channel Number                                                       </span>
+<span class="go">1                 32    1  262144  HDR-T  [0.000000, 0.000000]  HDR-T</span>
+<span class="go">2                 32    1  262144  FSC-A  [0.000000, 0.000000]  FSC-A</span>
+<span class="go">3                 32    1  262144  FSC-H  [0.000000, 0.000000]  FSC-H</span>
+<span class="go">4                 32    1  262144  FSC-W  [0.000000, 0.000000]  FSC-W</span>
+<span class="go">5                 32    1  262144  SSC-A  [0.000000, 0.000000]  SSC-A</span>
+<span class="go">6                 32    1  262144  SSC-H  [0.000000, 0.000000]  SSC-H</span>
+<span class="go">7                 32    1  262144  SSC-W  [0.000000, 0.000000]  SSC-W</span>
+<span class="go">8                 32    1  262144   V2-A  [0.000000, 0.000000]   V2-A</span>
+<span class="go">9                 32    1  262144   V2-H  [0.000000, 0.000000]   V2-H</span>
+<span class="go">10                32    1  262144   V2-W  [0.000000, 0.000000]   V2-W</span>
+<span class="go">11                32    1  262144   Y2-A  [0.000000, 0.000000]   Y2-A</span>
+<span class="go">12                32    1  262144   Y2-H  [0.000000, 0.000000]   Y2-H</span>
+<span class="go">13                32    1  262144   Y2-W  [0.000000, 0.000000]   Y2-W</span>
+<span class="go">14                32    1  262144   B1-A  [0.000000, 0.000000]   B1-A</span>
+<span class="go">15                32    1  262144   B1-H  [0.000000, 0.000000]   B1-H</span>
+<span class="go">16                32    1  262144   B1-W  [0.000000, 0.000000]   B1-W</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="full-meta-data">
+<h2>Full Meta Data<a class="headerlink" href="#full-meta-data" title="Permalink to this headline">¶</a></h2>
+<p>In addition to the raw data, the FCS files contain “meta” information about the
+measurements, which may be useful for data analysis. You can access this
+information using the <cite>meta</cite> property, which will return to you a python
+dictionary. The meaning of the fields in meta data is explained in the FCS
+format specifications (google for the specification).</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [9]: </span><span class="k">print</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">sample</span><span class="o">.</span><span class="n">meta</span><span class="p">))</span>
+<span class="go">&lt;class &#39;dict&#39;&gt;</span>
+
+<span class="gp">In [10]: </span><span class="k">print</span><span class="p">(</span><span class="n">sample</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+<span class="go">               dict_keys([&#39;$OP&#39;, &#39;$ENDSTEXT&#39;, &#39;$DATE&#39;, &#39;$CYTSN&#39;, &#39;$FIL&#39;, &#39;$ENDDATA&#39;, &#39;_channel_names_&#39;, &#39;$SRC&#39;, &#39;$MODE&#39;, &#39;$DATATYPE&#39;, &#39;$BEGINANALYSIS&#39;, &#39;$CYT&#39;, &#39;$PAR&#39;, &#39;$TOT&#39;, &#39;$ENDANALYSIS&#39;, &#39;$BTIM&#39;, &#39;$BEGINSTEXT&#39;, &#39;__header__&#39;, &#39;$CELLS&#39;, &#39;$NEXTDATA&#39;, &#39;$SYS&#39;, &#39;_channels_&#39;, &#39;$BYTEORD&#39;, &#39;$ETIM&#39;, &#39;$BEGINDATA&#39;])</span>
+
+<span class="gp">In [11]: </span><span class="k">print</span><span class="p">(</span><span class="n">sample</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s1">&#39;$SRC&#39;</span><span class="p">])</span>
+<span class="go">                                                                                                                                                                                                                                                                                                                       A3</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="accessing-raw-data">
+<h2>Accessing Raw Data<a class="headerlink" href="#accessing-raw-data" title="Permalink to this headline">¶</a></h2>
+<p>The data is accessible as a <a class="reference external" href="http://pandas.pydata.org/pandas-docs/stable/generated/pandas.DataFrame.html">pandas.DataFrame</a>.</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [12]: </span><span class="k">print</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">sample</span><span class="o">.</span><span class="n">data</span><span class="p">))</span>
+<span class="go">&lt;class &#39;pandas.core.frame.DataFrame&#39;&gt;</span>
+
+<span class="gp">In [13]: </span><span class="k">print</span><span class="p">(</span><span class="n">sample</span><span class="o">.</span><span class="n">data</span><span class="p">[[</span><span class="s1">&#39;Y2-A&#39;</span><span class="p">,</span> <span class="s1">&#39;FSC-A&#39;</span><span class="p">]][:</span><span class="mi">10</span><span class="p">])</span>
+<span class="go">                                                Y2-A        FSC-A</span>
+<span class="go">0   109.946274   459.962982</span>
+<span class="go">1  5554.108398  -267.174652</span>
+<span class="go">2    81.835281  -201.582336</span>
+<span class="go">3   -54.120304   291.259888</span>
+<span class="go">4   -10.542595  -397.168579</span>
+<span class="go">5    34.791252  -213.151566</span>
+<span class="go">6  6132.993164   -25.696339</span>
+<span class="go">7    33.034771    61.271519</span>
+<span class="go">8  6688.348633  1462.823608</span>
+<span class="go">9    14.344463   490.025482</span>
+</pre></div>
+</div>
+<p>If you do not know how to work with DataFrames, you can get the underlying numpy array using the values property.</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [14]: </span><span class="k">print</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">sample</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">values</span><span class="p">))</span>
+<span class="go">&lt;class &#39;numpy.ndarray&#39;&gt;</span>
+
+<span class="gp">In [15]: </span><span class="k">print</span><span class="p">(</span><span class="n">sample</span><span class="o">.</span><span class="n">data</span><span class="p">[[</span><span class="s1">&#39;Y2-A&#39;</span><span class="p">,</span> <span class="s1">&#39;FSC-A&#39;</span><span class="p">]][:</span><span class="mi">10</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
+<span class="go">                        [[ 109.9463  459.963 ]</span>
+<span class="go"> [5554.1084 -267.1747]</span>
+<span class="go"> [  81.8353 -201.5823]</span>
+<span class="go"> [ -54.1203  291.2599]</span>
+<span class="go"> [ -10.5426 -397.1686]</span>
+<span class="go"> [  34.7913 -213.1516]</span>
+<span class="go"> [6132.993   -25.6963]</span>
+<span class="go"> [  33.0348   61.2715]</span>
+<span class="go"> [6688.3486 1462.8236]</span>
+<span class="go"> [  14.3445  490.0255]]</span>
+</pre></div>
+</div>
+<p>Of course, working directly with a pandas DataFrame is very convenient. For example,</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [16]: </span><span class="n">data</span> <span class="o">=</span> <span class="n">sample</span><span class="o">.</span><span class="n">data</span>
+
+<span class="gp">In [17]: </span><span class="k">print</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;Y2-A&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">describe</span><span class="p">())</span>
+<span class="go">count    10000.000000</span>
+<span class="go">mean      2540.119141</span>
+<span class="go">std       3330.651123</span>
+<span class="go">min       -144.069305</span>
+<span class="go">25%         10.865871</span>
+<span class="go">50%         82.575161</span>
+<span class="go">75%       5133.238525</span>
+<span class="go">max      68489.953125</span>
+<span class="go">Name: Y2-A, dtype: float64</span>
+</pre></div>
+</div>
+<p>Want to know how many events are in the data?</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [18]: </span><span class="k">print</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+<span class="go">10000</span>
+</pre></div>
+</div>
+<p>Want to calculate the median fluorescence level measured on the <code class="docutils literal notranslate"><span class="pre">Y2-A</span></code> channel?</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [19]: </span><span class="k">print</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;Y2-A&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">median</span><span class="p">())</span>
+<span class="go">82.57516479492188</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="transformations">
+<h1>Transformations<a class="headerlink" href="#transformations" title="Permalink to this headline">¶</a></h1>
+<p>The presence of both very dim and very bright cell populations in flow
+cytometry data can make it difficult to simultaneously visualize both
+populations on the same plot. To address this problem, flow cytometry
+analysis programs typically apply a transformation to the
+data to make it easy to visualize and interpret properly.</p>
+<p>Rather than having this transformation applied automatically and without your
+knowledge, this package provides a few of the common transformations (e.g.,
+hlog, tlog), but ultimately leaves it up to you to decide how to manipulate
+your data.</p>
+<p>As an example, let’s apply the ‘hlog’ transformation to the <code class="docutils literal notranslate"><span class="pre">Y2-A</span></code>, <code class="docutils literal notranslate"><span class="pre">B1-A</span></code> and
+<code class="docutils literal notranslate"><span class="pre">V2-A</span></code> channels, and save the transformed sample in <code class="docutils literal notranslate"><span class="pre">tsample</span></code>.</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [20]: </span><span class="n">tsample</span> <span class="o">=</span> <span class="n">sample</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="s1">&#39;hlog&#39;</span><span class="p">,</span> <span class="n">channels</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Y2-A&#39;</span><span class="p">,</span> <span class="s1">&#39;B1-A&#39;</span><span class="p">,</span> <span class="s1">&#39;V2-A&#39;</span><span class="p">],</span> <span class="n">b</span><span class="o">=</span><span class="mf">500.0</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>In the hlog transformation, the parameter <cite>b</cite> controls the location where the transformation shifts from
+linear to log. The optimal value for this parameter depends on the range of your data. For smaller ranges,
+try smaller values of <cite>b</cite>. So if your population doesn’t show up well, just adjust <cite>b</cite>.</p>
+<p>For more information see <a class="reference internal" href="API/FlowCytometryTools.FCMeasurement.transform.html#FlowCytometryTools.FCMeasurement.transform" title="FlowCytometryTools.FCMeasurement.transform"><code class="xref py py-meth docutils literal notranslate"><span class="pre">FCMeasurement.transform()</span></code></a>, <a class="reference internal" href="API/FlowCytometryTools.core.transforms.hlog.html#FlowCytometryTools.core.transforms.hlog" title="FlowCytometryTools.core.transforms.hlog"><code class="xref py py-meth docutils literal notranslate"><span class="pre">FlowCytometryTools.core.transforms.hlog()</span></code></a>.</p>
+<p>Throughout the rest of the tutorial we’ll always be working with hlog-transformed data.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>For more details see the API documentation section.</p>
+<dl class="last docutils">
+<dt>You can read more about transformations here:</dt>
+<dd><ul class="first last simple">
+<li>Bagwell. Cytometry Part A, 2005.</li>
+<li>Parks, Roederer, and Moore. Cytometry Part A, 2006.</li>
+<li>Trotter, Joseph. In Current Protocols in Cytometry. John Wiley &amp; Sons, Inc., 2001.</li>
+</ul>
+</dd>
+</dl>
+</div>
+<div class="section" id="compensation-and-custom-transformations">
+<h2>Compensation and custom transformations<a class="headerlink" href="#compensation-and-custom-transformations" title="Permalink to this headline">¶</a></h2>
+<p>If you want to compensate your data or perform a custom transformation
+there’s an example in the <a class="reference external" href="gallery.html">gallery</a>.</p>
+<p><strong>HINT</strong>: It’s very easy!</p>
+</div>
+</div>
+<div class="section" id="plotting">
+<h1>Plotting<a class="headerlink" href="#plotting" title="Permalink to this headline">¶</a></h1>
+<p>Let’s import matplotlib’s plotting functions.</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [21]: </span><span class="kn">from</span> <span class="nn">pylab</span> <span class="kn">import</span> <span class="o">*</span>
+</pre></div>
+</div>
+<p>For more information see <a class="reference internal" href="API/FlowCytometryTools.FCMeasurement.plot.html#FlowCytometryTools.FCMeasurement.plot" title="FlowCytometryTools.FCMeasurement.plot"><code class="xref py py-meth docutils literal notranslate"><span class="pre">FCMeasurement.plot()</span></code></a>.</p>
+<div class="section" id="d-histograms">
+<h2>1d histograms<a class="headerlink" href="#d-histograms" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [22]: </span><span class="n">figure</span><span class="p">();</span>
+
+<span class="gp">In [23]: </span><span class="n">tsample</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="s1">&#39;Y2-A&#39;</span><span class="p">],</span> <span class="n">bins</span><span class="o">=</span><span class="mi">100</span><span class="p">);</span>
+</pre></div>
+</div>
+<a class="reference internal image-reference" href="_images/1d_plot.png"><img alt="_images/1d_plot.png" src="_images/1d_plot.png" style="width: 4.5in;" /></a>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [24]: </span><span class="n">figure</span><span class="p">();</span>
+
+<span class="gp">In [25]: </span><span class="n">grid</span><span class="p">(</span><span class="bp">True</span><span class="p">);</span>
+
+<span class="gp">In [26]: </span><span class="n">tsample</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="s1">&#39;Y2-A&#39;</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;green&#39;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.7</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="mi">100</span><span class="p">);</span>
+</pre></div>
+</div>
+<a class="reference internal image-reference" href="_images/1d_plot_prettier.png"><img alt="_images/1d_plot_prettier.png" src="_images/1d_plot_prettier.png" style="width: 4.5in;" /></a>
+</div>
+<div class="section" id="id1">
+<h2>2d histograms<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
+<p>If you provide the plot function with the names of two channels, you’ll get a 2d histogram.</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [27]: </span><span class="n">figure</span><span class="p">();</span>
+
+<span class="gp">In [28]: </span><span class="n">tsample</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="s1">&#39;B1-A&#39;</span><span class="p">,</span> <span class="s1">&#39;Y2-A&#39;</span><span class="p">]);</span>
+</pre></div>
+</div>
+<a class="reference internal image-reference" href="_images/2d_plot_A.png"><img alt="_images/2d_plot_A.png" src="_images/2d_plot_A.png" style="width: 4.5in;" /></a>
+<p>As with 1d histograms, the plot function accepts all the same arguments as does the matplotlib histogram function.</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [29]: </span><span class="n">figure</span><span class="p">();</span>
+
+<span class="gp">In [30]: </span><span class="n">tsample</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="s1">&#39;B1-A&#39;</span><span class="p">,</span> <span class="s1">&#39;Y2-A&#39;</span><span class="p">],</span> <span class="n">cmap</span><span class="o">=</span><span class="n">cm</span><span class="o">.</span><span class="n">Oranges</span><span class="p">,</span> <span class="n">colorbar</span><span class="o">=</span><span class="bp">False</span><span class="p">);</span>
+</pre></div>
+</div>
+<a class="reference internal image-reference" href="_images/2d_plot_B.png"><img alt="_images/2d_plot_B.png" src="_images/2d_plot_B.png" style="width: 4.5in;" /></a>
+</div>
+<div class="section" id="d-scatter-plots">
+<h2>2d scatter plots<a class="headerlink" href="#d-scatter-plots" title="Permalink to this headline">¶</a></h2>
+<p>To create a scatter plot, provide the argument <code class="docutils literal notranslate"><span class="pre">kind='scatter</span></code> to the plot command.</p>
+<p>This makes the plot function behave like the matplotlib scatter function (and accept all the same arguments).</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [31]: </span><span class="n">figure</span><span class="p">();</span>
+
+<span class="gp">In [32]: </span><span class="n">tsample</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="s1">&#39;B1-A&#39;</span><span class="p">,</span> <span class="s1">&#39;Y2-A&#39;</span><span class="p">],</span> <span class="n">kind</span><span class="o">=</span><span class="s1">&#39;scatter&#39;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;red&#39;</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">);</span>
+</pre></div>
+</div>
+<a class="reference internal image-reference" href="_images/2d_scatter_plot_A.png"><img alt="_images/2d_scatter_plot_A.png" src="_images/2d_scatter_plot_A.png" style="width: 4.5in;" /></a>
+</div>
+</div>
+<div class="section" id="gating">
+<h1>Gating<a class="headerlink" href="#gating" title="Permalink to this headline">¶</a></h1>
+<p>See the <a class="reference external" href="api.html#gates">API</a> for a list of available gates.</p>
+<p>Let’s import a few of those gates.</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [33]: </span><span class="kn">from</span> <span class="nn">FlowCytometryTools</span> <span class="kn">import</span> <span class="n">ThresholdGate</span><span class="p">,</span> <span class="n">PolyGate</span>
+</pre></div>
+</div>
+<div class="section" id="creating-gates">
+<h2>Creating Gates<a class="headerlink" href="#creating-gates" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="programmatically">
+<h3>Programmatically<a class="headerlink" href="#programmatically" title="Permalink to this headline">¶</a></h3>
+<p>To create a gate you need to provide the following information:</p>
+<ul class="simple">
+<li>set(s) of coordinates</li>
+<li>name(s) of channel(s)</li>
+<li>region</li>
+</ul>
+<p>Let’s create a <a class="reference internal" href="API/FlowCytometryTools.ThresholdGate.html#FlowCytometryTools.ThresholdGate" title="FlowCytometryTools.ThresholdGate"><code class="xref py py-class docutils literal notranslate"><span class="pre">ThresholdGate</span></code></a> that passes events with a Y2-A (RFP) value <em>above</em> the 1000.0.</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [34]: </span><span class="n">y2_gate</span> <span class="o">=</span> <span class="n">ThresholdGate</span><span class="p">(</span><span class="mf">1000.0</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;Y2-A&#39;</span><span class="p">],</span> <span class="n">region</span><span class="o">=</span><span class="s1">&#39;above&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>While we’re at it, here’s another gate for events with a B1-A value (CFP) above 2000.0.</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [35]: </span><span class="n">b1_gate</span> <span class="o">=</span> <span class="n">ThresholdGate</span><span class="p">(</span><span class="mf">2000.0</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;B1-A&#39;</span><span class="p">],</span> <span class="n">region</span><span class="o">=</span><span class="s1">&#39;above&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="using-the-gui">
+<h3>Using the GUI<a class="headerlink" href="#using-the-gui" title="Permalink to this headline">¶</a></h3>
+<p>You can launch the GUI for creating the gates, by calling the view_interactively() method of an <code class="docutils literal notranslate"><span class="pre">FCMeasurement</span></code> instance.</p>
+<p>There are two backends enabled for the GUI. Both are buggy, but can help to get the job done.</p>
+<p>Use the wx backend this way:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">tsample</span><span class="o">.</span><span class="n">view_interactively</span><span class="p">(</span><span class="n">backend</span><span class="o">=</span><span class="s1">&#39;wx&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p>wxpython must be installed in order to use the GUI. (It may already be installed, so just try it out.)</p>
+<p class="last">Please note that there’s no way to apply transformations through the GUI, so
+view samples through the view_interactively method. (Don’t load new FCS files directly from the GUI,
+if you need those files transformed.)</p>
+</div>
+<p>Use the webagg backend this way:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">tsample</span><span class="o">.</span><span class="n">view_interactively</span><span class="p">(</span><span class="n">backend</span><span class="o">=</span><span class="s1">&#39;webagg&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<a class="reference external image-reference" href="_static/webagg_demo.gif"><img alt="_images/webagg_demo.gif" src="_images/webagg_demo.gif" /></a>
+</div>
+</div>
+<div class="section" id="plotting-gates">
+<h2>Plotting Gates<a class="headerlink" href="#plotting-gates" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [36]: </span><span class="n">figure</span><span class="p">();</span>
+
+<span class="gp">In [37]: </span><span class="n">tsample</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="s1">&#39;Y2-A&#39;</span><span class="p">],</span> <span class="n">gates</span><span class="o">=</span><span class="p">[</span><span class="n">y2_gate</span><span class="p">],</span> <span class="n">bins</span><span class="o">=</span><span class="mi">100</span><span class="p">);</span>
+
+<span class="gp">In [38]: </span><span class="n">title</span><span class="p">(</span><span class="s1">&#39;Gate Plotted&#39;</span><span class="p">);</span>
+</pre></div>
+</div>
+<a class="reference internal image-reference" href="_images/gate_A_plot.png"><img alt="_images/gate_A_plot.png" src="_images/gate_A_plot.png" style="width: 4.5in;" /></a>
+</div>
+<div class="section" id="applying-gates">
+<h2>Applying Gates<a class="headerlink" href="#applying-gates" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [39]: </span><span class="n">gated_sample</span> <span class="o">=</span> <span class="n">tsample</span><span class="o">.</span><span class="n">gate</span><span class="p">(</span><span class="n">y2_gate</span><span class="p">)</span>
+
+<span class="gp">In [40]: </span><span class="k">print</span><span class="p">(</span><span class="n">gated_sample</span><span class="o">.</span><span class="n">get_data</span><span class="p">()</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+<span class="go">4433</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">gated_sample</span></code> is also an instance of <a class="reference internal" href="API/FlowCytometryTools.FCMeasurement.html#FlowCytometryTools.FCMeasurement" title="FlowCytometryTools.FCMeasurement"><code class="xref py py-class docutils literal notranslate"><span class="pre">FCMeasurement</span></code></a>, so it supports the
+same routines as does the ungated sample. For example, we can plot it:</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [41]: </span><span class="n">figure</span><span class="p">();</span>
+
+<span class="gp">In [42]: </span><span class="n">gated_sample</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="s1">&#39;Y2-A&#39;</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="mi">100</span><span class="p">);</span>
+
+<span class="gp">In [43]: </span><span class="n">title</span><span class="p">(</span><span class="s1">&#39;Gated Sample&#39;</span><span class="p">);</span>
+</pre></div>
+</div>
+<a class="reference internal image-reference" href="_images/gated_sample_only_plot.png"><img alt="_images/gated_sample_only_plot.png" src="_images/gated_sample_only_plot.png" style="width: 4.5in;" /></a>
+<p>Let’s compare the gated and ungated side by side.</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [44]: </span><span class="n">figure</span><span class="p">();</span>
+
+<span class="gp">In [45]: </span><span class="n">subplots_adjust</span><span class="p">(</span><span class="n">hspace</span><span class="o">=</span><span class="mf">0.4</span><span class="p">)</span>
+
+<span class="gp">In [46]: </span><span class="n">ax1</span> <span class="o">=</span> <span class="n">subplot</span><span class="p">(</span><span class="mi">211</span><span class="p">)</span>
+
+<span class="gp">In [47]: </span><span class="n">tsample</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="s1">&#39;Y2-A&#39;</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;gray&#39;</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">gates</span><span class="o">=</span><span class="p">[</span><span class="n">y2_gate</span><span class="p">]);</span>
+
+<span class="gp">In [48]: </span><span class="n">title</span><span class="p">(</span><span class="s1">&#39;Original Sample&#39;</span><span class="p">);</span>
+
+<span class="gp">In [49]: </span><span class="n">ax2</span> <span class="o">=</span> <span class="n">subplot</span><span class="p">(</span><span class="mi">212</span><span class="p">,</span> <span class="n">sharey</span><span class="o">=</span><span class="n">ax1</span><span class="p">,</span> <span class="n">sharex</span><span class="o">=</span><span class="n">ax1</span><span class="p">)</span>
+
+<span class="gp">In [50]: </span><span class="n">gated_sample</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="s1">&#39;Y2-A&#39;</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">gates</span><span class="o">=</span><span class="p">[</span><span class="n">y2_gate</span><span class="p">]);</span>
+
+<span class="gp">In [51]: </span><span class="n">title</span><span class="p">(</span><span class="s1">&#39;Gated Sample&#39;</span><span class="p">);</span>
+</pre></div>
+</div>
+<a class="reference internal image-reference" href="_images/gate_D_plot.png"><img alt="_images/gate_D_plot.png" src="_images/gate_D_plot.png" style="width: 4.5in;" /></a>
+</div>
+<div class="section" id="combining-gates">
+<h2>Combining gates<a class="headerlink" href="#combining-gates" title="Permalink to this headline">¶</a></h2>
+<p>Gates can be inverted and combined together. See <a class="reference internal" href="API/FlowCytometryTools.core.gates.CompositeGate.html#FlowCytometryTools.core.gates.CompositeGate" title="FlowCytometryTools.core.gates.CompositeGate"><code class="xref py py-class docutils literal notranslate"><span class="pre">FlowCytometryTools.core.gates.CompositeGate</span></code></a>.</p>
+</div>
+</div>
+<div class="section" id="working-with-plates">
+<h1>Working with plates<a class="headerlink" href="#working-with-plates" title="Permalink to this headline">¶</a></h1>
+<p>For high-throughput analysis of flow cytometery data,
+loading single FCS files is silly. Don’t be silly!</p>
+<p>Instead, we provided you with the awesome <a class="reference external" href="api.html#fcplate">FCPlate</a> class (also called <a class="reference internal" href="API/FlowCytometryTools.FCOrderedCollection.html#FlowCytometryTools.FCOrderedCollection" title="FlowCytometryTools.FCOrderedCollection"><code class="xref py py-class docutils literal notranslate"><span class="pre">FCOrderedCollection</span></code></a>).</p>
+<div class="section" id="loading-data">
+<h2>Loading Data<a class="headerlink" href="#loading-data" title="Permalink to this headline">¶</a></h2>
+<p>The code below loads two FCS samples and shows two different methods of placing them on a plate container.</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [52]: </span><span class="kn">from</span> <span class="nn">FlowCytometryTools</span> <span class="kn">import</span> <span class="n">FCPlate</span>
+
+<span class="gp">In [53]: </span><span class="n">sample1</span> <span class="o">=</span> <span class="n">FCMeasurement</span><span class="p">(</span><span class="s1">&#39;B1&#39;</span><span class="p">,</span> <span class="n">datafile</span><span class="o">=</span><span class="n">datafile</span><span class="p">)</span>
+
+<span class="gp">In [54]: </span><span class="n">sample2</span> <span class="o">=</span> <span class="n">FCMeasurement</span><span class="p">(</span><span class="s1">&#39;D2&#39;</span><span class="p">,</span> <span class="n">datafile</span><span class="o">=</span><span class="n">datafile</span><span class="p">)</span>
+
+<span class="go"># Use the samples ID as their position on a plate:</span>
+<span class="gp">In [55]: </span><span class="n">plate1</span> <span class="o">=</span> <span class="n">FCPlate</span><span class="p">(</span><span class="s1">&#39;demo plate&#39;</span><span class="p">,</span> <span class="p">[</span><span class="n">sample1</span><span class="p">,</span> <span class="n">sample2</span><span class="p">],</span> <span class="s1">&#39;name&#39;</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+
+<span class="gp">In [56]: </span><span class="k">print</span><span class="p">(</span><span class="n">plate1</span><span class="p">)</span>
+<span class="go">ID:</span>
+<span class="go">demo plate</span>
+
+<span class="go">Data:</span>
+<span class="go">    1   2 3</span>
+<span class="go">A          </span>
+<span class="go">B  B1      </span>
+<span class="go">C          </span>
+<span class="go">D      D2  </span>
+</pre></div>
+</div>
+<p>Alternatively, one can specify the sample positions independent of the samples IDs using a dictionary:</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [57]: </span><span class="n">plate2</span> <span class="o">=</span> <span class="n">FCPlate</span><span class="p">(</span><span class="s1">&#39;demo plate&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;C2&#39;</span> <span class="p">:</span> <span class="n">sample1</span><span class="p">,</span> <span class="s1">&#39;C3&#39;</span> <span class="p">:</span> <span class="n">sample2</span><span class="p">},</span> <span class="s1">&#39;name&#39;</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+
+<span class="gp">In [58]: </span><span class="k">print</span><span class="p">(</span><span class="n">plate2</span><span class="p">)</span>
+<span class="go">ID:</span>
+<span class="go">demo plate</span>
+
+<span class="go">Data:</span>
+<span class="go">  1   2   3</span>
+<span class="go">A          </span>
+<span class="go">B          </span>
+<span class="go">C    B1  D2</span>
+<span class="go">D          </span>
+
+<span class="gp">In [59]: </span><span class="k">print</span><span class="p">(</span><span class="n">plate2</span><span class="p">[</span><span class="s1">&#39;C2&#39;</span><span class="p">])</span>
+<span class="go">                                                                                  &lt;FCMeasurement &#39;B1&#39;&gt;</span>
+</pre></div>
+</div>
+<p>Having overwritten the default mapping based on the samples ID, we now have to access <code class="docutils literal notranslate"><span class="pre">sample1</span></code> using the key <code class="docutils literal notranslate"><span class="pre">C2</span></code>. So the command <code class="docutils literal notranslate"><span class="pre">plate['C2']</span></code> should return sample1 (whose ID should still remain <code class="docutils literal notranslate"><span class="pre">B1</span></code>).</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [60]: </span><span class="n">plate3</span> <span class="o">=</span> <span class="n">FCPlate</span><span class="p">(</span><span class="s1">&#39;demo plate&#39;</span><span class="p">,</span> <span class="p">{</span><span class="mi">3</span> <span class="p">:</span> <span class="n">sample1</span><span class="p">,</span> <span class="mi">4</span> <span class="p">:</span> <span class="n">sample2</span><span class="p">},</span> <span class="s1">&#39;row_first_enumerator&#39;</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+
+<span class="gp">In [61]: </span><span class="k">print</span><span class="p">(</span><span class="n">plate3</span><span class="p">)</span>
+<span class="go">ID:</span>
+<span class="go">demo plate</span>
+
+<span class="go">Data:</span>
+<span class="go">    1 2 3</span>
+<span class="go">A        </span>
+<span class="go">B        </span>
+<span class="go">C  B1    </span>
+<span class="go">D  D2    </span>
+
+<span class="gp">In [62]: </span><span class="k">print</span><span class="p">(</span><span class="n">plate3</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span>
+<span class="go">                                                                        &lt;FCMeasurement &#39;B1&#39;&gt;</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Below we show a much faster way of loading data into a plate format. This method should make life simpler for most users by removing a bunch of boilerplate code. So keep on reading!</p>
+</div>
+</div>
+<div class="section" id="loading-data-better-way">
+<h2>Loading Data (better way)<a class="headerlink" href="#loading-data-better-way" title="Permalink to this headline">¶</a></h2>
+<p>What we’d like to do is to construct a flow cytometry plate object by loading all the ‘*.fcs’ files in a directory.</p>
+<p>To do that, FCPlate needs to know where on the plate each file belongs; i.e.,
+we need to tell it that the file ‘My_awesome_data_Well_C9.fcs’ corresponds to well ‘C9’, which corresponds to the third row and the ninth column on the plate.</p>
+<p>The process by which the filename is mapped to a position on the plate is the following:</p>
+<ol class="arabic simple">
+<li>The filename is fed into a <strong>parser</strong> which extracts a key from it.
+For example, given ‘My_awesome_data_Well_C9.fcs’, the parser returns ‘C9’</li>
+<li>The key is fed into a <strong>position mapper</strong> which returns a matrix position.
+For example, given ‘C9’ the position_mapper should return (2, 8).
+The reason it’s (2, 8) rather than (3, 9) is because counting starts from 0 rather than 1. (So ‘A’ corresponds to 0.)</li>
+</ol>
+<p>Here’s a summary table that’ll help you decide what to do (depending on your file name format):</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="27%" />
+<col width="12%" />
+<col width="61%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">File Name Format</th>
+<th class="head">parser</th>
+<th class="head">Comments</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>‘[whatever]_Well_C9_[blah].fcs’</td>
+<td>‘name’</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-odd"><td>‘[blah]_someothertagC9_[blah].fcs’</td>
+<td>‘name’</td>
+<td>But to use must modify ID_kwargs (see API) for details</td>
+</tr>
+<tr class="row-even"><td>‘[whatever].025.fcs’</td>
+<td>‘number’</td>
+<td>001 -&gt; A1, 002 -&gt; B1, … etc. i.e., advances by row first</td>
+</tr>
+<tr class="row-odd"><td>Some other naming format</td>
+<td>dict</td>
+<td>dict with keys = filenames, values = positions</td>
+</tr>
+<tr class="row-even"><td>Some other naming format</td>
+<td>function</td>
+<td>Provide a function that accepts a filename and returns a position (e.g., ‘C9’)</td>
+</tr>
+</tbody>
+</table>
+<p>For the analysis below, we’ll be using the ‘name’ parser since our files match that convention. OK. Let’s try it out:</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [63]: </span><span class="kn">from</span> <span class="nn">FlowCytometryTools</span> <span class="kn">import</span> <span class="n">FCPlate</span>
+
+<span class="gp">In [64]: </span><span class="n">plate</span> <span class="o">=</span> <span class="n">FCPlate</span><span class="o">.</span><span class="n">from_dir</span><span class="p">(</span><span class="n">ID</span><span class="o">=</span><span class="s1">&#39;Demo Plate&#39;</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="n">datadir</span><span class="p">,</span> <span class="n">parser</span><span class="o">=</span><span class="s1">&#39;name&#39;</span><span class="p">)</span>
+
+<span class="gp">In [65]: </span><span class="n">plate</span> <span class="o">=</span> <span class="n">plate</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="s1">&#39;hlog&#39;</span><span class="p">,</span> <span class="n">channels</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Y2-A&#39;</span><span class="p">,</span> <span class="s1">&#39;B1-A&#39;</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>Let’s see what data got loaded.</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [66]: </span><span class="k">print</span><span class="p">(</span><span class="n">plate</span><span class="p">)</span>
+<span class="go">ID:</span>
+<span class="go">Demo Plate</span>
+
+<span class="go">Data:</span>
+<span class="go">  1  2   3   4  5   6   7  8  9  10 11 12</span>
+<span class="go">A        A3  A4     A6  A7               </span>
+<span class="go">B        B3  B4                          </span>
+<span class="go">C                       C7               </span>
+<span class="go">D                                        </span>
+<span class="go">E                                        </span>
+<span class="go">F                                        </span>
+<span class="go">G                                        </span>
+<span class="go">H                                        </span>
+</pre></div>
+</div>
+<p>And just to confirm, let’s look at the naming of our files to see that <code class="docutils literal notranslate"><span class="pre">parser='name'</span></code> should indeed work.</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [67]: </span><span class="kn">import</span> <span class="nn">os</span>
+
+<span class="gp">In [68]: </span><span class="k">print</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">plate</span><span class="p">[</span><span class="s1">&#39;A3&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">datafile</span><span class="p">))</span>
+<span class="go">RFP_Well_A3.fcs</span>
+</pre></div>
+</div>
+<p>This plate contains many empty rows and columns. The method <a class="reference internal" href="API/FlowCytometryTools.FCPlate.dropna.html#FlowCytometryTools.FCPlate.dropna" title="FlowCytometryTools.FCPlate.dropna"><code class="xref py py-meth docutils literal notranslate"><span class="pre">FCPlate.dropna()</span></code></a> allow us to drop empty rows and columns for convenience:</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [69]: </span><span class="n">plate</span> <span class="o">=</span> <span class="n">plate</span><span class="o">.</span><span class="n">dropna</span><span class="p">()</span>
+
+<span class="gp">In [70]: </span><span class="k">print</span><span class="p">(</span><span class="n">plate</span><span class="p">)</span>
+<span class="go">ID:</span>
+<span class="go">Demo Plate</span>
+
+<span class="go">Data:</span>
+<span class="go">    3   4   6   7</span>
+<span class="go">A  A3  A4  A6  A7</span>
+<span class="go">B  B3  B4        </span>
+<span class="go">C              C7</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="id2">
+<h2>Plotting<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h2>
+<p>Please import matplotlib’s plotting functions if you haven’t yet…</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [71]: </span><span class="kn">from</span> <span class="nn">pylab</span> <span class="kn">import</span> <span class="o">*</span>
+</pre></div>
+</div>
+<p>For more information see <a class="reference internal" href="API/FlowCytometryTools.FCPlate.plot.html#FlowCytometryTools.FCPlate.plot" title="FlowCytometryTools.FCPlate.plot"><code class="xref py py-meth docutils literal notranslate"><span class="pre">FCPlate.plot()</span></code></a>.</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [72]: </span><span class="n">figure</span><span class="p">();</span>
+
+<span class="gp">In [73]: </span><span class="n">plate</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="s1">&#39;Y2-A&#39;</span><span class="p">],</span> <span class="n">bins</span><span class="o">=</span><span class="mi">100</span><span class="p">);</span>
+</pre></div>
+</div>
+<a class="reference internal image-reference" href="_images/plate_plot_A.png"><img alt="_images/plate_plot_A.png" src="_images/plate_plot_A.png" style="width: 4.5in;" /></a>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [74]: </span><span class="n">figure</span><span class="p">();</span>
+
+<span class="gp">In [75]: </span><span class="n">plate</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="s1">&#39;B1-A&#39;</span><span class="p">,</span> <span class="s1">&#39;Y2-A&#39;</span><span class="p">],</span> <span class="n">bins</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">wspace</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">hspace</span><span class="o">=</span><span class="mf">0.2</span><span class="p">);</span>
+</pre></div>
+</div>
+<a class="reference internal image-reference" href="_images/plate_plot_B.png"><img alt="_images/plate_plot_B.png" src="_images/plate_plot_B.png" style="width: 4.5in;" /></a>
+</div>
+<div class="section" id="accessing-single-wells">
+<h2>Accessing Single Wells<a class="headerlink" href="#accessing-single-wells" title="Permalink to this headline">¶</a></h2>
+<p>FCPlate supports indexing to make it easier to work with single wells.</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [76]: </span><span class="k">print</span><span class="p">(</span><span class="n">plate</span><span class="p">[</span><span class="s1">&#39;A3&#39;</span><span class="p">])</span>
+<span class="go">&lt;FCMeasurement &#39;A3&#39;&gt;</span>
+
+<span class="gp">In [77]: </span><span class="n">figure</span><span class="p">();</span>
+
+<span class="gp">In [78]: </span><span class="n">plate</span><span class="p">[</span><span class="s1">&#39;A3&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="s1">&#39;Y2-A&#39;</span><span class="p">],</span> <span class="n">bins</span><span class="o">=</span><span class="mi">100</span><span class="p">);</span>
+</pre></div>
+</div>
+<a class="reference internal image-reference" href="_images/plate_indexing_A.png"><img alt="_images/plate_indexing_A.png" src="_images/plate_indexing_A.png" style="width: 4.5in;" /></a>
+</div>
+</div>
+<div class="section" id="examples">
+<h1>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="counting-using-the-counts-method">
+<h2>Counting using the counts method<a class="headerlink" href="#counting-using-the-counts-method" title="Permalink to this headline">¶</a></h2>
+<p>Use the <code class="docutils literal notranslate"><span class="pre">counts</span></code> method to count total number of events.</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [79]: </span><span class="n">total_counts</span> <span class="o">=</span> <span class="n">plate</span><span class="o">.</span><span class="n">counts</span><span class="p">()</span>
+
+<span class="gp">In [80]: </span><span class="k">print</span><span class="p">(</span><span class="n">total_counts</span><span class="p">)</span>
+<span class="go">         3        4        6        7</span>
+<span class="go">A  10000.0  10000.0  10000.0  10000.0</span>
+<span class="go">B  10000.0  10000.0      NaN      NaN</span>
+<span class="go">C      NaN      NaN      NaN  10000.0</span>
+</pre></div>
+</div>
+<p>Let’s count the number of events that pass a certain gate:</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [81]: </span><span class="n">y2_counts</span> <span class="o">=</span> <span class="n">plate</span><span class="o">.</span><span class="n">gate</span><span class="p">(</span><span class="n">y2_gate</span><span class="p">)</span><span class="o">.</span><span class="n">counts</span><span class="p">()</span>
+
+<span class="gp">In [82]: </span><span class="k">print</span><span class="p">(</span><span class="n">y2_counts</span><span class="p">)</span>
+<span class="go">        3     4      6    7</span>
+<span class="go">A  4433.0  50.0  420.0  6.0</span>
+<span class="go">B  5496.0   7.0    NaN  NaN</span>
+<span class="go">C     NaN   NaN    NaN  0.0</span>
+</pre></div>
+</div>
+<p>What about the events that land outside the y2_gate?</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [83]: </span><span class="n">outside_of_y2_counts</span> <span class="o">=</span> <span class="n">plate</span><span class="o">.</span><span class="n">gate</span><span class="p">(</span><span class="o">~</span><span class="n">y2_gate</span><span class="p">)</span><span class="o">.</span><span class="n">counts</span><span class="p">()</span>
+
+<span class="gp">In [84]: </span><span class="k">print</span><span class="p">(</span><span class="n">outside_of_y2_counts</span><span class="p">)</span>
+<span class="go">        3       4       6        7</span>
+<span class="go">A  5567.0  9950.0  9580.0   9994.0</span>
+<span class="go">B  4504.0  9993.0     NaN      NaN</span>
+<span class="go">C     NaN     NaN     NaN  10000.0</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="counting-on-our-own">
+<h2>Counting on our own<a class="headerlink" href="#counting-on-our-own" title="Permalink to this headline">¶</a></h2>
+<p>To learn how to do more complex calculations, let’s start by writing our
+own counting function. At the end of this, we better get the
+same result as was produced using the <code class="docutils literal notranslate"><span class="pre">counts</span></code> method above.</p>
+<p>Here’s the function:</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [85]: </span><span class="k">def</span> <span class="nf">count_events</span><span class="p">(</span><span class="n">well</span><span class="p">):</span>
+<span class="gp">   ....: </span>    <span class="sd">&quot;&quot;&quot; Counts the number of events inside of a well. &quot;&quot;&quot;</span>
+<span class="gp">   ....: </span>    <span class="n">data</span> <span class="o">=</span> <span class="n">well</span><span class="o">.</span><span class="n">get_data</span><span class="p">()</span>
+<span class="gp">   ....: </span>    <span class="n">count</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="gp">   ....: </span>    <span class="k">return</span> <span class="n">count</span>
+<span class="gp">   ....: </span>
+</pre></div>
+</div>
+<p>Let’s check that it works on a single well.</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [86]: </span><span class="k">print</span><span class="p">(</span><span class="n">count_events</span><span class="p">(</span><span class="n">plate</span><span class="p">[</span><span class="s1">&#39;A3&#39;</span><span class="p">]))</span>
+<span class="go">10000</span>
+</pre></div>
+</div>
+<p>Now, to use it in a calculation we need to feed it to the <code class="docutils literal notranslate"><span class="pre">apply</span></code> method.
+Like this:</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [87]: </span><span class="k">print</span><span class="p">(</span><span class="n">plate</span><span class="p">[</span><span class="s1">&#39;A3&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">count_events</span><span class="p">))</span>
+<span class="go">10000</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">apply</span></code> method is a functional, which is just a fancy way of saying
+that it accepts functions as inputs. If you’ve got a function that can
+operate on a well (like the function <code class="docutils literal notranslate"><span class="pre">count_events</span></code>), you can feed it into the <code class="docutils literal notranslate"><span class="pre">apply</span></code>
+method. Check the API for the <code class="docutils literal notranslate"><span class="pre">apply</span></code> method for more details.</p>
+<p>Anyway, the <code class="docutils literal notranslate"><span class="pre">apply</span></code> method is particularly useful because it works on plates.</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [88]: </span><span class="n">total_counts_using_our_function</span> <span class="o">=</span> <span class="n">plate</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">count_events</span><span class="p">)</span>
+
+<span class="gp">In [89]: </span><span class="k">print</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">total_counts_using_our_function</span><span class="p">))</span>
+<span class="go">&lt;class &#39;pandas.core.frame.DataFrame&#39;&gt;</span>
+
+<span class="gp">In [90]: </span><span class="k">print</span><span class="p">(</span><span class="n">total_counts_using_our_function</span><span class="p">)</span>
+<span class="go">                                               3        4        6        7</span>
+<span class="go">A  10000.0  10000.0  10000.0  10000.0</span>
+<span class="go">B  10000.0  10000.0      NaN      NaN</span>
+<span class="go">C      NaN      NaN      NaN  10000.0</span>
+</pre></div>
+</div>
+<p>Holy Rabbit!</p>
+<p>First, for wells without data, a <code class="docutils literal notranslate"><span class="pre">nan</span></code> was produced.
+Second, the output that was returned is a DataFrame.</p>
+<p>Also, as you can see the total counts we computed (<code class="docutils literal notranslate"><span class="pre">total_counts_using_our_function</span></code>)
+agrees with the counts computed using the <code class="docutils literal notranslate"><span class="pre">counts</span></code> methods in the previous example.</p>
+<p>Now, let’s apply a gate and count again.</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [91]: </span><span class="k">print</span><span class="p">(</span><span class="n">plate</span><span class="o">.</span><span class="n">gate</span><span class="p">(</span><span class="n">y2_gate</span><span class="p">)</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">count_events</span><span class="p">))</span>
+<span class="go">        3     4      6    7</span>
+<span class="go">A  4433.0  50.0  420.0  6.0</span>
+<span class="go">B  5496.0   7.0    NaN  NaN</span>
+<span class="go">C     NaN   NaN    NaN  0.0</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="calculating-median-fluorescence">
+<h2>Calculating median fluorescence<a class="headerlink" href="#calculating-median-fluorescence" title="Permalink to this headline">¶</a></h2>
+<p>Ready for some more baking?</p>
+<p>Let’s calculate the median Y2-A fluorescence.</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [92]: </span><span class="k">def</span> <span class="nf">calculate_median_rfp</span><span class="p">(</span><span class="n">well</span><span class="p">):</span>
+<span class="gp">   ....: </span>    <span class="sd">&quot;&quot;&quot; Calculates the median on the RFP channel. &quot;&quot;&quot;</span>
+<span class="gp">   ....: </span>    <span class="n">data</span> <span class="o">=</span> <span class="n">well</span><span class="o">.</span><span class="n">get_data</span><span class="p">()</span>
+<span class="gp">   ....: </span>    <span class="k">return</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;Y2-A&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">median</span><span class="p">()</span>
+<span class="gp">   ....: </span>
+</pre></div>
+</div>
+<p>The median rfp fluorescence for all events in well ‘A3’.</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [93]: </span><span class="k">print</span><span class="p">(</span><span class="n">calculate_median_rfp</span><span class="p">(</span><span class="n">plate</span><span class="p">[</span><span class="s1">&#39;A3&#39;</span><span class="p">]))</span>
+<span class="go">303.09112548828125</span>
+</pre></div>
+</div>
+<p>The median rfp fluorescence for all events in the plate is:</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [94]: </span><span class="k">print</span><span class="p">(</span><span class="n">plate</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">calculate_median_rfp</span><span class="p">))</span>
+<span class="go">             3           4           6           7</span>
+<span class="go">A   303.091125  105.875381  136.326202  104.436157</span>
+<span class="go">B  4701.629395  126.765717         NaN         NaN</span>
+<span class="go">C          NaN         NaN         NaN   97.277603</span>
+</pre></div>
+</div>
+<p>The median rfp fluorescence for all events that pass the y2_gate is:</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [95]: </span><span class="k">print</span><span class="p">(</span><span class="n">plate</span><span class="o">.</span><span class="n">gate</span><span class="p">(</span><span class="n">y2_gate</span><span class="p">)</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">calculate_median_rfp</span><span class="p">))</span>
+<span class="go">             3            4            6            7</span>
+<span class="go">A  6573.452148  6240.961426  9346.646484  9294.400391</span>
+<span class="go">B  6544.949219  6413.048340          NaN          NaN</span>
+<span class="go">C          NaN          NaN          NaN          NaN</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2018, Eugene Yurtsev and Jonathan Friedman.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.0.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

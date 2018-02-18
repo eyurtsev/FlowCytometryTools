@@ -1,0 +1,6 @@
+FlowCytometryTools.FCMeasurement.apply
+======================================
+
+.. currentmodule:: FlowCytometryTools
+
+.. automethod:: FCMeasurement.apply

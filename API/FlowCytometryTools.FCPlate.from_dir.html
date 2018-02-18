@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+        <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>FlowCytometryTools.FCPlate.from_dir &#8212; FlowCytometryTools 0.5.0 documentation</title>
+    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head><body>
+  
+  <a href="https://github.com/eyurtsev/flowcytometrytools"
+     class="visible-desktop hidden-xs"><img
+    id="gh-banner"
+    style="position: absolute; top: 50px; right: 0; border: 0;"
+    src="https://s3.amazonaws.com/github/ribbons/forkme_right_white_ffffff.png"
+    alt="Fork me on GitHub"></a>
+  <script>
+    // Adjust banner height.
+    $(function () {
+      var navHeight = $(".navbar .container").css("height");
+      $("#gh-banner").css("top", navHeight);
+    });
+  </script>
+
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="../index.html">
+          FlowCytometryTools</a>
+        <span class="navbar-text navbar-version pull-left"><b>0.5.0</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+                <li><a href="../gallery.html">Gallery</a></li>
+                <li><a href="../install.html">Install</a></li>
+                <li><a href="../tutorial.html">Tutorial</a></li>
+                <li><a href="../api.html">API</a></li>
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="../index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"></ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">FlowCytometryTools.FCPlate.from_dir</a></li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+            
+            
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="../search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+      <div class="col-md-3">
+        <div id="sidebar" class="bs-sidenav" role="complementary"><ul>
+<li><a class="reference internal" href="#">FlowCytometryTools.FCPlate.from_dir</a></li>
+</ul>
+
+<div id="sourcelink">
+  <a href="../_sources/API/FlowCytometryTools.FCPlate.from_dir.rst.txt"
+     rel="nofollow">Source</a>
+</div>
+<form action="../search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+        </div>
+      </div>
+    <div class="col-md-9 content">
+      
+  <div class="section" id="flowcytometrytools-fcplate-from-dir">
+<h1>FlowCytometryTools.FCPlate.from_dir<a class="headerlink" href="#flowcytometrytools-fcplate-from-dir" title="Permalink to this headline">¶</a></h1>
+<dl class="classmethod">
+<dt id="FlowCytometryTools.FCPlate.from_dir">
+<em class="property">classmethod </em><code class="descclassname">FCPlate.</code><code class="descname">from_dir</code><span class="sig-paren">(</span><em>ID</em>, <em>path</em>, <em>parser='name'</em>, <em>position_mapper=None</em>, <em>pattern='*.fcs'</em>, <em>recursive=False</em>, <em>readdata_kwargs={}</em>, <em>readmeta_kwargs={}</em>, <em>ID_kwargs={}</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#FlowCytometryTools.FCPlate.from_dir" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a Collection of measurements from data files contained in a directory.</p>
+<dl class="docutils">
+<dt>ID <span class="classifier-delimiter">:</span> <span class="classifier">hashable</span></dt>
+<dd>Collection ID</dd>
+<dt>datadir <span class="classifier-delimiter">:</span> <span class="classifier">str</span></dt>
+<dd>Path of directory containing the data files.</dd>
+<dt>pattern <span class="classifier-delimiter">:</span> <span class="classifier">str</span></dt>
+<dd>Only files matching the pattern will be used to create measurements.</dd>
+<dt>recursive <span class="classifier-delimiter">:</span> <span class="classifier">bool</span></dt>
+<dd>Recursively look for files matching pattern in subdirectories.</dd>
+</dl>
+<p>parser : [‘name’ | ‘number’ | ‘read’ | mapping | callable]</p>
+<blockquote>
+<div><p>Extracts a key from a filename.</p>
+<p>Later, this key is used by the position mapper to determine
+the location of the measurement in the measurement collection.</p>
+<ul class="simple">
+<li><dl class="first docutils">
+<dt>‘name’ <span class="classifier-delimiter">:</span> <span class="classifier">Use the measurement name given in the file name.</span></dt>
+<dd>For example, ‘[whatever]_Well_C9_[blah].fcs’ will get key ‘C9’.
+The filename must look <strong>exactly</strong> like the template above.</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>‘number’ <span class="classifier-delimiter">:</span> <span class="classifier">Use the number given in the file name.</span></dt>
+<dd>For example, ‘[some name].001.fcs’ will get key 001.
+The filename must look <strong>exactly</strong> like the template above.</dd>
+</dl>
+</li>
+<li>‘read’ : Use the measurement ID specified in the metadata.</li>
+<li>mapping : mapping (dict-like) from datafiles to keys.</li>
+<li>callable : takes datafile name and returns key.</li>
+</ul>
+</div></blockquote>
+<p>position_mapper : [None, callable, mapping, ‘name’, ‘row_first_enumerator’, ‘col_first_enumerator’]</p>
+<blockquote>
+<div><p>Returns the coordinates (row, col) which correspond to the key.
+(The key is the key extracted from the filename by the parser.)</p>
+<p>For example, the key ‘A1’ corresponds to the matrix coordinates (0, 0).</p>
+<blockquote>
+<div><ul class="simple">
+<li>None     : if None, then uses the same value as the parser</li>
+<li>callable : gets key and returns position</li>
+<li>mapping  : key:pos</li>
+<li>‘name’   : parses things like ‘A1’, ‘G12’</li>
+<li>‘row_first_enumerator’, ‘name’ : converts number to positions, going over rows first</li>
+<li>‘col_first_enumerator’ : converts number to positions, going over columns first.</li>
+</ul>
+</div></blockquote>
+</div></blockquote>
+<dl class="docutils">
+<dt>ID_kwargs: dict</dt>
+<dd>Additional parameters to be used when assigning IDs.
+Passed to ‘_assign_IDS_to_datafiles’ method.</dd>
+<dt>kwargs <span class="classifier-delimiter">:</span> <span class="classifier">dict</span></dt>
+<dd>Additional key word arguments to be passed to constructor.</dd>
+</dl>
+</dd></dl>
+
+</div>
+
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2018, Eugene Yurtsev and Jonathan Friedman.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.0.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>
