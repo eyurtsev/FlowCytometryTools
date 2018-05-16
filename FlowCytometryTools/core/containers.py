@@ -331,7 +331,7 @@ class FCMeasurement(Measurement):
                     # EDGE CAES: Must return an empty sample
                     order = 'start'
                 if order == 'random':
-                    newdata = data.loc[sample(data.index, key)]  # Use loc not iloc here!!
+                    newdata = data.loc[sample(list(data.index), key)]  # Use loc not iloc here!!
                 elif order == 'start':
                     newdata = data.iloc[:key]
                 elif order == 'end':
