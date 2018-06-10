@@ -1,366 +1,164 @@
-from __future__ import print_function
-
 import os
-import timeit
 import unittest
-import warnings
 
-import numpy
-from fcsparser import parse as parse_fcs
-from numpy import array
+from fcsparser import parse
+import numpy as np
+from numpy.testing import assert_array_almost_equal
+
+from .. import test_data_file
 
 BASE_PATH = os.path.dirname(os.path.realpath(__file__))
 
-# Parent directory where the various fcs test files live.
-BASE_TEST_PATH = os.path.join(BASE_PATH, 'data', 'FlowCytometers')
 
-file_formats = {
-    'mq fcs 2.0': os.path.join(BASE_TEST_PATH, 'MiltenyiBiotec', 'FCS2.0',
-                               'EY_2013-07-19_PBS_FCS_2.0_Custom_Without_Add_Well_A1.001.fcs'),
+class TestFCSParser(unittest.TestCase):
+    def test_parse(self):
+        """Verify that the fcs parser behaves as expected."""
+        self.maxDiff = None
+        meta = parse(test_data_file, meta_data_only=True)
 
-    'mq fcs 3.0': os.path.join(BASE_TEST_PATH, 'MiltenyiBiotec', 'FCS3.0',
-                               'FCS3.0_Custom_Compatible.fcs'),
+        expected_meta = {
+            u'$BEGINANALYSIS': u'0',
+            u'$BEGINDATA': u'1892',
+            u'$BEGINSTEXT': u'0',
+            u'$BTIM': u'11:47:24',
+            u'$BYTEORD': u'1,2,3,4',
+            u'$CELLS': u'PID_101_MG1655_Transformants_D01',
+            u'$CYT': u'MACSQuant',
+            u'$CYTSN': u'3057',
+            u'$DATATYPE': u'F',
+            u'$DATE': u'2013-Jul-19',
+            u'$ENDANALYSIS': u'0',
+            u'$ENDDATA': u'641891',
+            u'$ENDSTEXT': u'0',
+            u'$ETIM': u'11:47:46',
+            u'$FIL': u'EY_2013-07-19_PID_101_MG1655_Transformants_D01_Well_A3.001.fcs',
+            u'$MODE': u'L',
+            u'$NEXTDATA': 0,
+            u'$OP': u'Eugene',
+            u'$P10B': 32,
+            u'$P10E': u'0.000000,0.000000',
+            u'$P10G': u'1',
+            u'$P10N': u'V2-W',
+            u'$P10R': u'262144',
+            u'$P10S': u'V2-W',
+            u'$P11B': 32,
+            u'$P11E': u'0.000000,0.000000',
+            u'$P11G': u'1',
+            u'$P11N': u'Y2-A',
+            u'$P11R': u'262144',
+            u'$P11S': u'Y2-A',
+            u'$P12B': 32,
+            u'$P12E': u'0.000000,0.000000',
+            u'$P12G': u'1',
+            u'$P12N': u'Y2-H',
+            u'$P12R': u'262144',
+            u'$P12S': u'Y2-H',
+            u'$P13B': 32,
+            u'$P13E': u'0.000000,0.000000',
+            u'$P13G': u'1',
+            u'$P13N': u'Y2-W',
+            u'$P13R': u'262144',
+            u'$P13S': u'Y2-W',
+            u'$P14B': 32,
+            u'$P14E': u'0.000000,0.000000',
+            u'$P14G': u'1',
+            u'$P14N': u'B1-A',
+            u'$P14R': u'262144',
+            u'$P14S': u'B1-A',
+            u'$P15B': 32,
+            u'$P15E': u'0.000000,0.000000',
+            u'$P15G': u'1',
+            u'$P15N': u'B1-H',
+            u'$P15R': u'262144',
+            u'$P15S': u'B1-H',
+            u'$P16B': 32,
+            u'$P16E': u'0.000000,0.000000',
+            u'$P16G': u'1',
+            u'$P16N': u'B1-W',
+            u'$P16R': u'262144',
+            u'$P16S': u'B1-W',
+            u'$P1B': 32,
+            u'$P1E': u'0.000000,0.000000',
+            u'$P1G': u'1',
+            u'$P1N': u'HDR-T',
+            u'$P1R': u'262144',
+            u'$P1S': u'HDR-T',
+            u'$P2B': 32,
+            u'$P2E': u'0.000000,0.000000',
+            u'$P2G': u'1',
+            u'$P2N': u'FSC-A',
+            u'$P2R': u'262144',
+            u'$P2S': u'FSC-A',
+            u'$P3B': 32,
+            u'$P3E': u'0.000000,0.000000',
+            u'$P3G': u'1',
+            u'$P3N': u'FSC-H',
+            u'$P3R': u'262144',
+            u'$P3S': u'FSC-H',
+            u'$P4B': 32,
+            u'$P4E': u'0.000000,0.000000',
+            u'$P4G': u'1',
+            u'$P4N': u'FSC-W',
+            u'$P4R': u'262144',
+            u'$P4S': u'FSC-W',
+            u'$P5B': 32,
+            u'$P5E': u'0.000000,0.000000',
+            u'$P5G': u'1',
+            u'$P5N': u'SSC-A',
+            u'$P5R': u'262144',
+            u'$P5S': u'SSC-A',
+            u'$P6B': 32,
+            u'$P6E': u'0.000000,0.000000',
+            u'$P6G': u'1',
+            u'$P6N': u'SSC-H',
+            u'$P6R': u'262144',
+            u'$P6S': u'SSC-H',
+            u'$P7B': 32,
+            u'$P7E': u'0.000000,0.000000',
+            u'$P7G': u'1',
+            u'$P7N': u'SSC-W',
+            u'$P7R': u'262144',
+            u'$P7S': u'SSC-W',
+            u'$P8B': 32,
+            u'$P8E': u'0.000000,0.000000',
+            u'$P8G': u'1',
+            u'$P8N': u'V2-A',
+            u'$P8R': u'262144',
+            u'$P8S': u'V2-A',
+            u'$P9B': 32,
+            u'$P9E': u'0.000000,0.000000',
+            u'$P9G': u'1',
+            u'$P9N': u'V2-H',
+            u'$P9R': u'262144',
+            u'$P9S': u'V2-H',
+            u'$PAR': 16,
+            u'$SRC': u'A3',
+            u'$SYS': u'MACSQuantify,2.4.1247.1dev',
+            u'$TOT': 10000,
+            '__header__': {'FCS format': 'FCS3.0',
+                           'analysis end': 0,
+                           'analysis start': 0,
+                           'data end': 641891,
+                           'data start': 1892,
+                           'text end': 1824,
+                           'text start': 256}
+        }
+        self.assertEqual(meta, expected_meta)
 
-    'mq fcs 3.1': os.path.join(BASE_TEST_PATH, 'MiltenyiBiotec', 'FCS3.1',
-                               'EY_2013-07-19_PBS_FCS_3.1_Well_A1.001.fcs'),
+        meta, df = parse(test_data_file, meta_data_only=False)
 
-    'LSR II fcs 3.0': os.path.join(BASE_TEST_PATH, 'HTS_BD_LSR-II',
-                                   'HTS_BD_LSR_II_Mixed_Specimen_001_D6_D06.fcs'),
+        self.assertEqual(meta, expected_meta)
 
-    'Fortessa fcs 3.0': os.path.join(BASE_TEST_PATH, 'Fortessa',
-                                     'FCS_3.0_Fortessa_PBS_Specimen_001_A1_A01.fcs'),
+        expected_columns = [u'HDR-T', u'FSC-A', u'FSC-H', u'FSC-W', u'SSC-A', u'SSC-H',
+                            u'SSC-W', u'V2-A', u'V2-H', u'V2-W', u'Y2-A', u'Y2-H', u'Y2-W',
+                            u'B1-A', u'B1-H', u'B1-W']
+        self.assertListEqual(df.columns.tolist(), expected_columns)
 
-    'large fake fcs': os.path.join(BASE_TEST_PATH, 'fake_large_fcs', 'fake_large_fcs.fcs'),
-}
+        # Verify that a few selected value fo the data resolve to their expected values.
+        subset_of_data = df.iloc[:3, :3].values
 
+        expected_values = np.array([[2.0185113, 459.96298, 437.35455],
+                                    [27.451754, -267.17465, 365.35455],
+                                    [32.043865, -201.58234, 501.35455]], dtype=np.float32)
 
-def check_data_segment(fcs_format, array_values):
-    fname = file_formats[fcs_format]
-    meta, matrix = parse_fcs(fname, output_format='ndarray')
-    diff = numpy.abs(array_values - matrix[0:4, :])
-    return numpy.all(diff < 10 ** -8)  # Is this the proper way to do the test?
-
-
-class TestFCSReader(unittest.TestCase):
-    def test_mq_FCS_2_0_text_segment(self):
-        """ Tests TEXT segment parsed from FCS (2.0 format) file produced by a MACSQuant flow cytometer """
-        fname = file_formats['mq fcs 2.0']
-        meta = parse_fcs(fname, meta_data_only=True, output_format='ndarray')
-
-        self.assertTrue(
-            meta['$FIL'] == 'EY_2013-07-19_PBS_FCS_2.0_Custom_Without_Add_Well_A1.001.fcs')
-
-        str_value = 'MACSQuant'
-        self.assertTrue(meta['$CYT'] == str_value)
-
-    def test_mq_FCS_3_0_text_segment(self):
-        """ Tests TEXT segment parsed from FCS (3.0 format) file produced by a MACSQuant flow cytometer """
-        fname = file_formats['mq fcs 3.0']
-        meta = parse_fcs(fname, meta_data_only=True, output_format='ndarray')
-
-        str_value = 'EY_2013-07-19_PID_101_MG1655_Transformants_D01_Well_A4.001.fcs'
-        self.assertTrue(meta['$FIL'] == str_value)
-
-        str_value = 'MACSQuant'
-        self.assertTrue(meta['$CYT'] == str_value)
-
-    def test_mq_FCS_3_1_text_segment(self):
-        """ Tests TEXT segment parsed from FCS (3.1 format) file produced by a MACSQuant flow cytometer """
-        fname = file_formats['mq fcs 3.1']
-        meta = parse_fcs(fname, meta_data_only=True, output_format='ndarray')
-
-        str_value = 'MACSQuant'
-        self.assertTrue(meta['$CYT'] == str_value)
-
-    def test_mq_FCS_2_0_data_segment(self):
-        """ Tests DATA segment parsed from FCS (2.0 format) file produced by a MACSQuant flow cytometer """
-        values = array([[1.60764902830123901367e-03, 1.46554875373840332031e+00,
-                         2.03116130828857421875e+00, 3.60766235351562500000e+02,
-                         1.57965099811553955078e+00, 1.90790867805480957031e+00,
-                         4.13974487304687500000e+02, -3.39318931102752685547e-01,
-                         7.84086048603057861328e-01, -2.16378631591796875000e+02,
-                         2.23477900028228759766e-01, 5.51754534244537353516e-01,
-                         2.02515670776367187500e+02, -2.45075762271881103516e-01,
-                         7.51648128032684326172e-01, -1.64115936279296875000e+02],
-                        [1.73421576619148254395e-03, 2.02872133255004882812e+00,
-                         1.45744156837463378906e+00, 6.95987243652343750000e+02,
-                         2.53075432777404785156e+00, 2.87364006042480468750e+00,
-                         4.40339477539062500000e+02, -4.55530643463134765625e-01,
-                         5.64715683460235595703e-01, -4.03327392578125000000e+02,
-                         4.40459489822387695312e-01, 6.26768946647644042969e-01,
-                         3.51373107910156250000e+02, 9.75054726004600524902e-02,
-                         8.04706454277038574219e-01, 5.41634635925292968750e+01],
-                        [2.33519822359085083008e-03, 1.64427363872528076172e+00,
-                         1.39029204845428466797e+00, 5.91341064453125000000e+02,
-                         3.27396273612976074219e+00, 3.31171727180480957031e+00,
-                         4.94299865722656250000e+02, 6.40093326568603515625e-01,
-                         8.14603626728057861328e-01, 3.92886383056640625000e+02,
-                         -5.28994854539632797241e-03, 2.77096331119537353516e-01,
-                         -9.54532432556152343750e+00, 9.36367154121398925781e-01,
-                         1.11724865436553955078e+00, 4.18674407958984375000e+02],
-                        [3.37790674529969692230e-03, 1.01516211032867431641e+00,
-                         1.84805572032928466797e+00, 2.74656768798828125000e+02,
-                         1.72263097763061523438e+00, 1.75532078742980957031e+00,
-                         4.90688354492187500000e+02, -2.24935024976730346680e-01,
-                         6.62015736103057861328e-01, -1.69886459350585937500e+02,
-                         5.19020110368728637695e-02, 3.99166643619537353516e-01,
-                         6.50129623413085937500e+01, 3.03109139204025268555e-01,
-                         8.76159846782684326172e-01, 1.67871810913085937500e+02]])
-
-        self.assertTrue(check_data_segment('mq fcs 2.0', values))
-
-    def test_mq_FCS_3_0_data_segment(self):
-        """ Tests DATA segment parsed from FCS (3.0 format) file produced by a MACSQuant flow cytometer """
-        values = array([[4.99655876159667968750e+01, -1.78884857177734375000e+02,
-                         3.53545867919921875000e+02, -6.63189687500000000000e+04,
-                         1.53373974609375000000e+03, 1.71934411621093750000e+03,
-                         1.16922687500000000000e+05, -1.85308218002319335938e+00,
-                         1.55241485595703125000e+02, -1.56457653808593750000e+03,
-                         7.68178787231445312500e+01, 1.61987319946289062500e+02,
-                         6.21571679687500000000e+04, 3.74284629821777343750e+01,
-                         1.23476585388183593750e+02, 3.87178945312500000000e+04],
-                        [7.65274276733398437500e+01, 8.52657958984375000000e+02,
-                         8.35975280761718750000e+02, 1.33687671875000000000e+05,
-                         2.55060937500000000000e+03, 2.26837988281250000000e+03,
-                         1.47379843750000000000e+05, 4.53825866699218750000e+02,
-                         4.73883544921875000000e+02, 1.25524226562500000000e+05,
-                         -8.64693832397460937500e+00, 9.53993377685546875000e+01,
-                         -1.18802871093750000000e+04, 8.17031021118164062500e+01,
-                         2.03511352539062500000e+02, 5.58651601562500000000e+04],
-                        [8.48738250732421875000e+01, 1.49076705932617187500e+02,
-                         2.49545867919921875000e+02, 7.83013671875000000000e+04,
-                         6.49180541992187500000e+02, 5.83344177246093750000e+02,
-                         1.45864812500000000000e+05, 1.76183197021484375000e+02,
-                         2.59241485595703125000e+02, 8.90778906250000000000e+04,
-                         1.03054801940917968750e+02, 1.69987319946289062500e+02,
-                         7.94623906250000000000e+04, -6.35836944580078125000e+01,
-                         1.13396583557128906250e+02, -6.63863593750000000000e+04],
-                        [1.02074172973632812500e+02, 1.37832305908203125000e+02,
-                         3.85545867919921875000e+02, 4.68581250000000000000e+04,
-                         1.88981237792968750000e+03, 1.81534411621093750000e+03,
-                         1.36448781250000000000e+05, 3.93574859619140625000e+02,
-                         4.83241485595703125000e+02, 1.06751273437500000000e+05,
-                         6.74475479125976562500e+01, 1.77987319946289062500e+02,
-                         4.96691835937500000000e+04, -3.04502067565917968750e+01,
-                         2.20916580200195312500e+02, -1.28346718750000000000e+04]])
-
-        self.assertTrue(check_data_segment('mq fcs 3.0', values))
-
-    def test_BD_LSR_II(self):
-        """ Tests DATA segment parsed from FCS (3.0 format) file produced by a HTS BD LSR-II flow cytometer """
-        values = array([[-2.85312500000000000000e+04, 1.00000000000000000000e+01,
-                         0.00000000000000000000e+00, 7.00149963378906250000e+02,
-                         1.65600000000000000000e+03, 2.77083515625000000000e+04,
-                         9.87999954223632812500e+01, 5.41499977111816406250e+01,
-                         1.64220001220703125000e+02, 1.20360000610351562500e+02,
-                         2.00000002980232238770e-01],
-                        [-4.94148789062500000000e+04, 8.00000000000000000000e+00,
-                         0.00000000000000000000e+00, 1.27584997558593750000e+03,
-                         2.27800000000000000000e+03, 3.67050507812500000000e+04,
-                         1.55800003051757812500e+02, 1.33000001907348632812e+01,
-                         1.61840011596679687500e+02, 9.48600006103515625000e+01,
-                         4.00000005960464477539e-01],
-                        [-5.86843203125000000000e+04, 1.40000000000000000000e+01,
-                         0.00000000000000000000e+00, -5.12049987792968750000e+02,
-                         4.72000000000000000000e+02, 0.00000000000000000000e+00,
-                         2.27999992370605468750e+01, 8.55000019073486328125e+00,
-                         1.72550003051757812500e+02, 8.56800003051757812500e+01,
-                         5.00000000000000000000e-01],
-                        [-3.85783984375000000000e+03, 4.32000000000000000000e+02,
-                         0.00000000000000000000e+00, 2.76449981689453125000e+02,
-                         1.33900000000000000000e+03, 1.35305644531250000000e+04,
-                         -4.93999977111816406250e+01, 3.42000007629394531250e+01,
-                         1.57080001831054687500e+02, 8.97599945068359375000e+01,
-                         6.99999988079071044922e-01]])
-        self.assertTrue(check_data_segment('LSR II fcs 3.0', values))
-
-        # def test_BD_LSR_II_auto_compensation(self):
-        # """ Tests auto compensation for DATA segment parsed from FCS (3.0 format) file produced by a HTS BD LSR-II flow cytometer """
-        # values = array([[ -2.85312500000000000000e+04,   1.00000000000000000000e+01,
-        # 0.00000000000000000000e+00,   7.00149963378906250000e+02,
-        # 1.65600000000000000000e+03,   2.77083515625000000000e+04,
-        # 6.83360908869141923105e+01,   5.41499977111816406250e+01,
-        # 1.60309407527416652783e+02,   1.20360000610351562500e+02,
-        # 2.00000002980232238770e-01],
-        # [ -4.94148789062500000000e+04,   8.00000000000000000000e+00,
-        # 0.00000000000000000000e+00,   1.27584997558593750000e+03,
-        # 2.27800000000000000000e+03,   3.67050507812500000000e+04,
-        # 1.26861305474787926073e+02,   1.33000001907348632812e+01,
-        # 1.57151863392994528112e+02,   9.48600006103515625000e+01,
-        # 4.00000005960464477539e-01],
-        # [ -5.86843203125000000000e+04,   1.40000000000000000000e+01,
-        # 0.00000000000000000000e+00,  -5.12049987792968750000e+02,
-        # 4.72000000000000000000e+02,   0.00000000000000000000e+00,
-        # -7.98914648525230663978e+00,   8.55000019073486328125e+00,
-        # 1.71012164279341703832e+02,   8.56800003051757812500e+01,
-        # 5.00000000000000000000e-01],
-        # [ -3.85783984375000000000e+03,   4.32000000000000000000e+02,
-        # 0.00000000000000000000e+00,   2.76449981689453125000e+02,
-        # 1.33900000000000000000e+03,   1.35305644531250000000e+04,
-        # -7.81109156139110325512e+01,   3.42000007629394531250e+01,
-        # 1.57003241830382449962e+02,   8.97599945068359375000e+01,
-        # 6.99999988079071044922e-01]])
-        ##self.checkTrue(check_data_segment('LSR II fcs 3.0', values))
-        ##self.assertTrue(1)
-        # warnings.warn('This test has not yet been implemented.')
-
-    def test_Fortessa_data_segment(self):
-        """ Tests DATA segment parsed from FCS (3.0 format) file produced by the Fortessa flow cytometer. """
-        values = array([[1.31284997558593750000e+03, 5.60000000000000000000e+02,
-                         1.53640968750000000000e+05, 1.47263989257812500000e+03,
-                         1.42400000000000000000e+03, 6.77745312500000000000e+04,
-                         1.79399986267089843750e+01, 8.57999992370605468750e+00,
-                         1.37059997558593750000e+02, -3.67200012207031250000e+01,
-                         0.00000000000000000000e+00],
-                        [9.15529968261718750000e+02, 2.97000000000000000000e+02,
-                         2.02020781250000000000e+05, 3.24479980468750000000e+02,
-                         3.49000000000000000000e+02, 6.09315781250000000000e+04,
-                         2.33999996185302734375e+01, 7.79999971389770507812e+00,
-                         1.65550003051757812500e+02, 2.01599998474121093750e+01,
-                         0.00000000000000000000e+00],
-                        [2.27150000000000000000e+03, 5.49000000000000000000e+02,
-                         2.62143000000000000000e+05, 8.54099975585937500000e+02,
-                         8.65000000000000000000e+02, 6.47101640625000000000e+04,
-                         2.49599990844726562500e+01, 2.65199985504150390625e+01,
-                         5.77500000000000000000e+01, 1.36800003051757812500e+01,
-                         1.00000001490116119385e-01],
-                        [2.33232983398437500000e+03, 5.83000000000000000000e+02,
-                         2.62143000000000000000e+05, 6.24000000000000000000e+02,
-                         6.27000000000000000000e+02, 6.52224296875000000000e+04,
-                         2.49599990844726562500e+01, 4.91399993896484375000e+01,
-                         7.23799972534179687500e+01, -1.29600009918212890625e+01,
-                         1.00000001490116119385e-01]])
-        self.assertTrue(check_data_segment('Fortessa fcs 3.0', values))
-
-    def test_mq_FCS_3_1_data_segment(self):
-        """ Tests DATA segment parsed from FCS (3.1 format) file produced by a MACSQuant flow cytometer """
-        fname = file_formats['mq fcs 3.1']
-        meta, matrix = parse_fcs(fname, output_format='ndarray')
-
-    def test_fcs_reader_API(self):
-        """
-        Makes sure that the API remains consistent.
-        """
-        print('\n')
-        for fname in file_formats.values():
-            print('Running file {0}'.format(fname))
-            meta = parse_fcs(fname, meta_data_only=True)
-            meta, data_pandas = parse_fcs(fname, meta_data_only=False, output_format='DataFrame')
-            meta, data_pandas = parse_fcs(fname, meta_data_only=False, output_format='DataFrame',
-                                          reformat_meta=True)
-            meta, data_numpy = parse_fcs(fname, meta_data_only=False, output_format='ndarray',
-                                         reformat_meta=False)
-            meta, data_numpy = parse_fcs(fname, meta_data_only=False, output_format='ndarray',
-                                         reformat_meta=True)
-            self.assertTrue(meta['_channel_names_'])
-            self.assertTrue(len(meta['_channel_names_']) != 0)
-
-    def test_channel_naming_manual(self):
-        """ Checks that channel names correspond to manual setting """
-        pnn_names = ['Time', 'HDR-CE', 'HDR-SE', 'HDR-V', 'FSC-A', 'FSC-H', 'FSC-W',
-                     'SSC-A', 'SSC-H', 'SSC-W', 'FL2-A', 'FL2-H', 'FL2-W', 'FL4-A',
-                     'FL4-H', 'FL4-W', 'FL7-A', 'FL7-H', 'FL7-W']
-        pns_names = ['HDR-T', 'HDR-CE', 'HDR-SE', 'HDR-V', 'FSC-A', 'FSC-H', 'FSC-W',
-                     'SSC-A', 'SSC-H', 'SSC-W', 'V2-A', 'V2-H', 'V2-W', 'Y2-A',
-                     'Y2-H', 'Y2-W', 'B1-A', 'B1-H', 'B1-W']
-
-        path = os.path.join(BASE_PATH, 'data', 'FlowCytometers', 'MiltenyiBiotec', 'FCS3.1',
-                            'EY_2013-07-19_PBS_FCS_3.1_Well_A1.001.fcs')
-        meta = parse_fcs(path, meta_data_only=True,
-                         reformat_meta=True, channel_naming='$PnN')
-        channel_names = list(meta['_channel_names_'])
-
-        self.assertTrue(channel_names == pnn_names)
-
-        # ---  Test with data
-
-        meta, data = parse_fcs(path, meta_data_only=False,
-                               reformat_meta=True, channel_naming='$PnN')
-        channel_names = list(meta['_channel_names_'])
-
-        self.assertTrue(channel_names == pnn_names)
-        self.assertTrue(list(data.columns.values) == pnn_names)
-
-        # ---  Test with data
-
-        meta, data = parse_fcs(path, meta_data_only=False,
-                               reformat_meta=True, channel_naming='$PnS')
-        channel_names = list(meta['_channel_names_'])
-
-        self.assertTrue(channel_names == pns_names)
-        self.assertTrue(list(data.columns.values) == pns_names)
-
-    def test_channel_naming_automatic_correction(self):
-        """ Checks that channel names are assigned automatically corrected if duplicate names
-        encountered. """
-        path = os.path.join(BASE_PATH, 'data', 'FlowCytometers', 'MiltenyiBiotec', 'FCS3.1',
-                            'SG_2014-09-26_Duplicate_Names.fcs')
-
-        with warnings.catch_warnings(record=True) as w:
-            # Cause all warnings to always be triggered.
-            warnings.simplefilter("always")
-            meta = parse_fcs(path, meta_data_only=True, reformat_meta=True)
-            channel_names = list(meta['_channel_names_'])
-
-            self.assertTrue(channel_names == \
-                            ['HDR-CE', 'HDR-SE', 'HDR-V', 'FSC-A', 'FSC-H', 'SSC-A', 'SSC-H',
-                             'FL7-A', 'FL7-H'])
-
-            # Verify some things
-            assert len(w) == 1
-
-    def test_speed_of_reading_fcs_files(self):
-        """ Testing the speed of loading a FCS files"""
-        fname = file_formats['mq fcs 3.1']
-        number = 1000
-
-        time = timeit.timeit(
-            lambda: parse_fcs(fname, meta_data_only=True, output_format='DataFrame',
-                              reformat_meta=False), number=number)
-        print("Loading fcs file {0} times with meta_data only without reformatting of meta "
-              "takes {1} per loop".format(time / number, number))
-
-        time = timeit.timeit(
-            lambda: parse_fcs(fname, meta_data_only=True, output_format='DataFrame',
-                              reformat_meta=True), number=number)
-        print("Loading fcs file {0} times with meta_data only with reformatting of meta takes "
-              "{1} per loop".format(time / number, number))
-
-        time = timeit.timeit(
-            lambda: parse_fcs(fname, meta_data_only=False, output_format='DataFrame',
-                              reformat_meta=False), number=number)
-
-        print("Loading fcs file {0} times both meta and data but without reformatting of meta "
-              "takes {1} per loop".format(time / number, number))
-
-    def test_reading_corrupted_fcs_file(self):
-        """ Raising exception when reading a corrupted fcs file. """
-        path = os.path.join(BASE_PATH, 'data', 'FlowCytometers', 'corrupted', 'corrupted.fcs')
-        self.assertRaises(ValueError, parse_fcs, path)
-
-    def test_reading_large_fcs_file(self):
-        """ Properly finding data segment of a large FCS file """
-        values = array([[1.31284998e+03, 5.60000000e+02, 1.53640969e+05,
-                         1.47263989e+03, 1.42400000e+03, 6.77745312e+04,
-                         1.79399986e+01, 8.57999992e+00, 1.37059998e+02,
-                         -3.67200012e+01, 0.00000000e+00],
-                        [9.15529968e+02, 2.97000000e+02, 2.02020781e+05,
-                         3.24479980e+02, 3.49000000e+02, 6.09315781e+04,
-                         2.33999996e+01, 7.79999971e+00, 1.65550003e+02,
-                         2.01599998e+01, 0.00000000e+00],
-                        [2.27150000e+03, 5.49000000e+02, 2.62143000e+05,
-                         8.54099976e+02, 8.65000000e+02, 6.47101641e+04,
-                         2.49599991e+01, 2.65199986e+01, 5.77500000e+01,
-                         1.36800003e+01, 1.00000001e-01],
-                        [2.33232983e+03, 5.83000000e+02, 2.62143000e+05,
-                         6.24000000e+02, 6.27000000e+02, 6.52224297e+04,
-                         2.49599991e+01, 4.91399994e+01, 7.23799973e+01,
-                         -1.29600010e+01, 1.00000001e-01]], dtype=numpy.float32)
-        self.assertTrue(check_data_segment('large fake fcs', values))
-
-
-if __name__ == '__main__':
-    import nose
-
-    nose.runmodule(argv=[__file__, '-vvs', '-x'],
-                   exit=False)
+        assert_array_almost_equal(subset_of_data, expected_values)
