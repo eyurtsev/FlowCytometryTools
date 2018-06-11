@@ -135,7 +135,7 @@ class TestFCSParser(unittest.TestCase):
             u'$SRC': u'A3',
             u'$SYS': u'MACSQuantify,2.4.1247.1dev',
             u'$TOT': 10000,
-            '__header__': {'FCS format': 'FCS3.0',
+            '__header__': {'FCS format': b'FCS3.0',
                            'analysis end': 0,
                            'analysis start': 0,
                            'data end': 641891,
