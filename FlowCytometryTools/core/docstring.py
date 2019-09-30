@@ -2,7 +2,7 @@ from __future__ import print_function
 
 import string
 
-from matplotlib.cbook import dedent
+from matplotlib import inspect
 
 
 class FormatDict(dict):
@@ -53,7 +53,7 @@ class DocReplacer(object):
         if func.__doc__:
             doc = func.__doc__
             if self.auto_dedent:
-                doc = dedent(doc)
+                doc = inspect.cleandoc(doc)
             func.__doc__ = self._format(doc)
         return func
 
