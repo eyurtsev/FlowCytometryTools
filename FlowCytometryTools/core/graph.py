@@ -540,10 +540,10 @@ def plot_heat_map(z, include_values=False,
     # to the annotation.
     auto_col_name, auto_col_labels, auto_row_name, auto_row_labels = extract_annotation(z)
 
-    if xtick_labels is 'auto': xtick_labels = auto_col_labels
-    if ytick_labels is 'auto': ytick_labels = auto_row_labels
-    if xlabel is 'auto': xlabel = auto_col_name
-    if ylabel is 'auto': ylabel = auto_row_name
+    if xtick_labels == 'auto': xtick_labels = auto_col_labels
+    if ytick_labels == 'auto': ytick_labels = auto_row_labels
+    if xlabel == 'auto': xlabel = auto_col_name
+    if ylabel == 'auto': ylabel = auto_row_name
 
     if isinstance(z, pandas.DataFrame):
         values = z.values

@@ -582,9 +582,9 @@ class MeasurementCollection(collections.MutableMapping, BaseObject):
         func = lambda x: x.get_meta_fields(fields)
         meta_d = self.apply(func, ids=ids, applyto='measurement',
                             noneval=noneval, output_format='dict')
-        if output_format is 'dict':
+        if output_format == 'dict':
             return meta_d
-        elif output_format is 'DataFrame':
+        elif output_format == 'DataFrame':
             from pandas import DataFrame as DF
             meta_df = DF(meta_d, index=fields)
             return meta_df
@@ -1001,11 +1001,11 @@ class OrderedCollection(MeasurementCollection):
 
         # Note: result should be of type dict or collection for the code
         # below to work
-        if output_format is 'dict':
+        if output_format == 'dict':
             return result
-        elif output_format is 'DataFrame':
+        elif output_format == 'DataFrame':
             return self._dict2DF(result, noneval, dropna)
-        elif output_format is 'collection':
+        elif output_format == 'collection':
             return result
         else:
             msg = ("output_format must be either 'dict' or 'DataFrame'. " +
