@@ -32,7 +32,7 @@ def get_tag_value(string, pre, post, tagtype=float, greedy=True):
         the type to which the tag value should be converted to
 
     greedy : bool
-        Whether the regular expression is gredy or not.
+        Whether the regular expression is greedy or not.
 
     Returns
     ---------------
@@ -46,8 +46,6 @@ def get_tag_value(string, pre, post, tagtype=float, greedy=True):
     get_tag_value('PID_23_5_.txt', pre=r'PID_', post='(?=_|\.txt)') should return 23
     get_tag_value('PID_23.txt', pre=r'PID_', post='.txt') should return 23
     get_tag_value('PID.txt', pre=r'PID_', post='.txt') should return None
-
-    TODO Make list/tuple input for pre
     """
     greedy = '?' if greedy else ''  # For greedy search
 

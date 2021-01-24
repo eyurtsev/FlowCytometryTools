@@ -1,17 +1,4 @@
-'''
-Created on Jun 18, 2013
-
-@author: jonathanfriedman
-
-Base objects for measurement and plate objects.
-
-TODO:
-- make plate a subclass of collection
-- consider converting init methods to accepting data, and adding
-factory methods for construction from files.
-- consider always reading in data in measurements, perhaps storing on disk
-using shelve|PyTables|pandas HDFStore
-'''
+"""Base objects for measurement and plate objects."""
 import inspect
 import os
 
@@ -83,7 +70,7 @@ def int2letters(x, alphabet):
     """
     base = len(alphabet)
     if x < 0:
-        raise ValueError('Only non-negative numbers are supported. Encounterd %s' % x)
+        raise ValueError('Only non-negative numbers are supported. Encountered %s' % x)
     letters = []
     quotient = x
     while quotient >= 0:
@@ -121,10 +108,10 @@ def queueable(fun, *args, **kwargs):
 
 
 class BaseObject(object):
-    '''
+    """
     Object providing common utility methods.
     Used for inheritance.
-    '''
+    """
 
     def __repr__(self):
         return '<{0} {1}>'.format(type(self).__name__, repr(self.ID))
@@ -163,10 +150,10 @@ class BaseObject(object):
 
 
 class Measurement(BaseObject):
-    '''
+    """
     A class for holding data from a single measurement, i.e.
     a single well or a single tube.
-    '''
+    """
 
     def __init__(self, ID,
                  datafile=None, readdata=False, readdata_kwargs={},
@@ -230,24 +217,24 @@ class Measurement(BaseObject):
     # Methods getting/setting data
     # ----------------------
     def read_data(self, **kwargs):
-        '''
+        """
         This function should be overwritten for each
         specific data type.
-        '''
+        """
         pass
 
     def read_meta(self, **kwargs):
-        '''
+        """
         This function should be overwritten for each
         specific data type.
-        '''
+        """
         pass
 
     def set_data(self, data=None, **kwargs):
-        '''
+        """
         Read data into memory, applying all actions in queue.
         Additionally, update queue and history.
-        '''
+        """
         if data is None:
             data = self.get_data(**kwargs)
         setattr(self, '_data', data)
@@ -255,16 +242,16 @@ class Measurement(BaseObject):
         self.queue = []
 
     def set_meta(self, meta=None, **kwargs):
-        '''
+        """
         Assign values to self.meta.
         Meta is not returned
-        '''
+        """
         if meta is None:
             meta = self.get_meta(**kwargs)
         setattr(self, '_meta', meta)
 
     def _get_attr_from_file(self, name, **kwargs):
-        '''
+        """
         return values of attribute of self.
         Attribute values can the ones assigned already, or the read for
         the corresponding file.
@@ -275,7 +262,7 @@ class Measurement(BaseObject):
             ii) the file path will be the one specified in an attribute
             named: '[attr name]file'. (e.g. for an attribute named
             'meta' a 'metafile' attribute will be created).
-        '''
+        """
         current_value = getattr(self, '_' + name)
         if current_value is not None:
             value = current_value
@@ -285,10 +272,10 @@ class Measurement(BaseObject):
         return value
 
     def get_data(self, **kwargs):
-        '''
+        """
         Get the measurement data.
         If data is not set, read from 'self.datafile' using 'self.read_data'.
-        '''
+        """
         if self.queue:
             new = self.apply_queued()
             return new.get_data()
@@ -296,10 +283,10 @@ class Measurement(BaseObject):
             return self._get_attr_from_file('data', **kwargs)
 
     def get_meta(self, **kwargs):
-        '''
+        """
         Get the measurement metadata.
         If not metadata is not set, read from 'self.metafile' using 'self.read_meta'.
-        '''
+        """
         return self._get_attr_from_file('meta', **kwargs)
 
     data = property(get_data, set_data, doc='Data may be stored in memory or on disk')
@@ -307,21 +294,21 @@ class Measurement(BaseObject):
 
     # ----------------------
     def get_meta_fields(self, fields, **kwargs):
-        '''
+        """
         Get specific fields of associated metadata.
 
         This function should be overwritten for each
         specific data type.
-        '''
+        """
         pass
 
     def ID_from_data(self):
-        '''
+        """
         Get measurement ID from loaded data.
 
         This function should be overwritten for each
         specific data type.
-        '''
+        """
         pass
 
     def apply(self, func, applyto='measurement', noneval=nan, setdata=False):
@@ -367,13 +354,13 @@ import collections
 
 
 class MeasurementCollection(collections.MutableMapping, BaseObject):
-    '''
+    """
     A collection of measurements
-    '''
+    """
     _measurement_class = Measurement  # to be replaced when inheriting
 
     def __init__(self, ID, measurements):
-        '''
+        """
         A dictionary-like container for holding multiple Measurements.
 
         Note that the collection keys are not necessarily identical to the Measurements IDs.
@@ -385,7 +372,7 @@ class MeasurementCollection(collections.MutableMapping, BaseObject):
             Collection ID
         measurements : mappable | iterable
             values are measurements of appropriate type (type is explicitly check for).
-        '''
+        """
         self.ID = ID
         self.data = {}
         if isinstance(measurements, collections.Mapping):
@@ -476,7 +463,7 @@ class MeasurementCollection(collections.MutableMapping, BaseObject):
     def apply(self, func, ids=None, applyto='measurement', noneval=nan,
               setdata=False, output_format='dict', ID=None,
               **kwargs):
-        '''
+        """
         Apply func to each of the specified measurements.
 
         Parameters
@@ -502,7 +489,7 @@ class MeasurementCollection(collections.MutableMapping, BaseObject):
         -------
         Dictionary keyed by measurement keys containing the corresponding output of func
         or returns a collection (if output_format='collection').
-        '''
+        """
         if ids is None:
             ids = self.keys()
         else:
@@ -812,10 +799,10 @@ class OrderedCollection(MeasurementCollection):
                               ID_kwargs=ID_kwargs, **kwargs)
 
     def set_labels(self, labels, axis='rows'):
-        '''
+        """
         Set the row/col labels.
         Note that this method doesn't check that enough labels were set for all the assigned positions.
-        '''
+        """
         if axis.lower() in ('rows', 'row', 'r', 0):
             assigned_pos = set(v[0] for v in self._positions.itervalues())
             not_assigned = set(labels) - assigned_pos
@@ -836,9 +823,9 @@ class OrderedCollection(MeasurementCollection):
             return range(1, 1 + shape[1])
 
     def _is_valid_position(self, position):
-        '''
+        """
         check if given position is valid for this collection
-        '''
+        """
         row, col = position
         valid_r = row in self.row_labels
         valid_c = col in self.col_labels
@@ -846,7 +833,7 @@ class OrderedCollection(MeasurementCollection):
 
     @doc_replacer
     def _get_ID2position_mapper(self, position_mapper):
-        '''
+        """
         Defines a position parser that is used
         to map between sample IDs and positions.
 
@@ -856,7 +843,7 @@ class OrderedCollection(MeasurementCollection):
 
         TODO: Fix the name to work with more than 26 letters
         of the alphabet.
-        '''
+        """
 
         def num_parser(x, order):
             i, j = unravel_index(int(x - 1), self.shape, order=order)
@@ -878,7 +865,7 @@ class OrderedCollection(MeasurementCollection):
         return mapper
 
     def set_positions(self, positions=None, position_mapper='name', ids=None):
-        '''
+        """
         checks for position validity & collisions,
         but not that all measurements are assigned.
 
@@ -895,7 +882,7 @@ class OrderedCollection(MeasurementCollection):
             If None is given, parser will be applied to all measurements.
 
         TODO: output a more informative message for position collisions
-        '''
+        """
         if positions is None:
             if ids is None:
                 ids = self.keys()
@@ -920,9 +907,9 @@ class OrderedCollection(MeasurementCollection):
             self[k]._set_position(self.ID, pos)
 
     def get_positions(self, copy=True):
-        '''
+        """
         Get a dictionary of measurement positions.
-        '''
+        """
         if copy:
             return self._positions.copy()
         else:
@@ -943,10 +930,10 @@ class OrderedCollection(MeasurementCollection):
             return df
 
     def dropna(self):
-        '''
+        """
         Remove rows and cols that have no assigned measurements.
         Return new instance.
-        '''
+        """
         new = self.copy()
         tmp = self._dict2DF(self, nan, True)
         new.row_labels = list(tmp.index)
