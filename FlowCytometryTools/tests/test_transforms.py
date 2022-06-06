@@ -1,11 +1,11 @@
-'''
+"""
 @author: jonathanfriedman
-'''
+"""
 import os
 import unittest
 
 import numpy as np
-from numpy.testing import assert_almost_equal, assert_equal
+from numpy.testing import assert_allclose, assert_equal, assert_almost_equal
 
 from FlowCytometryTools import FCMeasurement, FCPlate
 from FlowCytometryTools.core import transforms as trans
@@ -13,12 +13,17 @@ from FlowCytometryTools.core.transforms import Transformation
 
 base_path = os.path.dirname(os.path.realpath(__file__))
 
-test_path = os.path.join(base_path, 'data', 'FlowCytometers',
-                         'HTS_BD_LSR-II', 'HTS_BD_LSR_II_Mixed_Specimen_001_D6_D06.fcs')
+test_path = os.path.join(
+    base_path,
+    "data",
+    "FlowCytometers",
+    "HTS_BD_LSR-II",
+    "HTS_BD_LSR_II_Mixed_Specimen_001_D6_D06.fcs",
+)
 
 n = 1000
-_xmax = 2 ** 18  # max machine value
-_ymax = 10 ** 4  # max display value
+_xmax = 2**18  # max machine value
+_ymax = 10**4  # max display value
 _xpos = np.logspace(-3, np.log10(_xmax), n)
 _xneg = -_xpos[::-1]
 _xall = np.r_[_xneg, _xpos]
@@ -30,16 +35,17 @@ _yall = np.r_[_yneg, _ypos]
 class TestTransforms(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.fc_measurement = FCMeasurement(ID='test', datafile=test_path)
-        cls.fc_plate = FCPlate('plate', measurements={'A1': cls.fc_measurement},
-                               position_mapper='name')
+        cls.fc_measurement = FCMeasurement(ID="test", datafile=test_path)
+        cls.fc_plate = FCPlate(
+            "plate", measurements={"A1": cls.fc_measurement}, position_mapper="name"
+        )
 
     def test_tlog(self):
         th = 2
-        r = 10 ** 4
-        d = np.log10(2 ** 18)
+        r = 10**4
+        d = np.log10(2**18)
         result = trans.tlog(_xall, th, r, d)
-        assert_almost_equal(result[_xall < th], np.log10(th) * 1. * r / d, decimal=3)
+        assert_almost_equal(result[_xall < th], np.log10(th) * 1.0 * r / d, decimal=3)
         self.assertTrue(np.all(result[_xall > th]))
         assert_almost_equal(r, result.max())
 
@@ -68,23 +74,21 @@ class TestTransforms(unittest.TestCase):
         result = trans._x_for_spln(_xall, nx, True)
         assert_equal(result.min(), _xall.min())
         assert_equal(result.max(), _xall.max())
-        assert_equal(len(np.where(result < 0)[0]),
-                     len(np.where(result > 0)[0]))
+        assert_equal(len(np.where(result < 0)[0]), len(np.where(result > 0)[0]))
 
     def test_x_for_spln_edge_cases(self):
         # Additional tests around various edge cases
         test_cases = [
             # (input data, num_x, log_spacing), (expected_output)
-            (([10, 1], 3, False), [1., 5.5, 10.]),
-            (([-1, 10], 3, False), [-1., 4.5, 10.]),
-            (([2, 3], 3, False), [2., 2.5, 3.]),
-            (([-2, -3], 3, False), [-3., -2.5, -2]),
-            (([0, 1, 10], 3, True), [0., 0.1, 10]),
+            (([10, 1], 3, False), [1.0, 5.5, 10.0]),
+            (([-1, 10], 3, False), [-1.0, 4.5, 10.0]),
+            (([2, 3], 3, False), [2.0, 2.5, 3.0]),
+            (([-2, -3], 3, False), [-3.0, -2.5, -2]),
+            (([0, 1, 10], 3, True), [0.0, 0.1, 10]),
             (([0.1, 1, 10], 3, True), [0.1, 1.0, 10]),
             (([0.1, 0.4], 3, True), [0.1, 0.2, 0.4]),
             (([-0.1, -0.4], 3, True), [-0.4, -0.2, -0.1]),
             (([-0.1, 0.1], 3, True), [-0.1, 0, 0.1]),  # Non-logarithmic behavior
-
             # Edge case below is not totally reasonable. But shouldn't hurt for purposes
             # of interpolation.
             (([-0.3, 10], 3, True), [-1, 0.1, 10]),  # Non-logarithmic behavior
@@ -110,7 +114,7 @@ class TestTransforms(unittest.TestCase):
         d = (hlpos_large - tlpos_large) / hlpos_large
         assert_almost_equal(d, np.zeros(len(d)), decimal=2)
         # test spline option
-        transformation = Transformation(transform='hlog', direction='forward')
+        transformation = Transformation(transform="hlog", direction="forward")
         result1 = transformation(_xall, use_spln=True)
         result2 = transformation(_xall, use_spln=False)
         d = (result1 - result2) / result1
@@ -127,32 +131,35 @@ class TestTransforms(unittest.TestCase):
         assert_almost_equal(d, np.zeros(len(d)), decimal=2)
 
     def test_hlog_on_fc_measurement(self):
-        fc_measurement = self.fc_measurement.transform(transform='hlog', b=10)
+        fc_measurement = self.fc_measurement.transform(transform="hlog", b=10)
         data = fc_measurement.data.values[:3, :4]
-        correct_output = np.array([[-8.22113965e+03, 1.20259949e+03, 1.01216449e-06,
-                                    5.21899170e+03],
-                                   [-8.66184277e+03, 1.01013794e+03, 1.01216449e-06,
-                                    5.71275928e+03],
-                                   [-8.79974414e+03, 1.52737976e+03, 1.01216449e-06,
-                                    -4.95852930e+03]])
-        np.testing.assert_array_almost_equal(data, correct_output, 5,
-                                             err_msg='the hlog transformation gives '
-                                                     'an incorrect result')
+        correct_output = np.array(
+            [
+                [-8.22113965e03, 1.20259949e03, 1.01216449e-06, 5.21899170e03],
+                [-8.66184277e03, 1.01013794e03, 1.01216449e-06, 5.71275928e03],
+                [-8.79974414e03, 1.52737976e03, 1.01216449e-06, -4.95852930e03],
+            ]
+        )
+        np.testing.assert_allclose(
+            data,
+            correct_output,
+            rtol=1e-6,
+            err_msg="the hlog transformation gives " "an incorrect result",
+        )
 
     def test_transform_invocations_on_sample(self):
         """Shallow integration tests -- check that transform methods can be invoked"""
         test_cases = (
             # (transformation name, list of channels, dict of kwargs)
-            ('linear', ['FSC-A'], {'old_range': 0.5, 'new_range': 2.5}),
-            ('glog', ['FSC-A', 'SSC-A'], {'l': 10}),
-            ('tlog', ['FSC-A', 'SSC-A'], {}),
-            ('hlog', ['FSC-A'], {'b': 10}),
-            ('hlog', ['FSC-A'], {}),
-
+            ("linear", ["FSC-A"], {"old_range": 0.5, "new_range": 2.5}),
+            ("glog", ["FSC-A", "SSC-A"], {"l": 10}),
+            ("tlog", ["FSC-A", "SSC-A"], {}),
+            ("hlog", ["FSC-A"], {"b": 10}),
+            ("hlog", ["FSC-A"], {}),
             # Test inverse invocations
-            ('hlog', ['FSC-A'], {'direction': 'inverse'}),
-            ('glog', ['FSC-A'], {'direction': 'inverse', 'l': 10}),
-            ('tlog', ['FSC-A'], {'direction': 'inverse'}),
+            ("hlog", ["FSC-A"], {"direction": "inverse"}),
+            ("glog", ["FSC-A"], {"direction": "inverse", "l": 10}),
+            ("tlog", ["FSC-A"], {"direction": "inverse"}),
         )
 
         # Attempt valid invocations
