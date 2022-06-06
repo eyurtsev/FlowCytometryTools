@@ -67,7 +67,7 @@ you run into issues, please update the dependencies.
 
 **Required Dependencies**
 
-#. `python <https://www.python.org/getit/>`_ python 2.7 or python 3
+#. `python <https://www.python.org/getit/>`_ python 3.7 or higher
 #. `pandas <https://pandas.pydata.org/>`__ (Recommended version: 0.19.0 or higher).
 #. `matplotlib <https://matplotlib.org/>`__ (Recommended version: 1.5.3 or higher).
 #. `scipy <https://www.scipy.org/>`__ 
@@ -160,7 +160,7 @@ LICENSE
 
 The MIT License (MIT)
 
-Copyright (c) 2013-2015 Eugene Yurtsev and Jonathan Friedman
+Copyright (c) 2013-2022 Eugene Yurtsev and Jonathan Friedman
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

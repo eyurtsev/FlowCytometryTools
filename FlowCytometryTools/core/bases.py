@@ -1,8 +1,9 @@
 """Base objects for measurement and plate objects."""
-import inspect
-import os
+from collections import abc
 
 import decorator
+import inspect
+import os
 import pylab as pl
 import six
 from numpy import nan, unravel_index
@@ -36,21 +37,25 @@ def _assign_IDS_to_datafiles(datafiles, parser, measurement_class=None, **kwargs
     -------
     Dict of ID:datafile
     """
-    if isinstance(parser, collections.Mapping):
+    if isinstance(parser, abc.Mapping):
         fparse = lambda x: parser[x]
-    elif hasattr(parser, '__call__'):
+    elif hasattr(parser, "__call__"):
         fparse = lambda x: parser(x, **kwargs)
-    elif parser == 'name':
-        kwargs.setdefault('pre', 'Well_')
-        kwargs.setdefault('post', ['_', '\.', '$'])
-        kwargs.setdefault('tagtype', str)
+    elif parser == "name":
+        kwargs.setdefault("pre", "Well_")
+        kwargs.setdefault("post", ["_", "\.", "$"])
+        kwargs.setdefault("tagtype", str)
         fparse = lambda x: get_tag_value(os.path.basename(x), **kwargs)
-    elif parser == 'number':
-        fparse = lambda x: int(x.split('.')[-2])
-    elif parser == 'read':
-        fparse = lambda x: measurement_class(ID='temporary', datafile=x).ID_from_data(**kwargs)
+    elif parser == "number":
+        fparse = lambda x: int(x.split(".")[-2])
+    elif parser == "read":
+        fparse = lambda x: measurement_class(ID="temporary", datafile=x).ID_from_data(
+            **kwargs
+        )
     else:
-        raise ValueError('Encountered unsupported value "%s" for parser parameter.' % parser)
+        raise ValueError(
+            'Encountered unsupported value "%s" for parser parameter.' % parser
+        )
     d = dict((fparse(dfile), dfile) for dfile in datafiles)
     return d
 
@@ -70,7 +75,7 @@ def int2letters(x, alphabet):
     """
     base = len(alphabet)
     if x < 0:
-        raise ValueError('Only non-negative numbers are supported. Encountered %s' % x)
+        raise ValueError("Only non-negative numbers are supported. Encountered %s" % x)
     letters = []
     quotient = x
     while quotient >= 0:
@@ -78,17 +83,19 @@ def int2letters(x, alphabet):
         quotient -= 1
         letters.append(alphabet[remainder])
     letters.reverse()
-    return ''.join(letters)
+    return "".join(letters)
 
 
-_now = 'apply_now'
+_now = "apply_now"
 
 
 @decorator.decorator
 def queueable(fun, *args, **kwargs):
     params = inspect.getcallargs(fun, *args, **kwargs)
     if not _now in params:
-        raise ValueError('"%s" must be a parameter of queued function "%s"' % (_now, fun.__name__))
+        raise ValueError(
+            '"%s" must be a parameter of queued function "%s"' % (_now, fun.__name__)
+        )
     f_name = fun.__name__
     kw_name = inspect.getargspec(fun).keywords
     kws = params.pop(kw_name, {})
@@ -99,8 +106,8 @@ def queueable(fun, *args, **kwargs):
         out.history.append((f_name, params))
         return out
     else:
-        new = params['self'].copy()
-        del params['self']
+        new = params["self"].copy()
+        del params["self"]
         params[_now] = True
 
         new.queue.append((f_name, params))
@@ -114,15 +121,15 @@ class BaseObject(object):
     """
 
     def __repr__(self):
-        return '<{0} {1}>'.format(type(self).__name__, repr(self.ID))
+        return "<{0} {1}>".format(type(self).__name__, repr(self.ID))
 
     def save(self, path):
-        """ Saves object to a pickled file. """
+        """Saves object to a pickled file."""
         save(self, path)
 
     @classmethod
     def load(cls, path):
-        """ Loads object from a pickled file. """
+        """Loads object from a pickled file."""
         return load(path)
 
     @property
@@ -143,6 +150,7 @@ class BaseObject(object):
         copy : type of caller
         """
         from copy import copy, deepcopy
+
         if deep:
             return deepcopy(self)
         else:
@@ -155,9 +163,16 @@ class Measurement(BaseObject):
     a single well or a single tube.
     """
 
-    def __init__(self, ID,
-                 datafile=None, readdata=False, readdata_kwargs={},
-                 metafile=None, readmeta=True, readmeta_kwargs={}):
+    def __init__(
+        self,
+        ID,
+        datafile=None,
+        readdata=False,
+        readdata_kwargs={},
+        metafile=None,
+        readmeta=True,
+        readmeta_kwargs={},
+    ):
         self.ID = ID
         self.datafile = datafile
         self.metafile = metafile
@@ -165,8 +180,10 @@ class Measurement(BaseObject):
         self._meta = None
         self.readdata_kwargs = readdata_kwargs
         self.readmeta_kwargs = readmeta_kwargs
-        if readdata: self.set_data()
-        if readmeta: self.set_meta()
+        if readdata:
+            self.set_data()
+        if readmeta:
+            self.set_meta()
         self.position = {}
         self.history = []
         self.queue = []
@@ -237,7 +254,7 @@ class Measurement(BaseObject):
         """
         if data is None:
             data = self.get_data(**kwargs)
-        setattr(self, '_data', data)
+        setattr(self, "_data", data)
         self.history += self.queue
         self.queue = []
 
@@ -248,7 +265,7 @@ class Measurement(BaseObject):
         """
         if meta is None:
             meta = self.get_meta(**kwargs)
-        setattr(self, '_meta', meta)
+        setattr(self, "_meta", meta)
 
     def _get_attr_from_file(self, name, **kwargs):
         """
@@ -263,12 +280,12 @@ class Measurement(BaseObject):
             named: '[attr name]file'. (e.g. for an attribute named
             'meta' a 'metafile' attribute will be created).
         """
-        current_value = getattr(self, '_' + name)
+        current_value = getattr(self, "_" + name)
         if current_value is not None:
             value = current_value
         else:
-            parser_kwargs = getattr(self, 'read%s_kwargs' % name, {})
-            value = getattr(self, 'read_%s' % name)(**parser_kwargs)
+            parser_kwargs = getattr(self, "read%s_kwargs" % name, {})
+            value = getattr(self, "read_%s" % name)(**parser_kwargs)
         return value
 
     def get_data(self, **kwargs):
@@ -280,17 +297,17 @@ class Measurement(BaseObject):
             new = self.apply_queued()
             return new.get_data()
         else:
-            return self._get_attr_from_file('data', **kwargs)
+            return self._get_attr_from_file("data", **kwargs)
 
     def get_meta(self, **kwargs):
         """
         Get the measurement metadata.
         If not metadata is not set, read from 'self.metafile' using 'self.read_meta'.
         """
-        return self._get_attr_from_file('meta', **kwargs)
+        return self._get_attr_from_file("meta", **kwargs)
 
-    data = property(get_data, set_data, doc='Data may be stored in memory or on disk')
-    meta = property(get_meta, set_meta, doc='Metadata associated with measurement.')
+    data = property(get_data, set_data, doc="Data may be stored in memory or on disk")
+    meta = property(get_meta, set_meta, doc="Metadata associated with measurement.")
 
     # ----------------------
     def get_meta_fields(self, fields, **kwargs):
@@ -311,7 +328,7 @@ class Measurement(BaseObject):
         """
         pass
 
-    def apply(self, func, applyto='measurement', noneval=nan, setdata=False):
+    def apply(self, func, applyto="measurement", noneval=nan, setdata=False):
         """
         Apply func either to self or to associated data.
         If data is not already parsed, try and read it.
@@ -332,7 +349,7 @@ class Measurement(BaseObject):
             Otherwise data will be discarded at end of apply.
         """
         applyto = applyto.lower()
-        if applyto == 'data':
+        if applyto == "data":
             if self.data is not None:
                 data = self.data
             elif self.datafile is None:
@@ -342,28 +359,22 @@ class Measurement(BaseObject):
                 if setdata:
                     self.data = data
             return func(data)
-        elif applyto == 'measurement':
+        elif applyto == "measurement":
             return func(self)
         else:
-            raise ValueError('Encountered unsupported value "%s" for applyto parameter.' % applyto)
+            raise ValueError(
+                'Encountered unsupported value "%s" for applyto parameter.' % applyto
+            )
 
 
 Well = Measurement
 
-import collections
-try:
-    from collections import abc
-    collections.MutableMapping = abc.MutableMapping
-    collections.Iterable = abc.Iterable
-    collections.Mapping = abc.Mapping
-except:
-    pass
 
-
-class MeasurementCollection(collections.MutableMapping, BaseObject):
+class MeasurementCollection(abc.MutableMapping, BaseObject):
     """
     A collection of measurements
     """
+
     _measurement_class = Measurement  # to be replaced when inheriting
 
     def __init__(self, ID, measurements):
@@ -382,7 +393,7 @@ class MeasurementCollection(collections.MutableMapping, BaseObject):
         """
         self.ID = ID
         self.data = {}
-        if isinstance(measurements, collections.Mapping):
+        if isinstance(measurements, abc.Mapping):
             self.update(measurements)
         else:
             for m in measurements:
@@ -390,7 +401,9 @@ class MeasurementCollection(collections.MutableMapping, BaseObject):
 
     @classmethod
     @doc_replacer
-    def from_files(cls, ID, datafiles, parser, readdata_kwargs={}, readmeta_kwargs={}, **ID_kwargs):
+    def from_files(
+        cls, ID, datafiles, parser, readdata_kwargs={}, readmeta_kwargs={}, **ID_kwargs
+    ):
         """
         Create a Collection of measurements from a set of data files.
 
@@ -401,22 +414,38 @@ class MeasurementCollection(collections.MutableMapping, BaseObject):
         {_bases_filename_parser}
         {_bases_ID_kwargs}
         """
-        d = _assign_IDS_to_datafiles(datafiles, parser, cls._measurement_class, **ID_kwargs)
+        d = _assign_IDS_to_datafiles(
+            datafiles, parser, cls._measurement_class, **ID_kwargs
+        )
         measurements = []
         for sID, dfile in d.items():
             try:
-                measurements.append(cls._measurement_class(sID, datafile=dfile,
-                                                           readdata_kwargs=readdata_kwargs,
-                                                           readmeta_kwargs=readmeta_kwargs))
+                measurements.append(
+                    cls._measurement_class(
+                        sID,
+                        datafile=dfile,
+                        readdata_kwargs=readdata_kwargs,
+                        readmeta_kwargs=readmeta_kwargs,
+                    )
+                )
             except:
-                msg = 'Error occurred while trying to parse file: %s' % dfile
+                msg = "Error occurred while trying to parse file: %s" % dfile
                 raise IOError(msg)
         return cls(ID, measurements)
 
     @classmethod
     @doc_replacer
-    def from_dir(cls, ID, datadir, parser, pattern='*.fcs', recursive=False,
-                 readdata_kwargs={}, readmeta_kwargs={}, **ID_kwargs):
+    def from_dir(
+        cls,
+        ID,
+        datadir,
+        parser,
+        pattern="*.fcs",
+        recursive=False,
+        readdata_kwargs={},
+        readmeta_kwargs={},
+        **ID_kwargs
+    ):
         """
         Create a Collection of measurements from data files contained in a directory.
 
@@ -434,24 +463,30 @@ class MeasurementCollection(collections.MutableMapping, BaseObject):
         {_bases_ID_kwargs}
         """
         datafiles = get_files(datadir, pattern, recursive)
-        return cls.from_files(ID, datafiles, parser,
-                              readdata_kwargs=readdata_kwargs, readmeta_kwargs=readmeta_kwargs,
-                              **ID_kwargs)
+        return cls.from_files(
+            ID,
+            datafiles,
+            parser,
+            readdata_kwargs=readdata_kwargs,
+            readmeta_kwargs=readmeta_kwargs,
+            **ID_kwargs
+        )
 
     # ----------------------
     # MutableMapping methods
     # ----------------------
     def __str__(self):
-        return 'ID:\n%s\n\nData:\n%s' % (self.ID, repr(self.data))
+        return "ID:\n%s\n\nData:\n%s" % (self.ID, repr(self.data))
 
     def __getitem__(self, key):
         return self.data[key]
 
     def __setitem__(self, key, value):
         if not isinstance(value, self._measurement_class):
-            msg = ('Collection of type %s can only contain object of type %s.\n' % (
-                type(self), type(self._measurement_class)) +
-                   'Encountered type %s.' % type(value))
+            msg = "Collection of type %s can only contain object of type %s.\n" % (
+                type(self),
+                type(self._measurement_class),
+            ) + "Encountered type %s." % type(value)
             raise TypeError(msg)
         self.data[key] = value
 
@@ -467,9 +502,17 @@ class MeasurementCollection(collections.MutableMapping, BaseObject):
     # ----------------------
     # User methods
     # ----------------------
-    def apply(self, func, ids=None, applyto='measurement', noneval=nan,
-              setdata=False, output_format='dict', ID=None,
-              **kwargs):
+    def apply(
+        self,
+        func,
+        ids=None,
+        applyto="measurement",
+        noneval=nan,
+        setdata=False,
+        output_format="dict",
+        ID=None,
+        **kwargs
+    ):
         """
         Apply func to each of the specified measurements.
 
@@ -503,13 +546,16 @@ class MeasurementCollection(collections.MutableMapping, BaseObject):
             ids = to_list(ids)
         result = dict((i, self[i].apply(func, applyto, noneval, setdata)) for i in ids)
 
-        if output_format == 'collection':
+        if output_format == "collection":
             can_keep_as_collection = all(
-                [isinstance(r, self._measurement_class) for r in result.values()])
+                [isinstance(r, self._measurement_class) for r in result.values()]
+            )
             if not can_keep_as_collection:
                 raise TypeError(
-                    'Cannot turn output into a collection. The provided func must return results of type {}'.format(
-                        self._measurement_class))
+                    "Cannot turn output into a collection. The provided func must return results of type {}".format(
+                        self._measurement_class
+                    )
+                )
 
             new_collection = self.copy()
             # Locate IDs to remove
@@ -532,26 +578,27 @@ class MeasurementCollection(collections.MutableMapping, BaseObject):
         Set the data for all specified measurements (all if None given).
         """
         fun = lambda x: x.set_data()
-        self.apply(fun, ids=ids, applyto='measurement')
+        self.apply(fun, ids=ids, applyto="measurement")
 
     def _clear_measurement_attr(self, attr, ids=None):
         fun = lambda x: setattr(x, attr, None)
-        self.apply(fun, ids=ids, applyto='measurement')
+        self.apply(fun, ids=ids, applyto="measurement")
 
     def clear_measurement_data(self, ids=None):
         """
         Clear the data in all specified measurements (all if None given).
         """
-        self._clear_measurement_attr('data', ids=None)
+        self._clear_measurement_attr("data", ids=None)
 
     def clear_measurement_meta(self, ids=None):
         """
         Clear the metadata in all specified measurements (all if None given).
         """
-        self._clear_measurement_attr('meta', ids=None)
+        self._clear_measurement_attr("meta", ids=None)
 
-    def get_measurement_metadata(self, fields, ids=None, noneval=nan,
-                                 output_format='DataFrame'):
+    def get_measurement_metadata(
+        self, fields, ids=None, noneval=nan, output_format="DataFrame"
+    ):
         """
         Get the metadata fields of specified measurements (all if None given).
 
@@ -574,23 +621,27 @@ class MeasurementCollection(collections.MutableMapping, BaseObject):
         """
         fields = to_list(fields)
         func = lambda x: x.get_meta_fields(fields)
-        meta_d = self.apply(func, ids=ids, applyto='measurement',
-                            noneval=noneval, output_format='dict')
-        if output_format == 'dict':
+        meta_d = self.apply(
+            func, ids=ids, applyto="measurement", noneval=noneval, output_format="dict"
+        )
+        if output_format == "dict":
             return meta_d
-        elif output_format == 'DataFrame':
+        elif output_format == "DataFrame":
             from pandas import DataFrame as DF
+
             meta_df = DF(meta_d, index=fields)
             return meta_df
         else:
-            msg = ("The output_format must be either 'dict' or 'DataFrame'. " +
-                   "Encountered unsupported value %s." % repr(output_format))
+            msg = (
+                "The output_format must be either 'dict' or 'DataFrame'. "
+                + "Encountered unsupported value %s." % repr(output_format)
+            )
             raise Exception(msg)
 
     # ----------------------
     # Filtering methods
     # ----------------------
-    def filter(self, criteria, applyto='measurement', ID=None):
+    def filter(self, criteria, applyto="measurement", ID=None):
         """
         Filter measurements according to given criteria.
         Retain only Measurements for which criteria returns True.
@@ -616,13 +667,13 @@ class MeasurementCollection(collections.MutableMapping, BaseObject):
         """
         fil = criteria
         new = self.copy()
-        if isinstance(applyto, collections.Mapping):
+        if isinstance(applyto, abc.Mapping):
             remove = (k for k, v in self.items() if not fil(applyto[k]))
-        elif applyto == 'measurement':
+        elif applyto == "measurement":
             remove = (k for k, v in self.items() if not fil(v))
-        elif applyto == 'keys':
+        elif applyto == "keys":
             remove = (k for k, v in self.items() if not fil(k))
-        elif applyto == 'data':
+        elif applyto == "data":
             remove = (k for k, v in self.items() if not fil(v.get_data()))
         else:
             raise ValueError('Unsupported value "%s" for applyto parameter.' % applyto)
@@ -641,7 +692,7 @@ class MeasurementCollection(collections.MutableMapping, BaseObject):
         fil = lambda x: x in keys
         if ID is None:
             ID = self.ID
-        return self.filter(fil, applyto='keys', ID=ID)
+        return self.filter(fil, applyto="keys", ID=ID)
 
     def filter_by_attr(self, attr, criteria, ID=None):
         applyto = {k: getattr(v, attr) for k, v in self.items()}
@@ -654,7 +705,7 @@ class MeasurementCollection(collections.MutableMapping, BaseObject):
         Keep only Measurements with given IDs.
         """
         fil = lambda x: x in ids
-        return self.filter_by_attr('ID', fil, ID)
+        return self.filter_by_attr("ID", fil, ID)
 
     def filter_by_meta(self, criteria, ID=None):
         raise NotImplementedError
@@ -678,7 +729,7 @@ class MeasurementCollection(collections.MutableMapping, BaseObject):
         fil = lambda x: x in rows
         applyto = {k: self._positions[k][1] for k in self.keys()}
         if ID is None:
-            ID = self.ID + '.filtered_by_cols'
+            ID = self.ID + ".filtered_by_cols"
         return self.filter(fil, applyto=applyto, ID=ID)
 
 
@@ -691,8 +742,16 @@ class OrderedCollection(MeasurementCollection):
     """
 
     @doc_replacer
-    def __init__(self, ID, measurements, position_mapper, shape=(8, 12),
-                 positions=None, row_labels=None, col_labels=None):
+    def __init__(
+        self,
+        ID,
+        measurements,
+        position_mapper,
+        shape=(8, 12),
+        positions=None,
+        row_labels=None,
+        col_labels=None,
+    ):
         """
         A dictionary-like container for holding multiple Measurements in a 2D array.
 
@@ -720,9 +779,9 @@ class OrderedCollection(MeasurementCollection):
         super(OrderedCollection, self).__init__(ID, measurements)
         ## set shape-related attributes
         if row_labels is None:
-            row_labels = self._default_labels('rows', shape)
+            row_labels = self._default_labels("rows", shape)
         if col_labels is None:
-            col_labels = self._default_labels('cols', shape)
+            col_labels = self._default_labels("cols", shape)
         self.row_labels = row_labels
         self.col_labels = col_labels
         ##set positions
@@ -731,20 +790,30 @@ class OrderedCollection(MeasurementCollection):
         ## check that all positions have been set
         for k in self.keys():
             if k not in self._positions:
-                msg = ('All measurement position must be set,' +
-                       ' but no position was set for measurement %s' % k)
+                msg = (
+                    "All measurement position must be set,"
+                    + " but no position was set for measurement %s" % k
+                )
                 raise Exception(msg)
 
     def __str__(self):
         layout = self.layout
-        print_layout = layout.applymap(lambda x: x.ID if hasattr(x, 'ID') else '')
-        return 'ID:\n%s\n\nData:\n%s' % (self.ID, print_layout)
+        print_layout = layout.applymap(lambda x: x.ID if hasattr(x, "ID") else "")
+        return "ID:\n%s\n\nData:\n%s" % (self.ID, print_layout)
 
     @classmethod
     @doc_replacer
-    def from_files(cls, ID, datafiles, parser='name',
-                   position_mapper=None,
-                   readdata_kwargs={}, readmeta_kwargs={}, ID_kwargs={}, **kwargs):
+    def from_files(
+        cls,
+        ID,
+        datafiles,
+        parser="name",
+        position_mapper=None,
+        readdata_kwargs={},
+        readmeta_kwargs={},
+        ID_kwargs={},
+        **kwargs
+    ):
         """
         Create an OrderedCollection of measurements from a set of data files.
 
@@ -764,24 +833,40 @@ class OrderedCollection(MeasurementCollection):
             else:
                 msg = "When using a custom parser, you must specify the position_mapper keyword."
                 raise ValueError(msg)
-        d = _assign_IDS_to_datafiles(datafiles, parser, cls._measurement_class, **ID_kwargs)
+        d = _assign_IDS_to_datafiles(
+            datafiles, parser, cls._measurement_class, **ID_kwargs
+        )
         measurements = []
         for sID, dfile in d.items():
             try:
-                measurements.append(cls._measurement_class(sID, datafile=dfile,
-                                                           readdata_kwargs=readdata_kwargs,
-                                                           readmeta_kwargs=readmeta_kwargs))
+                measurements.append(
+                    cls._measurement_class(
+                        sID,
+                        datafile=dfile,
+                        readdata_kwargs=readdata_kwargs,
+                        readmeta_kwargs=readmeta_kwargs,
+                    )
+                )
             except:
-                msg = 'Error occured while trying to parse file: %s' % dfile
+                msg = "Error occured while trying to parse file: %s" % dfile
                 raise IOError(msg)
         return cls(ID, measurements, position_mapper, **kwargs)
 
     @classmethod
     @doc_replacer
-    def from_dir(cls, ID, path,
-                 parser='name',
-                 position_mapper=None, pattern='*.fcs', recursive=False,
-                 readdata_kwargs={}, readmeta_kwargs={}, ID_kwargs={}, **kwargs):
+    def from_dir(
+        cls,
+        ID,
+        path,
+        parser="name",
+        position_mapper=None,
+        pattern="*.fcs",
+        recursive=False,
+        readdata_kwargs={},
+        readmeta_kwargs={},
+        ID_kwargs={},
+        **kwargs
+    ):
         """
         Create a Collection of measurements from data files contained in a directory.
 
@@ -801,30 +886,38 @@ class OrderedCollection(MeasurementCollection):
             Additional key word arguments to be passed to constructor.
         """
         datafiles = get_files(path, pattern, recursive)
-        return cls.from_files(ID, datafiles, parser=parser, position_mapper=position_mapper,
-                              readdata_kwargs=readdata_kwargs, readmeta_kwargs=readmeta_kwargs,
-                              ID_kwargs=ID_kwargs, **kwargs)
+        return cls.from_files(
+            ID,
+            datafiles,
+            parser=parser,
+            position_mapper=position_mapper,
+            readdata_kwargs=readdata_kwargs,
+            readmeta_kwargs=readmeta_kwargs,
+            ID_kwargs=ID_kwargs,
+            **kwargs
+        )
 
-    def set_labels(self, labels, axis='rows'):
+    def set_labels(self, labels, axis="rows"):
         """
         Set the row/col labels.
         Note that this method doesn't check that enough labels were set for all the assigned positions.
         """
-        if axis.lower() in ('rows', 'row', 'r', 0):
+        if axis.lower() in ("rows", "row", "r", 0):
             assigned_pos = set(v[0] for v in self._positions.itervalues())
             not_assigned = set(labels) - assigned_pos
             if len(not_assigned) > 0:
-                msg = 'New labels must contain all assigned positions'
+                msg = "New labels must contain all assigned positions"
                 raise ValueError(msg)
             self.row_labels = labels
-        elif axis.lower() in ('cols', 'col', 'c', 1):
+        elif axis.lower() in ("cols", "col", "c", 1):
             self.col_labels = labels
         else:
-            raise TypeError('Unsupported axis value %s' % axis)
+            raise TypeError("Unsupported axis value %s" % axis)
 
     def _default_labels(self, axis, shape):
         import string
-        if axis == 'rows':
+
+        if axis == "rows":
             return [int2letters(i, string.ascii_uppercase) for i in range(shape[0])]
         else:
             return range(1, 1 + shape[1])
@@ -856,22 +949,22 @@ class OrderedCollection(MeasurementCollection):
             i, j = unravel_index(int(x - 1), self.shape, order=order)
             return (self.row_labels[i], self.col_labels[j])
 
-        if hasattr(position_mapper, '__call__'):
+        if hasattr(position_mapper, "__call__"):
             mapper = position_mapper
-        elif isinstance(position_mapper, collections.Mapping):
+        elif isinstance(position_mapper, abc.Mapping):
             mapper = lambda x: position_mapper[x]
-        elif position_mapper == 'name':
+        elif position_mapper == "name":
             mapper = lambda x: (x[0], int(x[1:]))
-        elif position_mapper in ('row_first_enumerator', 'number'):
-            mapper = lambda x: num_parser(x, 'F')
-        elif position_mapper == 'col_first_enumerator':
-            mapper = lambda x: num_parser(x, 'C')
+        elif position_mapper in ("row_first_enumerator", "number"):
+            mapper = lambda x: num_parser(x, "F")
+        elif position_mapper == "col_first_enumerator":
+            mapper = lambda x: num_parser(x, "C")
         else:
             msg = '"{}" is not a known key_to_position_parser.'.format(position_mapper)
             raise ValueError(msg)
         return mapper
 
-    def set_positions(self, positions=None, position_mapper='name', ids=None):
+    def set_positions(self, positions=None, position_mapper="name", ids=None):
         """
         checks for position validity & collisions,
         but not that all measurements are assigned.
@@ -903,12 +996,12 @@ class OrderedCollection(MeasurementCollection):
         temp = self._positions.copy()
         temp.update(positions)
         if not len(temp.values()) == len(set(temp.values())):
-            msg = 'A position can only be occupied by a single measurement'
+            msg = "A position can only be occupied by a single measurement"
             raise Exception(msg)
 
         for k, pos in positions.items():
             if not self._is_valid_position(pos):
-                msg = 'Position {} is not supported for this collection'.format(pos)
+                msg = "Position {} is not supported for this collection".format(pos)
                 raise ValueError(msg)
             self._positions[k] = pos
             self[k]._set_position(self.ID, pos)
@@ -932,7 +1025,7 @@ class OrderedCollection(MeasurementCollection):
         except:
             pass
         if dropna:
-            return df.dropna(axis=0, how='all').dropna(axis=1, how='all')
+            return df.dropna(axis=0, how="all").dropna(axis=1, how="all")
         else:
             return df
 
@@ -955,9 +1048,17 @@ class OrderedCollection(MeasurementCollection):
     def shape(self):
         return (len(self.row_labels), len(self.col_labels))
 
-    def apply(self, func, ids=None, applyto='measurement',
-              output_format='DataFrame', noneval=nan,
-              setdata=False, dropna=False, ID=None):
+    def apply(
+        self,
+        func,
+        ids=None,
+        applyto="measurement",
+        output_format="DataFrame",
+        noneval=nan,
+        setdata=False,
+        dropna=False,
+        ID=None,
+    ):
         """
         Apply func to each of the specified measurements.
 
@@ -988,34 +1089,48 @@ class OrderedCollection(MeasurementCollection):
         -------
         DataFrame/Dictionary/Collection containing the output of func for each Measurement.
         """
-        _output = 'collection' if output_format == 'collection' else 'dict'
-        result = super(OrderedCollection, self).apply(func, ids, applyto,
-                                                      noneval, setdata,
-                                                      output_format=_output)
+        _output = "collection" if output_format == "collection" else "dict"
+        result = super(OrderedCollection, self).apply(
+            func, ids, applyto, noneval, setdata, output_format=_output
+        )
 
         # Note: result should be of type dict or collection for the code
         # below to work
-        if output_format == 'dict':
+        if output_format == "dict":
             return result
-        elif output_format == 'DataFrame':
+        elif output_format == "DataFrame":
             return self._dict2DF(result, noneval, dropna)
-        elif output_format == 'collection':
+        elif output_format == "collection":
             return result
         else:
-            msg = ("output_format must be either 'dict' or 'DataFrame'. " +
-                   "Encountered unsupported value %s." % repr(output_format))
+            msg = (
+                "output_format must be either 'dict' or 'DataFrame'. "
+                + "Encountered unsupported value %s." % repr(output_format)
+            )
             raise Exception(msg)
 
     @doc_replacer
-    def grid_plot(self, func, applyto='measurement', ids=None,
-                  row_labels=None, col_labels=None,
-                  xlim='auto', ylim='auto',
-                  xlabel=None, ylabel=None,
-                  colorbar=True,
-                  row_label_xoffset=None, col_label_yoffset=None,
-                  hide_tick_labels=True, hide_tick_lines=True,
-                  hspace=0, wspace=0,
-                  row_labels_kwargs={}, col_labels_kwargs={}):
+    def grid_plot(
+        self,
+        func,
+        applyto="measurement",
+        ids=None,
+        row_labels=None,
+        col_labels=None,
+        xlim="auto",
+        ylim="auto",
+        xlabel=None,
+        ylabel=None,
+        colorbar=True,
+        row_label_xoffset=None,
+        col_label_yoffset=None,
+        hide_tick_labels=True,
+        hide_tick_lines=True,
+        hspace=0,
+        wspace=0,
+        row_labels_kwargs={},
+        col_labels_kwargs={},
+    ):
         """
         Creates subplots for each well in the plate. Uses func to plot on each axis.
         Follow with a call to matplotlibs show() in order to see the plot.
@@ -1050,22 +1165,36 @@ class OrderedCollection(MeasurementCollection):
         >>> plate.plot(z, applyto='data');
         """
         # Acquire call arguments to be passed to create plate layout
-        callArgs = locals().copy()  # This statement must remain first. The copy is just defensive.
-        [callArgs.pop(varname) for varname in
-         ['self', 'func', 'applyto', 'ids', 'colorbar', 'xlim', 'ylim']]  # pop args
+        callArgs = (
+            locals().copy()
+        )  # This statement must remain first. The copy is just defensive.
+        [
+            callArgs.pop(varname)
+            for varname in [
+                "self",
+                "func",
+                "applyto",
+                "ids",
+                "colorbar",
+                "xlim",
+                "ylim",
+            ]
+        ]  # pop args
 
-        callArgs['rowNum'] = self.shape[0]
-        callArgs['colNum'] = self.shape[1]
+        callArgs["rowNum"] = self.shape[0]
+        callArgs["colNum"] = self.shape[1]
 
         subplots_adjust_args = {}
-        subplots_adjust_args.setdefault('right', 0.85)
-        subplots_adjust_args.setdefault('top', 0.85)
+        subplots_adjust_args.setdefault("right", 0.85)
+        subplots_adjust_args.setdefault("top", 0.85)
         pl.subplots_adjust(**subplots_adjust_args)
 
         # Uses plate default row/col labels if user does not override them by specifying row/col
         # labels
-        if row_labels == None: callArgs['row_labels'] = self.row_labels
-        if col_labels == None: callArgs['col_labels'] = self.col_labels
+        if row_labels == None:
+            callArgs["row_labels"] = self.row_labels
+        if col_labels == None:
+            callArgs["col_labels"] = self.col_labels
 
         ax_main, ax_subplots = graph.create_grid_layout(**callArgs)
         subplots_ax = DF(ax_subplots, index=self.row_labels, columns=self.col_labels)
@@ -1076,16 +1205,16 @@ class OrderedCollection(MeasurementCollection):
 
         for ID in ids:
             measurement = self[ID]
-            if not hasattr(measurement, 'data'):
+            if not hasattr(measurement, "data"):
                 continue
 
             row, col = self._positions[ID]
             ax = subplots_ax[col][row]
             pl.sca(ax)  # sets the current axis
 
-            if applyto == 'measurement':
+            if applyto == "measurement":
                 func(measurement, ax)  # reminder: pandas row/col order is reversed
-            elif applyto == 'data':
+            elif applyto == "data":
                 data = measurement.get_data()
                 if data is not None:
                     if func.func_code.co_argcount == 1:
@@ -1093,8 +1222,11 @@ class OrderedCollection(MeasurementCollection):
                     else:
                         func(data, ax)
             else:
-                raise ValueError('Encountered unsupported value {} for applyto parameter.'.format(
-                    applyto))
+                raise ValueError(
+                    "Encountered unsupported value {} for applyto parameter.".format(
+                        applyto
+                    )
+                )
 
         # Autoscaling axes
         graph.scale_subplots(ax_subplots, xlim=xlim, ylim=ylim)

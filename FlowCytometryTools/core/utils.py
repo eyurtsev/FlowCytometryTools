@@ -2,13 +2,8 @@ import re
 import glob
 import os
 import fnmatch
-
-try:
-    import cPickle as pickle
-except ImportError:
-    import pickle
-
-import collections
+import pickle
+from collections import abc
 
 import six
 
@@ -152,7 +147,7 @@ def to_iter(obj):
     else:
         # Nesting here since symmetry is broken in isinstance checks.
         # Strings are iterables in python 3, so the relative order of if statements is important.
-        if isinstance(obj, collections.Iterable):
+        if isinstance(obj, abc.Iterable):
             return obj
         else:
             return [obj]
