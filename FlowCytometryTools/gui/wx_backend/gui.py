@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 import wx
 
-from FlowCytometryTools.gui import fc_widget
-from FlowCytometryTools.gui.wx_backend.wireframe import GeneratedWireframe
+from ...gui import fc_widget
+from ...gui.wx_backend.wireframe import GeneratedWireframe
 
 
 class GUIEmbedded(GeneratedWireframe):
@@ -36,16 +36,16 @@ class GUIEmbedded(GeneratedWireframe):
         self.update_widget_channels()
 
     def btn_create_poly_gate(self, event):
-        self.fcgatemanager.create_gate_widget('poly')
+        self.fcgatemanager.create_gate_widget("poly")
 
     def btn_create_quad_gate(self, event):
-        self.fcgatemanager.create_gate_widget('quad')
+        self.fcgatemanager.create_gate_widget("quad")
 
     def btn_create_horizontal_threshold_gate(self, event):
-        self.fcgatemanager.create_gate_widget('horizontal threshold')
+        self.fcgatemanager.create_gate_widget("horizontal threshold")
 
     def btn_create_vertical_threshold_gate(self, event):
-        self.fcgatemanager.create_gate_widget('vertical threshold')
+        self.fcgatemanager.create_gate_widget("vertical threshold")
 
     def btn_delete_gate(self, event):
         self.fcgatemanager.remove_active_gate()
@@ -58,7 +58,7 @@ class GUIEmbedded(GeneratedWireframe):
         if self.fcgatemanager.sample is not None:
             options = list(self.fcgatemanager.sample.channel_names)
         else:
-            options = list(['d1', 'd2', 'd3'])  # For testing
+            options = list(["d1", "d2", "d3"])  # For testing
         self.x_axis_list.Clear()
         self.x_axis_list.InsertItems(options, 0)
         self.y_axis_list.Clear()
@@ -84,11 +84,13 @@ class GUIEmbedded(GeneratedWireframe):
 
 
 class GUILauncher(object):
-    """ Use this to launch the wx-based fdlow cytometry app """
+    """Use this to launch the wx-based fdlow cytometry app"""
 
     def __init__(self, filepath=None, measurement=None):
         if filepath is not None and measurement is not None:
-            raise ValueError('You can only specify either filepath or measurement, but not both.')
+            raise ValueError(
+                "You can only specify either filepath or measurement, but not both."
+            )
 
         self.app = wx.App(False)
         self.main = GUIEmbedded(None, -1, "")
