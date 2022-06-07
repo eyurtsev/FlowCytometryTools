@@ -9,9 +9,9 @@ import six
 from numpy import nan, unravel_index
 from pandas import DataFrame as DF
 
-from FlowCytometryTools.core import graph
-from FlowCytometryTools.core.common_doc import doc_replacer
-from FlowCytometryTools.core.utils import get_tag_value, get_files, save, load, to_list
+from . import graph
+from .common_doc import doc_replacer
+from .utils import get_tag_value, get_files, save, load, to_list
 
 
 @doc_replacer

@@ -1,4 +1,4 @@
-"""'
+"""
 Various transformations for flow cytometry data.
 The forward transformations all refer to transforming the
 raw data off the machine (i.e. a log transformation is the forword
@@ -17,18 +17,17 @@ TODO:
 from __future__ import division
 
 import warnings
-
 from numpy import (log, log10, exp, where, sign, vectorize, min, max, linspace, logspace, r_, abs,
-                   asarray)
+                   asarray, )
 from numpy.lib.shape_base import apply_along_axis
 from scipy.interpolate import InterpolatedUnivariateSpline
 from scipy.optimize import brentq
 
-from FlowCytometryTools.core.utils import to_list, BaseObject
+from .utils import to_list, BaseObject
 
-_machine_max = 2 ** 18
+_machine_max = 2**18
 _l_mmax = log10(_machine_max)
-_display_max = 10 ** 4
+_display_max = 10**4
 
 
 def linear(x, old_range, new_range):
@@ -76,8 +75,8 @@ def tlog(x, th=1, r=_display_max, d=_l_mmax):
     Array of transformed values.
     """
     if th <= 0:
-        raise ValueError('Threshold value must be positive. %s given.' % th)
-    return where(x <= th, log10(th) * 1. * r / d, log10(x) * 1. * r / d)
+        raise ValueError("Threshold value must be positive. %s given." % th)
+    return where(x <= th, log10(th) * 1.0 * r / d, log10(x) * 1.0 * r / d)
 
 
 def tlog_inv(y, th=1, r=_display_max, d=_l_mmax):
@@ -103,12 +102,13 @@ def tlog_inv(y, th=1, r=_display_max, d=_l_mmax):
     Array of transformed values.
     """
     if th <= 0:
-        raise ValueError('Threshold value must be positive. %s given.' % th)
-    x = 10 ** (y * 1. * d / r)
+        raise ValueError("Threshold value must be positive. %s given." % th)
+    x = 10 ** (y * 1.0 * d / r)
     try:
         x[x < th] = th
     except TypeError:
-        if x < th: x = th
+        if x < th:
+            x = th
     return x
 
 
@@ -116,19 +116,19 @@ def glog(x, l):
     """
     Natural base generalized-log transform.
     """
-    return log(x + (x ** 2 + l) ** 0.5)
+    return log(x + (x**2 + l) ** 0.5)
 
 
 def glog_inv(y, l):
     ey = exp(y)
-    return (ey ** 2 - l) / (2 * ey)
+    return (ey**2 - l) / (2 * ey)
 
 
 def hlog_inv(y, b=500, r=_display_max, d=_l_mmax):
     """
     Inverse of base 10 hyperlog transform.
     """
-    aux = 1. * d / r * y
+    aux = 1.0 * d / r * y
     s = sign(y)
     if s.shape:  # to catch case where input is a single number
         s[s == 0] = 1
@@ -194,7 +194,7 @@ def _x_for_spln(x, nx, log_spacing):
 
             if nx <= 1:
                 # If triggered fix edge case behavior
-                raise AssertionError(u'nx should never bebe 0 or 1')
+                raise AssertionError("nx should never bebe 0 or 1")
 
             # Work-around various edge cases
             if nx_neg == 0:
@@ -217,8 +217,7 @@ def _make_hlog_numeric(b, r, d):
     Return a function that numerically computes the hlog transformation for given parameter values.
     """
     hlog_obj = lambda y, x, b, r, d: hlog_inv(y, b, r, d) - x
-    find_inv = vectorize(lambda x: brentq(hlog_obj, -2 * r, 2 * r,
-                                          args=(x, b, r, d)))
+    find_inv = vectorize(lambda x: brentq(hlog_obj, -2 * r, 2 * r, args=(x, b, r, d)))
     return find_inv
 
 
@@ -244,7 +243,7 @@ def hlog(x, b=500, r=_display_max, d=_l_mmax):
     Array of transformed values.
     """
     hlog_fun = _make_hlog_numeric(b, r, d)
-    if not hasattr(x, '__len__'):  # if transforming a single number
+    if not hasattr(x, "__len__"):  # if transforming a single number
         y = hlog_fun(x)
     else:
         n = len(x)
@@ -256,13 +255,13 @@ def hlog(x, b=500, r=_display_max, d=_l_mmax):
 
 
 _canonical_names = {
-    'linear': 'linear',
-    'lin': 'linear',
-    'rescale': 'linear',
-    'hlog': 'hlog',
-    'hyperlog': 'hlog',
-    'glog': 'glog',
-    'tlog': 'tlog',
+    "linear": "linear",
+    "lin": "linear",
+    "rescale": "linear",
+    "hlog": "hlog",
+    "hyperlog": "hlog",
+    "glog": "glog",
+    "tlog": "tlog",
 }
 
 
@@ -275,33 +274,40 @@ def _get_canonical_name(name):
 
 
 name_transforms = {
-    'linear': {'forward': linear, 'inverse': linear},
-    'hlog': {'forward': hlog, 'inverse': hlog_inv},
-    'glog': {'forward': glog, 'inverse': glog_inv},
-    'tlog': {'forward': tlog, 'inverse': tlog_inv},
+    "linear": {"forward": linear, "inverse": linear},
+    "hlog": {"forward": hlog, "inverse": hlog_inv},
+    "glog": {"forward": glog, "inverse": glog_inv},
+    "tlog": {"forward": tlog, "inverse": tlog_inv},
 }
 
 
-def parse_transform(transform, direction='forward'):
+def parse_transform(transform, direction="forward"):
     """
     direction : 'forward' | 'inverse'
     """
-    if hasattr(transform, '__call__'):
+    if hasattr(transform, "__call__"):
         tfun = transform
         tname = None
-    elif hasattr(transform, 'lower'):
+    elif hasattr(transform, "lower"):
         tname = _get_canonical_name(transform)
         if tname is None:
-            raise ValueError('Unknown transform: %s' % transform)
+            raise ValueError("Unknown transform: %s" % transform)
         else:
             tfun = name_transforms[tname][direction]
     else:
-        raise TypeError('Unsupported transform type: %s' % type(transform))
+        raise TypeError("Unsupported transform type: %s" % type(transform))
     return tfun, tname
 
 
-def transform_frame(frame, transform, columns=None, direction='forward',
-                    return_all=True, args=(), **kwargs):
+def transform_frame(
+    frame,
+    transform,
+    columns=None,
+    direction="forward",
+    return_all=True,
+    args=(),
+    **kwargs
+):
     """
     Apply transform to specified columns.
 
@@ -330,7 +336,9 @@ class Transformation(BaseObject):
     A transformation for flow cytometry data.
     """
 
-    def __init__(self, transform, direction='forward', name=None, spln=None, args=(), **kwargs):
+    def __init__(
+        self, transform, direction="forward", name=None, spln=None, args=(), **kwargs
+    ):
         """
         Parameters
         ----------
@@ -350,7 +358,7 @@ class Transformation(BaseObject):
         self.name = name
         self.spln = spln
 
-    __init__.__doc__ = __init__.__doc__.format(', '.join(name_transforms.keys()))
+    __init__.__doc__ = __init__.__doc__.format(", ".join(name_transforms.keys()))
 
     def __repr__(self):
         return repr(self.name)
@@ -390,10 +398,12 @@ class Transformation(BaseObject):
     @property
     def inverse(self):
         if self.tname is None:
-            warnings.warn('inverse is supported only for named transforms. Returning None.')
+            warnings.warn(
+                "inverse is supported only for named transforms. Returning None."
+            )
             return None
         else:
-            direction = 'forward' if self.direction == 'inverse' else 'inverse'
+            direction = "forward" if self.direction == "inverse" else "inverse"
             ifun = name_transforms[self.tname][direction]
             tinv = self.copy()
             tinv.tfun = ifun
@@ -402,7 +412,7 @@ class Transformation(BaseObject):
 
     def set_spline(self, xmin, xmax, nx=1000, log_spacing=None, **kwargs):
         if log_spacing is None:
-            if self.tname in ['hlog', 'tlog', 'glog']:
+            if self.tname in ["hlog", "tlog", "glog"]:
                 log_spacing = True
             else:
                 log_spacing = False
