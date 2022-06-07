@@ -3,8 +3,6 @@ FlowCytometryTools
 
 **Authors**: Jonathan Friedman and `Eugene Yurtsev <https://eyurtsev.github.io>`_
 
-.. image:: https://travis-ci.org/eyurtsev/FlowCytometryTools.svg?branch=master
-    :target: https://travis-ci.org/eyurtsev/FlowCytometryTools
 .. image:: https://zenodo.org/badge/doi/10.5281/zenodo.32991.svg
     :target: https://zenodo.org/record/32991   
 
