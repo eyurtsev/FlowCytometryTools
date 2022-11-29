@@ -368,6 +368,14 @@ class Measurement(BaseObject):
 
 
 Well = Measurement
+import collections
+try:
+    from collections import abc
+    collections.MutableMapping = abc.MutableMapping
+    collections.Iterable = abc.Iterable
+    collections.Mapping = abc.Mapping
+except:
+    pass
 
 
 class MeasurementCollection(abc.MutableMapping, BaseObject):
