@@ -99,7 +99,7 @@ def queueable(fun, *args, **kwargs):
     f_name = fun.__name__
     print(fun)
     print(type(fun))
-    kw_name = inspect.getfullargspec(fun)
+    kw_name = inspect.getfullargspec(fun).varkw
     print(kw_name)
     kws = params.pop(kw_name, {})
     params.update(kws)
