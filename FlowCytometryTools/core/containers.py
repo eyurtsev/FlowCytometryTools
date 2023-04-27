@@ -286,6 +286,7 @@ class FCMeasurement(Measurement):
                         if self.channel_names[i - 1] in channels
                     ]
                     print(ranges)
+                    print(channels)
                     if not np.allclose(ranges, ranges[0]):
                         raise Exception(
                             """Not all specified channels have the same data range,
