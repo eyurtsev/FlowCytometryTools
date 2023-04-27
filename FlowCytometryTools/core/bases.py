@@ -91,7 +91,6 @@ _now = "apply_now"
 
 @decorator.decorator
 def queueable(fun, *args, **kwargs):
-    print(fun, *args, **kwargs)
     params = inspect.getcallargs(fun, *args, **kwargs)
     if not _now in params:
         raise ValueError(
