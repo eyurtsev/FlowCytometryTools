@@ -97,10 +97,7 @@ def queueable(fun, *args, **kwargs):
             '"%s" must be a parameter of queued function "%s"' % (_now, fun.__name__)
         )
     f_name = fun.__name__
-    print(fun)
-    print(type(fun))
-    kw_name = inspect.getfullargspec(fun).varkws
-    print(kw_name)
+    kw_name = inspect.getfullargspec(fun).varkw
     kws = params.pop(kw_name, {})
     params.update(kws)
     if params[_now]:
