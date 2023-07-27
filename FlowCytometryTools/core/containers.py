@@ -132,11 +132,11 @@ class FCMeasurement(Measurement):
         plot_output = graph.plotFCM(self.data, channel_names, kind=kind, **kwargs)
 
         if gates is not None:
+
             if gate_colors is None:
                 gate_colors = cycle(("b", "g", "r", "m", "c", "y"))
 
-            if not isinstance(gate_lw, collections.Iterable):
-                gate_lw = [gate_lw]
+            gate_lw = [gate_lw]
 
             gate_lw = cycle(gate_lw)
 
